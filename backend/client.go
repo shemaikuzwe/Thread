@@ -12,9 +12,9 @@ import (
 )
 
 type Message struct {
-	Message string
-	Type    Type
-	Date    string
+	Message string `json:"message"`
+	Type    Type   `json:"type"`
+	Date    string `json:"date"`
 }
 
 type Type string
@@ -154,8 +154,8 @@ func toBYTE(m *Message) ([]byte, error) {
 	return msg, err
 }
 
-func toJSON(b []byte) (*Message, error) {
-	msg := Message{}
-	err := json.Unmarshal(b, &msg)
-	return &msg, err
-}
+// func toJSON(b []byte)(*Message,error){
+//   msg :=Message{}
+//   err:=json.Unmarshal(b,&msg)
+//   return  &msg,err
+// }

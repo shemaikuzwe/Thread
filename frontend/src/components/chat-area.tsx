@@ -42,15 +42,13 @@ export const ChatArea = () => {
   };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data) as Message;
-    console.log("received msg", typeof msg, msg);
+    console.log("received msg",msg);
 
     if (msg.type == "USER_CONNECTED") {
-      console.log(msg.message);
-
       setActive(Number(msg.message));
     }
     if (msg.type == "USER_DISCONNECTED") {
-      setActive((prev) => Math.min(prev, prev - 1));
+      setActive(Number(msg.message));
     }
     if (msg.type == "MESSAGE") {
       setMessages([...messages, msg]);
