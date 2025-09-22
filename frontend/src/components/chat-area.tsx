@@ -42,7 +42,7 @@ export const ChatArea = () => {
   };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data) as Message;
-    console.log("received msg",msg);
+    console.log("received msg", msg);
 
     if (msg.type == "USER_CONNECTED") {
       setActive(Number(msg.message));
@@ -81,14 +81,8 @@ export const ChatArea = () => {
     <div className="flex-1 flex flex-col h-screen">
       {/* Chat header */}
       <div className="border-b bg-background px-6 py-4">
-        <h2 className="text-xl font-semibold">
-          {getChannelDisplayName()} Active {active}
-        </h2>
-        {!isDirectMessage && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {getChannelDescription()}
-          </p>
-        )}
+        <h2 className="text-2xl font-semibold">{getChannelDisplayName()}</h2>
+        {active > 1 && <span className="text-sm">{active} online</span>}
       </div>
 
       {/* Messages area */}

@@ -39,7 +39,7 @@ export const Sidebar = () => {
       {/* Workspace header */}
       <div className="p-4 border-b border-slack-sidebar-hover">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Slack</h1>
+          <h1 className="text-lg font-bold">Acme</h1>
           {/* <Button
             size="sm"
             variant="outline"

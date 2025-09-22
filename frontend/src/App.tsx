@@ -6,6 +6,10 @@ import Index from "./pages";
 import Channel from "./pages/channel";
 import DirectMessage from "./pages/direct-message";
 import NotFound from "./pages/channel";
+import HomePage from "./pages/home";
+import LoginPage from "./pages/login";
+import RegisterPage from "./pages/register";
+import ChatPage from "./pages/chat";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +20,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/chat/:id" element={<ChatPage/>}/>
           <Route path="/channel/:channelId" element={<Channel />} />
           <Route path="/dm/:dmId" element={<DirectMessage />} />
           <Route path="*" element={<NotFound />} />
