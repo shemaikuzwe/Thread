@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useParams } from "react-router-dom";
 import { useChannels } from "@/hooks/use-channel";
-import { ws } from "@/lib/ws";
 
 interface Message {
   id: string;
@@ -35,25 +34,25 @@ export const ChatArea = () => {
       date: new Date().toISOString(),
     };
 
-    ws.send(JSON.stringify(newMessage));
+    // ws.send(JSON.stringify(newMessage));
 
     setMessages([...messages, newMessage]);
     setMessage("");
   };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data) as Message;
-    console.log("received msg", msg);
+  // ws.onmessage = (e) => {
+  //   const msg = JSON.parse(e.data) as Message;
+  //   console.log("received msg", msg);
 
-    if (msg.type == "USER_CONNECTED") {
-      setActive(Number(msg.message));
-    }
-    if (msg.type == "USER_DISCONNECTED") {
-      setActive(Number(msg.message));
-    }
-    if (msg.type == "MESSAGE") {
-      setMessages([...messages, msg]);
-    }
-  };
+  //   if (msg.type == "USER_CONNECTED") {
+  //     setActive(Number(msg.message));
+  //   }
+  //   if (msg.type == "USER_DISCONNECTED") {
+  //     setActive(Number(msg.message));
+  //   }
+  //   if (msg.type == "MESSAGE") {
+  //     setMessages([...messages, msg]);
+  //   }
+  // };
 
   const handleKeyUp = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -64,17 +63,6 @@ export const ChatArea = () => {
 
   const getChannelDisplayName = () => {
     return `# ${currentChannel}`;
-  };
-
-  const getChannelDescription = () => {
-    if (isDirectMessage) return null;
-
-    const channel = getChannel(currentChannel);
-    if (channel?.description) {
-      return channel.description;
-    }
-
-    return `This is the ${currentChannel} channel for team-wide communication`;
   };
 
   return (

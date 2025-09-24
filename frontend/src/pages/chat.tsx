@@ -2,11 +2,13 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/components/logo";
+import { useWebSocket } from "@/hooks/use-weboscket";
+import type { Message } from "@/lib/types";
 
 interface Channel {
   id: string;
@@ -21,14 +23,6 @@ interface DirectMessage {
   name: string;
   avatar: string;
   isOnline?: boolean;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  sender: string;
-  timestamp: string;
-  isOwn: boolean;
 }
 
 const channels: Channel[] = [
@@ -46,66 +40,33 @@ const directMessages: DirectMessage[] = [
   { id: "4", name: "Emily Davis", avatar: "/woman-brown-hair.jpg" },
 ];
 
-const sampleMessages: Message[] = [
-  {
-    id: "1",
-    content: "Hey everyone! Welcome to the general channel",
-    sender: "John Doe",
-    timestamp: "10:30 AM",
-    isOwn: false,
-  },
-  {
-    id: "2",
-    content: "Thanks for the warm welcome!",
-    sender: "You",
-    timestamp: "10:32 AM",
-    isOwn: true,
-  },
-  {
-    id: "3",
-    content: "How is everyone doing today?",
-    sender: "Jane Smith",
-    timestamp: "10:35 AM",
-    isOwn: false,
-  },
-  {
-    id: "4",
-    content: "Great! Just working on some new features",
-    sender: "You",
-    timestamp: "10:37 AM",
-    isOwn: true,
-  },
-  {
-    id: "5",
-    content: "That sounds exciting! Can't wait to see what you're building",
-    sender: "Peter Parker",
-    timestamp: "10:40 AM",
-    isOwn: false,
-  },
-];
-
 export default function ChatPage() {
   const [selectedChannel, setSelectedChannel] = useState<string>("1");
   const [selectedDM, setSelectedDM] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>(sampleMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const { message, sendMessage } = useWebSocket();
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       const message: Message = {
         id: Date.now().toString(),
-        content: newMessage,
-        sender: "You",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        isOwn: true,
+        date: new Date().toUTCString(),
+        message: newMessage,
+        type: "MESSAGE",
       };
       setMessages([...messages, message]);
       setNewMessage("");
+      sendMessage(newMessage);
     }
   };
+  useEffect(() => {
+    if (message) {
+      if (message.type === "MESSAGE") {
+        setMessages([...messages, message]);
+      }
+    }
+  }, [message]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -263,11 +224,11 @@ export default function ChatPage() {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${
-                message.isOwn ? "justify-end" : "justify-start"
-              }`}
+              className={`flex gap-3 
+                // message.isOwn ? "justify-end" : "justify-start"
+              `}
             >
-              {!message.isOwn && (
+              {/* {!message.isOwn && (
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage
                     src={`/abstract-geometric-shapes.png?height=32&width=32&query=${message.sender
@@ -281,13 +242,13 @@ export default function ChatPage() {
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
-              )}
+              )} */}
               <div
-                className={`max-w-xs lg:max-w-md ${
-                  message.isOwn ? "order-first" : ""
-                }`}
+              // className={`max-w-xs lg:max-w-md
+              //   // message.isOwn ? "order-first" : ""
+              // `}
               >
-                {!message.isOwn && (
+                {/* {!message.isOwn && (
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-gray-900">
                       {message.sender}
@@ -296,30 +257,30 @@ export default function ChatPage() {
                       {message.timestamp}
                     </span>
                   </div>
-                )}
+                )} */}
                 <div
-                  className={`rounded-2xl px-4 py-3 ${
-                    message.isOwn
-                      ? "bg-primary text-white rounded-br-md"
-                      : "bg-gray-100 text-gray-900 rounded-bl-md"
-                  }`}
+                // className={`rounded-2xl px-4 py-3 ${
+                //   message.isOwn
+                //     ? "bg-primary text-white rounded-br-md"
+                //     : "bg-gray-100 text-gray-900 rounded-bl-md"
+                // }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <p className="text-sm leading-relaxed">{message.message}</p>
                 </div>
-                {message.isOwn && (
+                {/* {message.isOwn && (
                   <div className="flex justify-end mt-1">
                     <span className="text-xs text-gray-500">
                       {message.timestamp}
                     </span>
                   </div>
-                )}
+                )} */}
               </div>
-              {message.isOwn && (
+              {/* {message.isOwn && (
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage src="/abstract-geometric-shapes.png" />
                   <AvatarFallback>You</AvatarFallback>
                 </Avatar>
-              )}
+              )} */}
             </div>
           ))}
         </div>
