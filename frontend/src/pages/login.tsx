@@ -4,9 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 
 export default function LoginPage() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const handleGoogleLogin = async () => {
+    window.location.href = `${apiUrl}/auth/login?oauth=google`;
+  };
   return (
     <div className="min-h-screen bg-gray-50">
-     <Header/>
+      <Header />
       <main className="px-6 py-16">
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-3xl shadow-xl p-8">
@@ -23,6 +27,7 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 className="w-full h-12 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-medium bg-transparent"
+                onClick={handleGoogleLogin}
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path
@@ -66,9 +71,7 @@ export default function LoginPage() {
                 <div className="w-full border-t"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4">
-                  Or continue with email
-                </span>
+                <span className="px-4">Or continue with email</span>
               </div>
             </div>
 
@@ -122,10 +125,7 @@ export default function LoginPage() {
                   </label>
                 </div>
 
-                <Link
-                  to="#"
-                  className="text-sm font-medium"
-                >
+                <Link to="#" className="text-sm font-medium">
                   Forgot password?
                 </Link>
               </div>
@@ -142,10 +142,7 @@ export default function LoginPage() {
             <div className="text-center mt-6">
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <Link
-                  to="/signup"
-                  className="text-primary font-medium"
-                >
+                <Link to="/signup" className="text-primary font-medium">
                   Sign up
                 </Link>
               </p>
