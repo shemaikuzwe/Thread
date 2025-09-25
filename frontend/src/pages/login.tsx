@@ -1,12 +1,26 @@
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const apiUrl = import.meta.env.VITE_API_URL;
   const handleGoogleLogin = async () => {
     window.location.href = `${apiUrl}/auth/login?oauth=google`;
+    // const popup = window.open(
+    //   `${apiUrl}/auth/login?oauth=google`,
+    //   "googleAuth",
+    //   "width=500,height=600,scrollbars=yes,resizable=yes"
+    // );
+    // const checkClosed = setInterval(async () => {
+    //   if (popup?.closed) {
+    //     clearInterval(checkClosed);
+    //     const status = await checkLogin();
+    //     if (status) {
+    //       navigate("/chat/123");
+    //     }
+    //   }
+    // });
   };
   return (
     <div className="min-h-screen bg-gray-50">

@@ -5,12 +5,11 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/shemaIkuzwe/websocket/internal/auth"
+	_ "github.com/lib/pq" // needed by sqlc
 	"github.com/shemaIkuzwe/websocket/internal/controllers"
 	"github.com/shemaIkuzwe/websocket/internal/db"
 	"github.com/shemaIkuzwe/websocket/internal/middleware"
 	"github.com/shemaIkuzwe/websocket/utils"
-	_ "github.com/lib/pq" // needed by sqlc
 )
 
 func init() {
@@ -37,9 +36,10 @@ func main() {
 	})
 
 	router.POST("/auth/signup", controllers.SignUp)
-	router.Any("/auth/login",controllers.HandleLogin)
-
-	router.GET("/callback/google", auth.HandleGoogleCallback)
+	router.Any("/auth/login", controllers.HandleLogin)
+	router.GET("auth/callback/google", controllers.HandleGoogleCallback)
+	router.GET("/auth/session", controllers.Session)
+	router.GET("/auth/logout")
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

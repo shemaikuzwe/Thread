@@ -10,6 +10,7 @@ import (
 
 func AuthMiddleware(c *gin.Context) {
 	if strings.Contains(c.Request.URL.Path, "/auth") {
+		c.Set("user", nil)
 		c.Next()
 		return
 	}

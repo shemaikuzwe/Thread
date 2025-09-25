@@ -1,4 +1,4 @@
-package auth
+package controllers
 
 import (
 	"encoding/json"
@@ -60,7 +60,7 @@ func HandleGoogleCallback(ctx *gin.Context) {
 	res, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "failed to get user info",
+			"message": "Failed to get user info",
 		})
 		return
 	}
@@ -71,22 +71,39 @@ func HandleGoogleCallback(ctx *gin.Context) {
 
 	if err := json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "failed to parse json",
+			"message": "Failed to parse json",
 		})
 		return
 	}
-	_, err = db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.email)
+	user, err := db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.email)
 	if err != nil {
-		db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
+		user, err = db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
 			FirstName:      userInfo.family_name,
 			LastName:       userInfo.given_name,
 			Email:          userInfo.email,
 			ProfilePicture: userInfo.picture,
 		})
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to create user",
+			})
+			return
+		}
 	}
-	// Create a token and refresh token
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "user logged in sucessfully",
-	})
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+		})
+		return
+	}
+	tokenString, err := GenerateTOken(&user)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to generate token",
+		})
+		return
+	}
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie("auth_token", tokenString, 3600*24, "/", "", false, true)
+	ctx.Redirect(http.StatusMovedPermanently, "http://localhost:5173/chat/123")
 }

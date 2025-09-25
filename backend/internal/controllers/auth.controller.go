@@ -11,7 +11,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/shemaIkuzwe/websocket/internal/auth"
+
 	"github.com/shemaIkuzwe/websocket/internal/database"
 	"github.com/shemaIkuzwe/websocket/internal/db"
 	"golang.org/x/crypto/bcrypt"
@@ -25,6 +25,13 @@ type Payload struct {
 	profilePicture string
 }
 
+type SessionStatus string
+
+const (
+	un_authenticated SessionStatus = "un_authenticated"
+	authenticated    SessionStatus = "authenticated"
+)
+
 func HandleLogin(ctx *gin.Context) {
 	if ctx.Request.Method == http.MethodGet {
 		oauthType := ctx.Request.FormValue("oauth")
@@ -32,7 +39,7 @@ func HandleLogin(ctx *gin.Context) {
 		if oauthType != "" {
 			switch oauthType {
 			case "google":
-				auth.HandleGoogleLogin(ctx)
+				HandleGoogleLogin(ctx)
 			}
 		}
 		return
@@ -128,6 +135,31 @@ func SignUp(ctx *gin.Context) {
 	ctx.SetCookie("auth_token", token, 3600*24, "/", "", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": user,
+	})
+}
+
+func Session(ctx *gin.Context) {
+	tokenString, err := GetToken(ctx)
+	log.Println("found tkn",tokenString)
+	if err != nil || tokenString == "" {
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": un_authenticated,
+			"user":   "",
+		})
+		return
+	}
+	
+	payload, err := VerifyToken(tokenString)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"status": un_authenticated,
+			"user":"",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": authenticated,
+		"user":   payload,
 	})
 }
 
