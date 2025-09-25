@@ -17,6 +17,15 @@ var (
 	oauthStateString = "randomstate"
 )
 
+type GoogleUser struct {
+	id          string
+	email       string
+	name        string
+	picture     string
+	family_name string
+	given_name  string
+}
+
 func HandleGoogleLogin(ctx *gin.Context) {
 	var clientId = os.Getenv("CLIENT_ID")
 	var clientSecret = os.Getenv("CLIENT_SECRET")
@@ -46,8 +55,8 @@ func HandleGoogleCallback(ctx *gin.Context) {
 		})
 		return
 	}
-	
-	res, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	client := googleOuthConfig.Client(ctx.Request.Context(), token)
+	res, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "failed to get user info",
