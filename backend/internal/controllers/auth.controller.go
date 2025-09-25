@@ -45,7 +45,7 @@ func HandleLogin(ctx *gin.Context) {
 func CredentialLogin(ctx *gin.Context) {
 	var body struct {
 		Email    string `json:"email"`
-		Password string  `json:"password"`
+		Password string `json:"password"`
 	}
 	if err := ctx.Bind(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -54,14 +54,13 @@ func CredentialLogin(ctx *gin.Context) {
 		return
 	}
 	user, err := db.Db.GetUserByEmail(ctx.Request.Context(), body.Email)
-	log.Println("user", user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid Username or Password",
 		})
 		return
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(body.Password)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid Username or Password",
 		})
@@ -104,11 +103,10 @@ func SignUp(ctx *gin.Context) {
 		return
 	}
 	user, err := db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
-		FirstName:      body.FirstName,
-		LastName:       body.LastName,
-		Email:          body.Email,
-		Password:       string(hashPassword),
-		ProfilePicture: sql.NullString{String: "/defult.png", Valid: true},
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Email:     body.Email,
+		Password:  sql.NullString{String: string(hashPassword), Valid: true},
 	})
 	if err != nil {
 		log.Println("Failed to create user", err)
@@ -139,12 +137,12 @@ func GenerateTOken(user *database.User) (string, error) {
 		email:          user.Email,
 		firstName:      user.FirstName,
 		lastName:       user.LastName,
-		profilePicture: user.ProfilePicture.String,
+		profilePicture: user.ProfilePicture,
 	}
 	log.Println("Payload", payload.firstName, payload.profilePicture, payload.email, payload.lastName, payload.id)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":     user.ID.String(),
-		"exp":     time.Now().Add(time.Hour * 24),
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"iat":     time.Now().Unix(),
 		"payload": payload,
 	})
@@ -162,10 +160,12 @@ func VerifyToken(tokenString string) (any, error) {
 	if err != nil || !token.Valid {
 		return nil, fmt.Errorf("invalid token: %v", err)
 	}
+
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
 	}
+	log.Println("claims", claims["exp"])
 	if float64(time.Now().Unix()) > claims["exp"].(float64) {
 		return nil, fmt.Errorf("token expired")
 	}

@@ -2,11 +2,12 @@ package auth
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shemaIkuzwe/websocket/internal/database"
+	"github.com/shemaIkuzwe/websocket/internal/db"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -66,7 +67,7 @@ func HandleGoogleCallback(ctx *gin.Context) {
 
 	defer res.Body.Close()
 
-	var userInfo map[string]interface{}
+	var userInfo GoogleUser
 
 	if err := json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -74,8 +75,16 @@ func HandleGoogleCallback(ctx *gin.Context) {
 		})
 		return
 	}
-	data, _ := json.MarshalIndent(userInfo, "", " ")
-	log.Println("userdata", string(data))
+	_, err = db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.email)
+	if err != nil {
+		db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
+			FirstName:      userInfo.family_name,
+			LastName:       userInfo.given_name,
+			Email:          userInfo.email,
+			ProfilePicture: userInfo.picture,
+		})
+	}
+	// Create a token and refresh token
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "user logged in sucessfully",

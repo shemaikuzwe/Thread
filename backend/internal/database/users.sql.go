@@ -22,8 +22,8 @@ type CreateUserParams struct {
 	FirstName      string         `json:"first_name"`
 	LastName       string         `json:"last_name"`
 	Email          string         `json:"email"`
-	ProfilePicture sql.NullString `json:"profile_picture"`
-	Password       string         `json:"password"`
+	ProfilePicture string         `json:"profile_picture"`
+	Password       sql.NullString `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
