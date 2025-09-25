@@ -18,11 +18,11 @@ import (
 )
 
 type Payload struct {
-	id             string
-	email          string
-	firstName      string
-	lastName       string
-	profilePicture string
+	Id             string `json:"id"`
+	Email          string `json:"email"`
+	FirstName      string `json:"first_name"`
+	LastName       string `json:"last_name"`
+	ProfilePicture string `json:"profile_picture"`
 }
 
 type SessionStatus string
@@ -140,7 +140,6 @@ func SignUp(ctx *gin.Context) {
 
 func Session(ctx *gin.Context) {
 	tokenString, err := GetToken(ctx)
-	log.Println("found tkn",tokenString)
 	if err != nil || tokenString == "" {
 		ctx.JSON(http.StatusOK, gin.H{
 			"status": un_authenticated,
@@ -148,35 +147,41 @@ func Session(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	payload, err := VerifyToken(tokenString)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
 			"status": un_authenticated,
-			"user":"",
+			"user":   "",
 		})
 		return
 	}
+	log.Println("pay", payload)
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": authenticated,
 		"user":   payload,
 	})
 }
+func Logout(c *gin.Context) {
+	//delete cookie
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("auth_token", "", -1, "/", "", false, true)
 
+	c.JSON(200, "Logout successfully")
+}
 func GenerateTOken(user *database.User) (string, error) {
-	payload := Payload{
-		id:             user.ID.String(),
-		email:          user.Email,
-		firstName:      user.FirstName,
-		lastName:       user.LastName,
-		profilePicture: user.ProfilePicture,
+	payload := &Payload{
+		Id:             user.ID.String(),
+		Email:          user.Email,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		ProfilePicture: user.ProfilePicture,
 	}
-	log.Println("Payload", payload.firstName, payload.profilePicture, payload.email, payload.lastName, payload.id)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":     user.ID.String(),
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"iat":     time.Now().Unix(),
-		"payload": payload,
+		"payload": *payload,
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET")))
 	return tokenString, err
@@ -197,7 +202,7 @@ func VerifyToken(tokenString string) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
 	}
-	log.Println("claims", claims["exp"])
+
 	if float64(time.Now().Unix()) > claims["exp"].(float64) {
 		return nil, fmt.Errorf("token expired")
 	}

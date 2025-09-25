@@ -39,7 +39,7 @@ func main() {
 	router.Any("/auth/login", controllers.HandleLogin)
 	router.GET("auth/callback/google", controllers.HandleGoogleCallback)
 	router.GET("/auth/session", controllers.Session)
-	router.GET("/auth/logout")
+	router.GET("/auth/logout",controllers.Logout)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")
