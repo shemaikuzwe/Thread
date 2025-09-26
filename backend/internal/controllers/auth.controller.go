@@ -156,7 +156,6 @@ func Session(ctx *gin.Context) {
 		})
 		return
 	}
-	log.Println("pay", payload)
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": authenticated,
 		"user":   payload,

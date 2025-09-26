@@ -15,7 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
-import { apiUrl } from "@/lib/constants";
+import { api } from "@/lib/axios";
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -23,23 +23,25 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { mutate } = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const res = await fetch(`${apiUrl}/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const res = await api.post(
+        `/auth/signup`,
+        {
+          email: data.email,
+          password: data.password,
           first_name: data.firstName,
           last_name: data.lastName,
-          password: data.password,
-          email: data.email,
-        }),
-      });
-      if (!res.ok) {
-        const error = await res.json();
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.status.toString().startsWith("2")) {
+        const error = await res.data;
         throw new Error(error.message || "something went wrong");
       }
-      return await res.json();
+      return await res.data;
     },
     onSuccess: () => {
       navigate("/chat");

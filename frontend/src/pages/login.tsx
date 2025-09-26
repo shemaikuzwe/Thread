@@ -10,7 +10,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { apiUrl } from "@/lib/constants";
+import { api } from "@/lib/axios";
 import { loginSchema, type LoginData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -27,13 +27,13 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { mutate } = useMutation({
     mutationFn: async (data: LoginData) => {
-      return await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      return await api.post(
+        `/auth/login`,
+        {
+          email: data.email,
+          password: data.password,
+        }
+      );
     },
     onSuccess: () => {
       navigate("/chat");

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 
@@ -76,7 +75,6 @@ func HandleGoogleCallback(ctx *gin.Context) {
 		})
 		return
 	}
-	log.Println("userInfo", userInfo.FamilyName, userInfo.GivenName, userInfo.Email)
 	user, err := db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.Email)
 	if err != nil {
 		user, err = db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{

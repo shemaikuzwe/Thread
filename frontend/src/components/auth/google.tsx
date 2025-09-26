@@ -1,9 +1,10 @@
-import { apiUrl } from "@/lib/constants";
 import { Button } from "../ui/button";
 
 export default function Google() {
   const handleGoogleLogin = async () => {
-    window.location.href = `${apiUrl}/auth/login?oauth=google`;
+    window.location.href = `${
+      import.meta.env.VITE_API_URL
+    }/auth/login?oauth=google`;
     // const popup = window.open(
     //   `${apiUrl}/auth/login?oauth=google`,
     //   "googleAuth",

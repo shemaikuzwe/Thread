@@ -1,5 +1,6 @@
-import { createContext, use, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { Session } from "@/lib/types";
+import { api } from "@/lib/axios";
 
 const SessionContext = createContext<Session | null>(null);
 export function SessionProvider({ children }: { children: React.ReactNode }) {
@@ -9,16 +10,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function getSession() {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/session`);
-      if (!res.ok) {
+      const res = await api.get("/auth/session");
+      if (!res.status) {
         setSession(null);
       }
-      const data = await res.json();
+      const data = res.data;
       setSession(data);
     }
     getSession();
   }, []);
-  console.log(session);
 
   return (
     <SessionContext.Provider value={session}>
@@ -28,6 +28,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useSession() {
-  const session = use(SessionContext);
+  const session = useContext(SessionContext);
   return session;
 }

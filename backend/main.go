@@ -21,10 +21,11 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		// AllowOrigins: []string{"http://localhost:5173"},
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:    []string{"Content-Type"},
+		AllowOrigins:     []string{"http://localhost:5173"},
+		// AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type"},
+		AllowCredentials: true,
 	}))
 	router.Use(middleware.AuthMiddleware)
 	channel := newChannel()
