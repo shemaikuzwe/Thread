@@ -43,11 +43,11 @@ export default function LoginPage() {
     },
   });
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="px-6 py-16">
+    <div>
+
+      <main className="px-6 ">
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
+          <div className="bg-white rounded-3xl w-120 shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">

@@ -9,6 +9,7 @@ import ChatPage from "./pages/chat";
 import { SessionProvider } from "./components/providers/session-provider";
 import NotFound from "./pages/not-found";
 import ChatLayout from "./pages/chat-layout";
+import HomeLayout from "./pages/home-layout";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +21,11 @@ const App = () => (
       <SessionProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route element={<HomeLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
             <Route element={<ChatLayout />}>
               <Route path="/chat" element={<ChatPage />} />
             </Route>

@@ -51,11 +51,10 @@ export default function RegisterPage() {
     },
   });
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="px-6 py-4">
+    <div>
+      <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
+          <div className="bg-white rounded-xl w-120 h-165 shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -65,7 +64,7 @@ export default function RegisterPage() {
             </div>
 
             {/* OAuth Buttons */}
-            <div className="space-y-3 mb-6">
+            <div className="flex flex-col gap-2">
               <Google />
               <Github />
             </div>
@@ -88,26 +87,25 @@ export default function RegisterPage() {
                 className="space-y-4"
                 onSubmit={form.handleSubmit((data) => mutate(data))}
               >
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            className="h-12 rounded-xl border-2"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          className="h-12 w-full rounded-xl border-2"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-2">
                   <FormField
                     control={form.control}
                     name="firstName"
@@ -140,7 +138,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex  gap-2">
                   <FormField
                     control={form.control}
                     name="password"

@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Phone from "@/assets/phone.png";
-import Header from "@/components/header";
+import { Apple } from "@/components/ui/svgs/apple";
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="px-6 py-16">
+    <div>
+      <main className="px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between lg:px-40 md:px-10 sm:px-5">
             <div className="space-y-8">
@@ -19,36 +18,30 @@ export default function HomePage() {
                 </p>
               </div>
               <Button
-                size="lg"
-                className="text-lg font-semibold rounded-2xl"
+                size="default"
+                className="text-lg rounded-xl"
                 asChild
               >
                 <Link to="/register">Get Started</Link>
               </Button>
             </div>
-            <img src={Phone} width={400} height={300} />
+            <img src={Phone} width={330} height={220} />
           </div>
 
           {/* Trust Section */}
-          <div className="text-center mt-24">
-            <p className="text-2xl text-gray-700 font-medium mb-12">
+          <div className="text-center mt-4 mb-5">
+            <p className="text-2xl text-gray-700 font-medium mb-5">
               Trusted by 10,000+ users
             </p>
 
             {/* Platform Icons */}
             <div className="flex justify-center items-center gap-12 opacity-60">
               {/* Apple */}
-              <svg
-                className="w-12 h-12"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.81.87.78 0 2.26-1.07 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-              </svg>
+              <Apple width={50} height={50} />
 
               {/* Android */}
               <svg
-                className="w-12 h-12"
+                className="w-16 h-16"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
