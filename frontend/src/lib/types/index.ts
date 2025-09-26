@@ -5,3 +5,13 @@ export interface Message {
   date: string;
 }
 
+export interface Session {
+  status: "un_authenticated" | "authenticated";
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profilePicture: string;
+  };
+}

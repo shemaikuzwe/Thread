@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 
@@ -19,12 +20,12 @@ var (
 )
 
 type GoogleUser struct {
-	id          string
-	email       string
-	name        string
-	picture     string
-	family_name string
-	given_name  string
+	ID         string `json:"id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Picture    string `json:"picture"`
+	FamilyName string `json:"family_name"`
+	GivenName  string `json:"given_name"`
 }
 
 func HandleGoogleLogin(ctx *gin.Context) {
@@ -75,13 +76,14 @@ func HandleGoogleCallback(ctx *gin.Context) {
 		})
 		return
 	}
-	user, err := db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.email)
+	log.Println("userInfo", userInfo.FamilyName, userInfo.GivenName, userInfo.Email)
+	user, err := db.Db.GetUserByEmail(ctx.Request.Context(), userInfo.Email)
 	if err != nil {
 		user, err = db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
-			FirstName:      userInfo.family_name,
-			LastName:       userInfo.given_name,
-			Email:          userInfo.email,
-			ProfilePicture: userInfo.picture,
+			FirstName:      userInfo.FamilyName,
+			LastName:       userInfo.GivenName,
+			Email:          userInfo.Email,
+			ProfilePicture: userInfo.Picture,
 		})
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -105,5 +107,5 @@ func HandleGoogleCallback(ctx *gin.Context) {
 	}
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie("auth_token", tokenString, 3600*24, "/", "", false, true)
-	ctx.Redirect(http.StatusMovedPermanently, "http://localhost:5173/chat/123")
+	ctx.Redirect(http.StatusMovedPermanently, "http://localhost:5173/chat")
 }

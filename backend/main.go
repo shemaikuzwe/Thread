@@ -23,7 +23,8 @@ func main() {
 	router.Use(cors.New(cors.Config{
 		// AllowOrigins: []string{"http://localhost:5173"},
 		AllowAllOrigins: true,
-		AllowHeaders:    []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"Content-Type"},
 	}))
 	router.Use(middleware.AuthMiddleware)
 	channel := newChannel()
@@ -39,7 +40,7 @@ func main() {
 	router.Any("/auth/login", controllers.HandleLogin)
 	router.GET("auth/callback/google", controllers.HandleGoogleCallback)
 	router.GET("/auth/session", controllers.Session)
-	router.GET("/auth/logout",controllers.Logout)
+	router.GET("/auth/logout", controllers.Logout)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

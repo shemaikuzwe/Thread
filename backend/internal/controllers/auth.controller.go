@@ -83,20 +83,20 @@ func CredentialLogin(ctx *gin.Context) {
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie("auth_token", token, 3600*24, "/", "", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "login successful",
+		"message": "user logged in",
 	})
 }
 func SignUp(ctx *gin.Context) {
 	var body struct {
-		Email     string `json:"email" binding:"required,email"`
-		FirstName string `json:"first_name" binding:"required,min=3"`
-		LastName  string `json:"last_name" binding:"required,min=4"`
-		Password  string `json:"password" binding:"required,min=4"`
+		Email     string `json:"email"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Password  string `json:"password"`
 	}
-	if err := ctx.ShouldBind(&body); err != nil {
+	if err := ctx.Bind(&body); err != nil {
 		log.Println("error", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid Request api",
+			"message": "Invalid Request",
 		})
 		return
 	}
@@ -134,7 +134,7 @@ func SignUp(ctx *gin.Context) {
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie("auth_token", token, 3600*24, "/", "", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": user,
+		"message": "user registered",
 	})
 }
 
