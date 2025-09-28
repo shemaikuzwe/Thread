@@ -1,4 +1,6 @@
 import { useSession } from "@/components/providers/session-provider";
+import { ChatSidebar } from "@/components/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 
 export default function ChatLayout() {
@@ -7,5 +9,12 @@ export default function ChatLayout() {
   if (!session || session.status === "un_authenticated") {
     navigate("/login", { replace: true });
   }
-  return <Outlet />;
+  return (
+    <SidebarProvider defaultOpen={false}>
+      <div className="flex flex-row h-screen w-full">
+        <ChatSidebar />
+        <Outlet />
+      </div>
+    </SidebarProvider>
+  );
 }

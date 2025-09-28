@@ -9,6 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/components/logo";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import type { Message } from "@/lib/types";
+import { useSession } from "@/components/providers/session-provider";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface Channel {
   id: string;
@@ -46,24 +49,26 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const { message, sendMessage } = useWebSocket();
-
+  const session = useSession();
+  const userId = session?.user?.id;
   const handleSendMessage = () => {
+    if (!userId) throw new Error("message is required");
     if (newMessage.trim()) {
       const message: Message = {
         id: Date.now().toString(),
         date: new Date().toUTCString(),
         message: newMessage,
         type: "MESSAGE",
+        userId: userId,
       };
-      setMessages([...messages, message]);
+      sendMessage(message);
       setNewMessage("");
-      sendMessage(newMessage);
     }
   };
   useEffect(() => {
     if (message) {
       if (message.type === "MESSAGE") {
-        setMessages([...messages, message]);
+        setMessages((prev) => [...prev, message]);
       }
     }
   }, [message]);
@@ -80,7 +85,7 @@ export default function ChatPage() {
     : channels.find((ch) => ch.id === selectedChannel)?.name;
 
   return (
-    <div className="h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex w-full">
       {/* Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
@@ -221,34 +226,35 @@ export default function ChatPage() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-3 
-                // message.isOwn ? "justify-end" : "justify-start"
-              `}
-            >
-              {/* {!message.isOwn && (
+          {messages.map((message) => {
+            const isOwn = message.userId === userId;
+            console.log("userId", userId, message.userId);
+
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex gap-3 ",
+                  isOwn ? "justify-end" : "justify-start"
+                )}
+              >
                 <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarImage
-                    src={`/abstract-geometric-shapes.png?height=32&width=32&query=${message.sender
-                      .toLowerCase()
-                      .replace(" ", "-")}`}
-                  />
+                  <AvatarImage src={``} />
                   <AvatarFallback>
-                    {message.sender
+                    {"Shema Ikuzwe"
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
-              )} */}
-              <div
-              // className={`max-w-xs lg:max-w-md
-              //   // message.isOwn ? "order-first" : ""
-              // `}
-              >
-                {/* {!message.isOwn && (
+
+                <div
+                  className={cn(
+                    "max-w-xs lg:max-w-md",
+                    isOwn ? "order-first" : ""
+                  )}
+                >
+                  {/* {!message.isOwn && (
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-gray-900">
                       {message.sender}
@@ -258,31 +264,31 @@ export default function ChatPage() {
                     </span>
                   </div>
                 )} */}
-                <div
-                // className={`rounded-2xl px-4 py-3 ${
-                //   message.isOwn
-                //     ? "bg-primary text-white rounded-br-md"
-                //     : "bg-gray-100 text-gray-900 rounded-bl-md"
-                // }`}
-                >
-                  <p className="text-sm leading-relaxed">{message.message}</p>
+                  <div
+                    className={cn(
+                      "rounded-2xl px-4 py-3 min-w-30",
+                      isOwn
+                        ? "bg-primary text-white rounded-br-md"
+                        : "bg-gray-100 text-gray-900 rounded-bl-md"
+                    )}
+                  >
+                    <p className="text-sm leading-relaxed">{message.message}</p>
+                    <div className="flex justify-end mt-1">
+                      <span className="text-xs">
+                        {format(new Date(message.date), "H:mm")}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 {/* {message.isOwn && (
-                  <div className="flex justify-end mt-1">
-                    <span className="text-xs text-gray-500">
-                      {message.timestamp}
-                    </span>
-                  </div>
-                )} */}
-              </div>
-              {/* {message.isOwn && (
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage src="/abstract-geometric-shapes.png" />
                   <AvatarFallback>You</AvatarFallback>
                 </Avatar>
               )} */}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* Message Input */}

@@ -10,9 +10,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function getSession() {
+      setSession({ status: "pending", user: null });
       const res = await api.get("/auth/session");
       if (!res.status) {
-        setSession(null);
+        setSession({ status: "un_authenticated", user: null });
       }
       const data = res.data;
       setSession(data);
@@ -29,5 +30,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
 export function useSession() {
   const session = useContext(SessionContext);
+  // if(!session){
+  //   throw new Error("No Session provider found");
+  // }
   return session;
 }
