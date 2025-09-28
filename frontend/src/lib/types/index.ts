@@ -14,6 +14,6 @@ export interface Session {
     email: string;
     first_name: string;
     last_name: string;
-    profilePicture: string;
+    profile_picture: string;
   }|null;
 }

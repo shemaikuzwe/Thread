@@ -9,7 +9,9 @@ import {
 } from "./dropdown-menu";
 import { AvatarImage } from "./avatar";
 import { useSession } from "../providers/session-provider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import defaultAvatar from "@/assets/default.png";
+import { api } from "@/lib/axios";
 
 export default function User() {
   const session = useSession();
@@ -17,13 +19,23 @@ export default function User() {
   const name = `${session.user?.first_name ?? ""} ${
     session?.user?.last_name ?? ""
   }`;
+  console.log("session",session);
+  
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    const res = await api.get("/auth/logout");
+    if (res.status !== 200) {
+      throw new Error("Something went wrong");
+    }
+    navigate("/login");
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <div className="flex justify-center items-center gap-2">
           <Avatar>
-            <AvatarImage src={session.user?.profilePicture ?? ""} />
+            <AvatarImage src={session.user?.profile_picture ?? defaultAvatar} />
             <AvatarFallback>
               {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
             </AvatarFallback>
@@ -41,7 +53,7 @@ export default function User() {
         </DropdownMenuItem>
         {/* <DropdownMenuItem><ThemeToggle /></DropdownMenuItem> */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Logout</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

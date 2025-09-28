@@ -6,11 +6,13 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import User from "./ui/user";
+import Logo from "@/assets/logo2.png";
 
 // Menu items
 const items = [
@@ -35,7 +37,11 @@ const items = [
 export function ChatSidebar() {
   return (
     <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <img src={Logo} alt="Logo" className="h-8 w-20" />
+      </SidebarHeader>
       <SidebarContent className="mt-20">
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="flex flex-col gap-5">
