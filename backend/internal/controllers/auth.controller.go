@@ -10,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/shemaIkuzwe/websocket/internal/database"
 	"github.com/shemaIkuzwe/websocket/internal/db"
@@ -72,7 +73,7 @@ func CredentialLogin(ctx *gin.Context) {
 		})
 		return
 	}
-	token, err := GenerateTOken(&user)
+	token, err := GenerateToken(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to generate token",
@@ -123,7 +124,7 @@ func SignUp(ctx *gin.Context) {
 		return
 	}
 
-	token, err := GenerateTOken(&user)
+	token, err := GenerateToken(&user)
 	if err != nil {
 		log.Println("Failed to generate token", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -168,7 +169,7 @@ func Logout(c *gin.Context) {
 
 	c.JSON(200, "Logout successfully")
 }
-func GenerateTOken(user *database.User) (string, error) {
+func GenerateToken(user *database.User) (string, error) {
 	payload := &Payload{
 		Id:             user.ID.String(),
 		Email:          user.Email,
@@ -186,7 +187,7 @@ func GenerateTOken(user *database.User) (string, error) {
 	return tokenString, err
 }
 
-func VerifyToken(tokenString string) (any, error) {
+func VerifyToken(tokenString string) (*Payload, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header)
@@ -205,7 +206,11 @@ func VerifyToken(tokenString string) (any, error) {
 	if float64(time.Now().Unix()) > claims["exp"].(float64) {
 		return nil, fmt.Errorf("token expired")
 	}
-	return claims["payload"], nil
+	var payload Payload
+	if err := mapstructure.Decode(claims["payload"], &payload); err != nil {
+		return nil, err
+	}
+	return &payload, nil
 }
 
 func GetToken(c *gin.Context) (string, error) {

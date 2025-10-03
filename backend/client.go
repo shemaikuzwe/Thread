@@ -2,19 +2,26 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/shemaIkuzwe/websocket/internal/controllers"
+	"github.com/shemaIkuzwe/websocket/internal/database"
+	"github.com/shemaIkuzwe/websocket/internal/db"
 )
 
 type Message struct {
-	Message string `json:"message"`
-	Type    Type   `json:"type"`
-	Date    string `json:"date"`
+	Message   string `json:"message"`
+	ChannelID string `json:"channel_id"`
+	UserID    string `json:"user_id"`
+	Type      Type   `json:"type"`
+	Date      string `json:"date"`
 }
 
 type Type string
@@ -26,16 +33,9 @@ const (
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 512
 )
 
@@ -50,60 +50,65 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// Client is a middleman between the websocket connection and the hub.
-type Client struct {
+type ClientConn struct {
 	channel *Channel
-
-	// The websocket connection.
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan []byte
+	conn    *websocket.Conn
+	send    chan []byte
+	userID  string
+	connID  string
 }
 
-// readPump pumps messages from the websocket connection to the hub.
-//
-// The application runs readPump in a per-connection goroutine. The application
-// ensures that there is at most one reader on a connection by executing all
-// reads from this goroutine.
-func (c *Client) readPump() {
+// Map of userID -> map[connID]*ClientConn
+var clients = make(map[string]map[string]*ClientConn)
+
+func (c *ClientConn) readPump() {
 	defer func() {
+		// unregister client when done
 		c.channel.unregister <- c
 		c.conn.Close()
+
+		// cleanup from clients map
+		if userMap, ok := clients[c.userID]; ok {
+			delete(userMap, c.connID)
+			if len(userMap) == 0 {
+				delete(clients, c.userID)
+			}
+		}
 	}()
+
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				log.Printf("read error: %v", err)
 			}
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.channel.broadcast <- message
+		go handlerCreateMessage(message, c.userID)
 	}
 }
 
-// writePump pumps messages from the hub to the websocket connection.
-//
-// A goroutine running writePump is started for each connection. The
-// application ensures that there is at most one writer to a connection by
-// executing all writes from this goroutine.
-func (c *Client) writePump() {
+func (c *ClientConn) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
 	}()
+
 	for {
 		select {
 		case message, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The hub closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
@@ -114,7 +119,6 @@ func (c *Client) writePump() {
 			}
 			w.Write(message)
 
-			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
@@ -124,6 +128,7 @@ func (c *Client) writePump() {
 			if err := w.Close(); err != nil {
 				return
 			}
+
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
@@ -133,29 +138,76 @@ func (c *Client) writePump() {
 	}
 }
 
-// serveWs handles websocket requests from the peer.
-func serveWs(c *Channel, ctx *gin.Context) {
+func serveWs(channel *Channel, ctx *gin.Context) {
+	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("Upgrade error:", err)
 		return
 	}
-	client := &Client{channel: c, conn: conn, send: make(chan []byte, 256)}
-	client.channel.register <- client
+	user, err := controllers.GetCurrentUser(ctx)
+	if err != nil {
+		log.Println("error getting user:", err)
+		return
+	}
+	connID := uuid.New().String()
 
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// Initialize user map if not exists
+	if clients[user.Id] == nil {
+		clients[user.Id] = make(map[string]*ClientConn)
+	}
+
+	client := &ClientConn{
+		channel: channel,
+		conn:    conn,
+		send:    make(chan []byte, 256),
+		userID:  user.Id,
+		connID:  connID,
+	}
+
+	clients[user.Id][connID] = client
+	channel.register <- client
+
 	go client.writePump()
 	go client.readPump()
 }
 
+func toJSON(b []byte) (*Message, error) {
+	msg := Message{}
+	err := json.Unmarshal(b, &msg)
+	return &msg, err
+}
 func toBYTE(m *Message) ([]byte, error) {
 	msg, err := json.Marshal(m)
 	return msg, err
 }
 
-// func toJSON(b []byte)(*Message,error){
-//   msg :=Message{}
-//   err:=json.Unmarshal(b,&msg)
-//   return  &msg,err
-// }
+func handlerCreateMessage(message []byte, userID string) {
+	msg, err := toJSON(message)
+	if err != nil {
+		log.Println("json parse error:", err)
+		return
+	}
+
+	chanUUID, err := uuid.Parse(msg.ChannelID)
+	if err != nil {
+		log.Println("invalid channel id:", err)
+		return
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Println("invalid user id:", err)
+		return
+	}
+
+	err = db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
+		ChannelID: chanUUID,
+		UserID:    userUUID,
+		Message:   msg.Message,
+	})
+
+	if err != nil {
+		log.Println("db create message error:", err)
+	}
+}

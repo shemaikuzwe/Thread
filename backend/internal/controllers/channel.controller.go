@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"errors"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/shemaIkuzwe/websocket/internal/database"
@@ -13,7 +16,18 @@ type channel struct {
 }
 
 func GetChannelsHandler(c *gin.Context) {
-	channels, err := db.Db.GetAllChannels(c.Request.Context())
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "user not found"})
+		return
+	}
+	uuid, err := uuid.Parse(user.Id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println("uuid", uuid)
+	channels, err := db.Db.GetChannelsByUserID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -30,6 +44,25 @@ func CreateChannelHandler(c *gin.Context) {
 	channel, err := db.Db.CreateChannel(c.Request.Context(), database.CreateChannelParams{
 		Name:        body.Name,
 		Description: &body.Description,
+	})
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "user not found"})
+		return
+	}
+	uuid, err := uuid.Parse(user.Id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	//create Relation channel_user
+	err = db.Db.CreateChannelUser(c.Request.Context(), database.CreateChannelUserParams{
+		UserID:    uuid,
+		ChannelID: channel.ID,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -54,4 +87,35 @@ func GetChannelByIdHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, channel)
+}
+func GetChannelMessagesHandler(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "id is required"})
+		return
+	}
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	messages, err := db.Db.GetChannelMessages(c.Request.Context(), uuid)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, messages)
+}
+func GetCurrentUser(c *gin.Context) (*Payload, error) {
+	user, ok := c.Get("user")
+	if !ok {
+		c.JSON(400, gin.H{"error": "user not found"})
+		return nil, errors.New("user not found")
+	}
+	payload := user.(*Payload)
+	if payload.Id == "" {
+		c.JSON(400, gin.H{"error": "user id is required"})
+		return nil, errors.New("user id is required")
+	}
+	return payload, nil
 }

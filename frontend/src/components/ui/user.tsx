@@ -15,12 +15,12 @@ import { api } from "@/lib/axios";
 
 export default function User() {
   const session = useSession();
+  const navigate = useNavigate();
   if (!session || session.status === "pending" || !session.user) return null;
   const name = `${session.user?.first_name ?? ""} ${
     session?.user?.last_name ?? ""
   }`;
-  
-  const navigate = useNavigate();
+
   const handleLogout = async () => {
     const res = await api.get("/auth/logout");
     if (res.status !== 200) {
@@ -34,9 +34,12 @@ export default function User() {
       <DropdownMenuTrigger>
         <div className="flex justify-center items-center gap-2">
           <Avatar>
-            <AvatarImage src={session.user?.profile_picture ?? defaultAvatar} className="rounded-full" />
+            <AvatarImage
+              src={session.user?.profile_picture ?? defaultAvatar}
+              className="rounded-full"
+            />
             <AvatarFallback>
-              {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
+              {/*{name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}*/}U
             </AvatarFallback>
           </Avatar>
         </div>

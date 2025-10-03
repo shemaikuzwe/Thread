@@ -49,6 +49,7 @@ func main() {
 	router.GET("/channels", controllers.GetChannelsHandler)
 	router.POST("/channels", controllers.CreateChannelHandler)
 	router.GET("/channels/:id", controllers.GetChannelByIdHandler)
+	router.GET("/channels/:id/messages", controllers.GetChannelMessagesHandler)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

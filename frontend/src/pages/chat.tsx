@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Logo from "@/components/logo";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import type { Message } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
@@ -56,7 +55,8 @@ export default function ChatPage() {
     if (!userId) throw new Error("message is required");
     if (newMessage.trim()) {
       const message: Message = {
-        id: Date.now().toString(),
+        channel_id: "69f42e0a-c0c5-4dac-b63e-307b3b2eb6ad",
+        id: crypto.randomUUID(),
         date: new Date().toUTCString(),
         message: newMessage,
         type: "MESSAGE",
@@ -67,6 +67,7 @@ export default function ChatPage() {
     }
   };
   useEffect(() => {
+    console.log("message", message);
     if (message) {
       if (message.type === "MESSAGE") {
         setMessages((prev) => [...prev, message]);
@@ -74,7 +75,7 @@ export default function ChatPage() {
       if (message.type == "USER_CONNECTED") {
         setActive(Number(message.message));
       }
-      if(message.type==="USER_DISCONNECTED"){
+      if (message.type === "USER_DISCONNECTED") {
         setActive(Number(message.message));
       }
     }
@@ -242,7 +243,7 @@ export default function ChatPage() {
                 key={message.id}
                 className={cn(
                   "flex gap-3 ",
-                  isOwn ? "justify-end" : "justify-start"
+                  isOwn ? "justify-end" : "justify-start",
                 )}
               >
                 <Avatar className="w-8 h-8 flex-shrink-0">
@@ -258,7 +259,7 @@ export default function ChatPage() {
                 <div
                   className={cn(
                     "max-w-xs lg:max-w-md",
-                    isOwn ? "order-first" : ""
+                    isOwn ? "order-first" : "",
                   )}
                 >
                   {/* {!message.isOwn && (
@@ -276,7 +277,7 @@ export default function ChatPage() {
                       "rounded-2xl px-4 py-3 min-w-30",
                       isOwn
                         ? "bg-primary text-white rounded-br-md"
-                        : "bg-gray-100 text-gray-900 rounded-bl-md"
+                        : "bg-gray-100 text-gray-900 rounded-bl-md",
                     )}
                   >
                     <p className="text-sm leading-relaxed">{message.message}</p>

@@ -96,7 +96,7 @@ func HandleGoogleCallback(ctx *gin.Context) {
 		})
 		return
 	}
-	tokenString, err := GenerateTOken(&user)
+	tokenString, err := GenerateToken(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to generate token",

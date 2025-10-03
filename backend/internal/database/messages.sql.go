@@ -12,10 +12,26 @@ import (
 	"github.com/google/uuid"
 )
 
+const createMessage = `-- name: CreateMessage :exec
+INSERT INTO messages (channel_id, user_id, message)
+VALUES ($1, $2, $3)
+`
+
+type CreateMessageParams struct {
+	ChannelID uuid.UUID `json:"channel_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Message   string    `json:"message"`
+}
+
+func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) error {
+	_, err := q.db.ExecContext(ctx, createMessage, arg.ChannelID, arg.UserID, arg.Message)
+	return err
+}
+
 const getChannelMessages = `-- name: GetChannelMessages :many
 SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,users.first_name,users.last_name FROM messages INNER JOIN
 users ON messages.user_id = users.id
-WHERE messages.channel_id = $1
+WHERE messages.channel_id = $1 LIMIT 10
 `
 
 type GetChannelMessagesRow struct {

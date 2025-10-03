@@ -1,6 +1,7 @@
 export interface Message {
   id: string;
-  userId:string;
+  userId: string;
+  channel_id: string;
   message: string;
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED";
   date: string;
@@ -8,20 +9,20 @@ export interface Message {
 }
 
 export interface Session {
-  status: "un_authenticated" | "authenticated"|"pending";
+  status: "un_authenticated" | "authenticated" | "pending";
   user: {
     id: string;
     email: string;
     first_name: string;
     last_name: string;
     profile_picture: string;
-  }|null;
+  } | null;
 }
 
 export interface User {
-  id:string;
-  first_name:string;
-  last_name:string;
-  email:string;
-  profile_picture:string;
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  profile_picture: string;
 }

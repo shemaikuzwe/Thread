@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -35,25 +36,59 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) (C
 	return i, err
 }
 
-const getAllChannels = `-- name: GetAllChannels :many
-SELECT id, name, description, created_at, updated_at FROM channels
+const createChannelUser = `-- name: CreateChannelUser :exec
+INSERT INTO channel_user (channel_id, user_id)
+VALUES ($1, $2)
 `
 
-func (q *Queries) GetAllChannels(ctx context.Context) ([]Channel, error) {
+type CreateChannelUserParams struct {
+	ChannelID uuid.UUID `json:"channel_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateChannelUser(ctx context.Context, arg CreateChannelUserParams) error {
+	_, err := q.db.ExecContext(ctx, createChannelUser, arg.ChannelID, arg.UserID)
+	return err
+}
+
+const getAllChannels = `-- name: GetAllChannels :many
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id
+FROM channels INNER JOIN channel_user
+ON channels.id = channel_user.channel_id
+INNER JOIN users ON channel_user.user_id = users.id
+`
+
+type GetAllChannelsRow struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
+	ID_2        uuid.UUID `json:"id_2"`
+}
+
+func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAllChannels)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Channel
+	var items []GetAllChannelsRow
 	for rows.Next() {
-		var i Channel
+		var i GetAllChannelsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.ID_2,
 		); err != nil {
 			return nil, err
 		}
@@ -69,43 +104,79 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]Channel, error) {
 }
 
 const getChannelByID = `-- name: GetChannelByID :one
-SELECT id, name, description, created_at, updated_at FROM channels WHERE id = $1
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id FROM channels INNER JOIN
+channel_user ON channels.id = channel_user.channel_id
+INNER JOIN users ON channel_user.user_id = users.id
+WHERE channels.id = $1
 `
 
-func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (Channel, error) {
+type GetChannelByIDRow struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
+	ID_2        uuid.UUID `json:"id_2"`
+}
+
+func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (GetChannelByIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getChannelByID, id)
-	var i Channel
+	var i GetChannelByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.ID_2,
 	)
 	return i, err
 }
 
 const getChannelsByUserID = `-- name: GetChannelsByUserID :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at FROM channels INNER JOIN
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id FROM channels INNER JOIN
 channel_user ON channels.id = channel_user.channel_id
+INNER JOIN users ON channel_user.user_id = users.id
 WHERE channel_user.user_id = $1
 `
 
-func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]Channel, error) {
+type GetChannelsByUserIDRow struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
+	ID_2        uuid.UUID `json:"id_2"`
+}
+
+func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]GetChannelsByUserIDRow, error) {
 	rows, err := q.db.QueryContext(ctx, getChannelsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Channel
+	var items []GetChannelsByUserIDRow
 	for rows.Next() {
-		var i Channel
+		var i GetChannelsByUserIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.ID_2,
 		); err != nil {
 			return nil, err
 		}

@@ -10,32 +10,36 @@ import (
 // clients.
 type Channel struct {
 	// Registered clients.
-	clients map[*Client]bool
-
+	clients map[string]map[string]*ClientConn
 	// Inbound messages from the clients.
 	broadcast chan []byte
 
 	// Register requests from the clients.
-	register chan *Client
+	register chan *ClientConn
 
 	// Unregister requests from clients.
-	unregister chan *Client
+	unregister chan *ClientConn
 }
 
 func newChannel() *Channel {
 	return &Channel{
 		broadcast:  make(chan []byte, 256),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
+		register:   make(chan *ClientConn),
+		unregister: make(chan *ClientConn),
+		clients:    make(map[string]map[string]*ClientConn),
 	}
 }
 
 func (h *Channel) run() {
 	for {
 		select {
-		case client := <-h.register:
-			h.clients[client] = true
+		case conn := <-h.register:
+			userID := conn.userID
+			connID := conn.connID
+			if h.clients[userID] == nil {
+				h.clients[userID] = make(map[string]*ClientConn)
+			}
+			h.clients[userID][connID] = conn
 			msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_CONNECTED, Date: time.Now().UTC().String()}
 			message, err := toBYTE(&msg)
 			if err != nil {
@@ -43,10 +47,16 @@ func (h *Channel) run() {
 				break
 			}
 			h.broadcast <- message
-		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.send)
+		case conn := <-h.unregister:
+
+			if userConns, ok := h.clients[conn.userID]; ok {
+				if _, exists := userConns[conn.connID]; exists {
+					close(userConns[conn.connID].send)
+					delete(userConns, conn.connID)
+				}
+				if len(userConns) == 0 {
+					delete(h.clients, conn.userID)
+				}
 				msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_DISCONNECTED, Date: time.Now().UTC().String()}
 				message, err := toBYTE(&msg)
 				if err != nil {
@@ -56,12 +66,14 @@ func (h *Channel) run() {
 				h.broadcast <- message
 			}
 		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+			for _, userConns := range h.clients {
+				for _, conn := range userConns {
+					select {
+					case conn.send <- message:
+					default:
+						close(conn.send)
+						delete(userConns, conn.connID)
+					}
 				}
 			}
 		}
