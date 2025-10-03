@@ -17,3 +17,11 @@ export interface Session {
     profile_picture: string;
   }|null;
 }
+
+export interface User {
+  id:string;
+  first_name:string;
+  last_name:string;
+  email:string;
+  profile_picture:string;
+}

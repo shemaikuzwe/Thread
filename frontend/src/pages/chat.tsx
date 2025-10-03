@@ -49,6 +49,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const { message, sendMessage } = useWebSocket();
+  const [active, setActive] = useState(0);
   const session = useSession();
   const userId = session?.user?.id;
   const handleSendMessage = () => {
@@ -69,6 +70,12 @@ export default function ChatPage() {
     if (message) {
       if (message.type === "MESSAGE") {
         setMessages((prev) => [...prev, message]);
+      }
+      if (message.type == "USER_CONNECTED") {
+        setActive(Number(message.message));
+      }
+      if(message.type==="USER_DISCONNECTED"){
+        setActive(Number(message.message));
       }
     }
   }, [message]);
@@ -217,7 +224,9 @@ export default function ChatPage() {
                   <h1 className="text-lg font-semibold text-gray-900">
                     #{currentChannelName}
                   </h1>
-                  <p className="text-sm text-gray-500">12 members</p>
+                  {active > 0 && (
+                    <p className="text-sm text-gray-500">{active} Online</p>
+                  )}
                 </div>
               </>
             )}
@@ -228,8 +237,6 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.map((message) => {
             const isOwn = message.userId === userId;
-            console.log("userId", userId, message.userId);
-
             return (
               <div
                 key={message.id}

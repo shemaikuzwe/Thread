@@ -19,7 +19,6 @@ export default function User() {
   const name = `${session.user?.first_name ?? ""} ${
     session?.user?.last_name ?? ""
   }`;
-  console.log("session",session);
   
   const navigate = useNavigate();
   const handleLogout = async () => {
@@ -35,7 +34,7 @@ export default function User() {
       <DropdownMenuTrigger>
         <div className="flex justify-center items-center gap-2">
           <Avatar>
-            <AvatarImage src={session.user?.profile_picture ?? defaultAvatar} />
+            <AvatarImage src={session.user?.profile_picture ?? defaultAvatar} className="rounded-full" />
             <AvatarFallback>
               {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
             </AvatarFallback>
