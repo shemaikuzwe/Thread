@@ -17,4 +17,16 @@ const loginSchema = z.object({
 });
 type LoginData = z.infer<typeof loginSchema>;
 
-export { registerSchema, type RegisterData, loginSchema, type LoginData };
+const createChatSchema = z.object({
+  name: z.string().min(2, { error: "Invalid name" }),
+  description: z.string().optional(),
+});
+export type CreateChatData = z.infer<typeof createChatSchema>;
+
+export {
+  registerSchema,
+  type RegisterData,
+  loginSchema,
+  type LoginData,
+  createChatSchema,
+};

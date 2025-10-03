@@ -8,7 +8,7 @@ import (
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
-type Channel struct {
+type Hub struct {
 	// Registered clients.
 	clients map[string]map[string]*ClientConn
 	// Inbound messages from the clients.
@@ -21,8 +21,8 @@ type Channel struct {
 	unregister chan *ClientConn
 }
 
-func newChannel() *Channel {
-	return &Channel{
+func newHub() *Hub {
+	return &Hub{
 		broadcast:  make(chan []byte, 256),
 		register:   make(chan *ClientConn),
 		unregister: make(chan *ClientConn),
@@ -30,7 +30,7 @@ func newChannel() *Channel {
 	}
 }
 
-func (h *Channel) run() {
+func (h *Hub) run() {
 	for {
 		select {
 		case conn := <-h.register:
@@ -67,6 +67,15 @@ func (h *Channel) run() {
 			}
 		case message := <-h.broadcast:
 			for _, userConns := range h.clients {
+				// ok, err := CheckUser(message, client)
+				// if err != nil {
+				// 	log.Println("failed to parse json", err)
+				// 	break
+				// }
+				// if !ok {
+				// 	log.Println("this client does not belong to this channel")
+				// 	continue
+				// }
 				for _, conn := range userConns {
 					select {
 					case conn.send <- message:
@@ -79,3 +88,33 @@ func (h *Channel) run() {
 		}
 	}
 }
+
+// check if user is in the channel to send message
+// func CheckUser(message []byte, client string) (bool, error) {
+// 	msg, err := toJSON(message)
+// 	if err != nil {
+// 		log.Println("failed to parse json", err)
+// 		return false, err
+// 	}
+// 	clientUUID, err := uuid.Parse(client)
+// 	if err != nil {
+// 		log.Println("failed to parse json", err)
+// 		return false, err
+// 	}
+// 	msgId, err := uuid.Parse(msg.ChannelID)
+// 	if err != nil {
+// 		log.Println("failed to parse json", err)
+// 		return false, err
+// 	}
+// 	usersChannels, err := db.Db.GetClientChannels(context.Background(), clientUUID)
+// 	if err != nil {
+// 		log.Println("failed to parse json", err)
+// 		return false, err
+// 	}
+// 	for _, channel := range usersChannels {
+// 		if channel == msgId {
+// 			return true, nil
+// 		}
+// 	}
+// 	return false, nil
+// }

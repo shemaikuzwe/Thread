@@ -28,13 +28,13 @@ func main() {
 		AllowCredentials: true,
 	}))
 	router.Use(middleware.AuthMiddleware)
-	channel := newChannel()
-	go channel.run()
+	hub := newHub()
+	go hub.run()
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to our chat server")
 	})
 	router.GET("/ws", func(c *gin.Context) {
-		serveWs(channel, c)
+		serveWs(hub, c)
 	})
 
 	router.POST("/auth/signup", controllers.SignUp)
@@ -46,10 +46,10 @@ func main() {
 	router.GET("/users", controllers.GetUsersHandler)
 	router.GET("/users/:id", controllers.GetUserHandler)
 
-	router.GET("/channels", controllers.GetChannelsHandler)
-	router.POST("/channels", controllers.CreateChannelHandler)
-	router.GET("/channels/:id", controllers.GetChannelByIdHandler)
-	router.GET("/channels/:id/messages", controllers.GetChannelMessagesHandler)
+	router.GET("/chats", controllers.GetChannelsHandler)
+	router.POST("/chats", controllers.CreateChannelHandler)
+	router.GET("/chats/:id", controllers.GetChannelByIdHandler)
+	router.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

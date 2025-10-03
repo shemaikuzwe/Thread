@@ -10,6 +10,7 @@ import { SessionProvider } from "./components/providers/session-provider";
 import NotFound from "./pages/not-found";
 import ChatLayout from "./pages/chat-layout";
 import HomeLayout from "./pages/home-layout";
+import NoChat from "./pages/no-chat";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,8 @@ const App = () => (
               <Route path="/register" element={<RegisterPage />} />
             </Route>
             <Route element={<ChatLayout />}>
-              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/chat" element={<NoChat />} />
+              <Route path="/chat/:id" element={<ChatPage />} />{" "}
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

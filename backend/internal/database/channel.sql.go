@@ -190,3 +190,32 @@ func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]
 	}
 	return items, nil
 }
+
+const getClientChannels = `-- name: GetClientChannels :many
+SELECT channels.id FROM channels INNER JOIN channel_user
+ON channels.id = channel_user.channel_id
+WHERE channel_user.user_id = $1
+`
+
+func (q *Queries) GetClientChannels(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getClientChannels, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

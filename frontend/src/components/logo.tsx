@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import LogoImage from "@/assets/logo.png";
 
 interface Props {
   className?: string;
@@ -11,10 +12,10 @@ export default function Logo({ className }: Props) {
       onClick={() => router("/")}
       className={cn(
         "cursor-pointer max-w-40 max-h-12 flex justify-start items-center",
-        className
+        className,
       )}
     >
-      <img src="/logo.png" width={250} height={100} />
+      <img src={LogoImage} width={250} height={100} />
     </div>
   );
 }

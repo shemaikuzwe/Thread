@@ -20,7 +20,7 @@ export default function User() {
   const name = `${session.user?.first_name ?? ""} ${
     session?.user?.last_name ?? ""
   }`;
-
+  console.log(session);
   const handleLogout = async () => {
     const res = await api.get("/auth/logout");
     if (res.status !== 200) {

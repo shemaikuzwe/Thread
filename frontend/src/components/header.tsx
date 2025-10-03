@@ -17,11 +17,7 @@ export default function Header() {
             Features
           </a>
           <Button asChild variant={"ghost"}>
-            <Link
-              to="/login"
-            >
-              Login
-            </Link>
+            <Link to="/login">Login</Link>
           </Button>
           <Button asChild>
             <Link to="/register">Register</Link>

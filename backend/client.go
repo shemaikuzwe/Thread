@@ -51,11 +51,11 @@ var upgrader = websocket.Upgrader{
 }
 
 type ClientConn struct {
-	channel *Channel
-	conn    *websocket.Conn
-	send    chan []byte
-	userID  string
-	connID  string
+	hub    *Hub
+	conn   *websocket.Conn
+	send   chan []byte
+	userID string
+	connID string
 }
 
 // Map of userID -> map[connID]*ClientConn
@@ -64,7 +64,7 @@ var clients = make(map[string]map[string]*ClientConn)
 func (c *ClientConn) readPump() {
 	defer func() {
 		// unregister client when done
-		c.channel.unregister <- c
+		c.hub.unregister <- c
 		c.conn.Close()
 
 		// cleanup from clients map
@@ -92,7 +92,7 @@ func (c *ClientConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.channel.broadcast <- message
+		c.hub.broadcast <- message
 		go handlerCreateMessage(message, c.userID)
 	}
 }
@@ -138,7 +138,7 @@ func (c *ClientConn) writePump() {
 	}
 }
 
-func serveWs(channel *Channel, ctx *gin.Context) {
+func serveWs(hub *Hub, ctx *gin.Context) {
 	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -158,15 +158,15 @@ func serveWs(channel *Channel, ctx *gin.Context) {
 	}
 
 	client := &ClientConn{
-		channel: channel,
-		conn:    conn,
-		send:    make(chan []byte, 256),
-		userID:  user.Id,
-		connID:  connID,
+		hub:    hub,
+		conn:   conn,
+		send:   make(chan []byte, 256),
+		userID: user.Id,
+		connID: connID,
 	}
 
 	clients[user.Id][connID] = client
-	channel.register <- client
+	hub.register <- client
 
 	go client.writePump()
 	go client.readPump()

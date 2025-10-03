@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -26,7 +25,6 @@ func GetChannelsHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("uuid", uuid)
 	channels, err := db.Db.GetChannelsByUserID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})

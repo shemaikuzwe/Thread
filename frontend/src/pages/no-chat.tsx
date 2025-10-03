@@ -1,0 +1,28 @@
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { CreateChat } from "@/components/create-chat";
+import { MessageCircleIcon } from "lucide-react";
+export default function NoChat() {
+  return (
+    <Empty className="border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <MessageCircleIcon />
+        </EmptyMedia>
+        <EmptyTitle>Open your chats</EmptyTitle>
+        <EmptyDescription>Open chats to start a conversation.</EmptyDescription>
+      </EmptyHeader>
+      <CreateChat>
+        <Button variant="outline" size="sm">
+          Create New Chat
+        </Button>
+      </CreateChat>
+    </Empty>
+  );
+}

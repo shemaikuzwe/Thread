@@ -1,6 +1,5 @@
 import Github from "@/components/auth/github";
 import Google from "@/components/auth/google";
-import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -27,13 +26,10 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { mutate } = useMutation({
     mutationFn: async (data: LoginData) => {
-      return await api.post(
-        `/auth/login`,
-        {
-          email: data.email,
-          password: data.password,
-        }
-      );
+      return await api.post(`/auth/login`, {
+        email: data.email,
+        password: data.password,
+      });
     },
     onSuccess: () => {
       navigate("/chat");
@@ -44,7 +40,6 @@ export default function LoginPage() {
   });
   return (
     <div>
-
       <main className="px-6 ">
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-3xl w-120 shadow-xl p-8">

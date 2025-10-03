@@ -8,6 +8,14 @@ export interface Message {
   // status:"PENDING" | "SENT" | "FAILED";
 }
 
+export type Channel = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export interface Session {
   status: "un_authenticated" | "authenticated" | "pending";
   user: {
