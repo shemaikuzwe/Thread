@@ -21,7 +21,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins: []string{"http://localhost:5173"},
 		// AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type"},
@@ -42,6 +42,13 @@ func main() {
 	router.GET("auth/callback/google", controllers.HandleGoogleCallback)
 	router.GET("/auth/session", controllers.Session)
 	router.GET("/auth/logout", controllers.Logout)
+
+	router.GET("/users", controllers.GetUsersHandler)
+	router.GET("/users/:id", controllers.GetUserHandler)
+
+	router.GET("/channels", controllers.GetChannelsHandler)
+	router.POST("/channels", controllers.CreateChannelHandler)
+	router.GET("/channels/:id", controllers.GetChannelByIdHandler)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

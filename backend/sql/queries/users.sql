@@ -9,7 +9,7 @@ SELECT * FROM users WHERE id=$1;
 
 -- name: GetUsers :many
 
-SELECT * FROM users;
+SELECT id, first_name, last_name, email, profile_picture FROM users;
 
 -- name: GetUserByEmail :one
 

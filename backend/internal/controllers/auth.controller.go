@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -67,7 +66,7 @@ func CredentialLogin(ctx *gin.Context) {
 		})
 		return
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(body.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(body.Password)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid Username or Password",
 		})
@@ -109,11 +108,12 @@ func SignUp(ctx *gin.Context) {
 		})
 		return
 	}
+	password := string(hashPassword)
 	user, err := db.Db.CreateUser(ctx.Request.Context(), database.CreateUserParams{
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
-		Password:  sql.NullString{String: string(hashPassword), Valid: true},
+		Password:  &password,
 	})
 	if err != nil {
 		log.Println("Failed to create user", err)
