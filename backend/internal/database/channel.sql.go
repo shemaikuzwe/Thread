@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -52,22 +53,24 @@ func (q *Queries) CreateChannelUser(ctx context.Context, arg CreateChannelUserPa
 }
 
 const getAllChannels = `-- name: GetAllChannels :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+'id', users.id,
+'first_name', users.first_name,
+'last_name', users.last_name,
+'email', users.email)) AS users
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
+GROUP BY channels.id
 `
 
 type GetAllChannelsRow struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	Email       string    `json:"email"`
-	ID_2        uuid.UUID `json:"id_2"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	Users       json.RawMessage `json:"users"`
 }
 
 func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, error) {
@@ -85,10 +88,7 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.FirstName,
-			&i.LastName,
-			&i.Email,
-			&i.ID_2,
+			&i.Users,
 		); err != nil {
 			return nil, err
 		}
@@ -104,22 +104,25 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 }
 
 const getChannelByID = `-- name: GetChannelByID :one
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id FROM channels INNER JOIN
-channel_user ON channels.id = channel_user.channel_id
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+'id', users.id,
+'first_name', users.first_name,
+'last_name', users.last_name,
+'email', users.email)) AS users
+FROM channels INNER JOIN channel_user
+ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
 WHERE channels.id = $1
+GROUP BY channels.id
 `
 
 type GetChannelByIDRow struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	Email       string    `json:"email"`
-	ID_2        uuid.UUID `json:"id_2"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	Users       json.RawMessage `json:"users"`
 }
 
 func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (GetChannelByIDRow, error) {
@@ -131,31 +134,31 @@ func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (GetChannelB
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.FirstName,
-		&i.LastName,
-		&i.Email,
-		&i.ID_2,
+		&i.Users,
 	)
 	return i, err
 }
 
 const getChannelsByUserID = `-- name: GetChannelsByUserID :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,users.first_name,users.last_name,users.email,users.id FROM channels INNER JOIN
-channel_user ON channels.id = channel_user.channel_id
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+'id', users.id,
+'first_name', users.first_name,
+'last_name', users.last_name,
+'email', users.email)) AS users
+FROM channels INNER JOIN channel_user
+ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
 WHERE channel_user.user_id = $1
+GROUP BY channels.id
 `
 
 type GetChannelsByUserIDRow struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	Email       string    `json:"email"`
-	ID_2        uuid.UUID `json:"id_2"`
+	ID          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	Users       json.RawMessage `json:"users"`
 }
 
 func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]GetChannelsByUserIDRow, error) {
@@ -173,10 +176,7 @@ func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.FirstName,
-			&i.LastName,
-			&i.Email,
-			&i.ID_2,
+			&i.Users,
 		); err != nil {
 			return nil, err
 		}

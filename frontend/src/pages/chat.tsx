@@ -47,6 +47,13 @@ export default function ChatPage() {
         message: newMessage,
         type: "MESSAGE",
         user_id: userId,
+        from: {
+          id: userId,
+          email: session?.user?.email ?? "",
+          first_name: session?.user?.first_name ?? "",
+          last_name: session?.user?.last_name ?? "",
+          profile_picture: session?.user?.profile_picture ?? "",
+        },
       };
       sendMessage(message);
       setNewMessage("");

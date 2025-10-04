@@ -5,7 +5,13 @@ export interface Message {
   message: string;
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED";
   created_at: string;
-  // status:"PENDING" | "SENT" | "FAILED";
+  from: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    profile_picture: string;
+  };
 }
 
 export type Channel = {

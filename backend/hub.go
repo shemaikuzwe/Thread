@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
+	"slices"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/shemaIkuzwe/websocket/internal/db"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -66,17 +71,18 @@ func (h *Hub) run() {
 				h.broadcast <- message
 			}
 		case message := <-h.broadcast:
-			for _, userConns := range h.clients {
-				// ok, err := CheckUser(message, client)
-				// if err != nil {
-				// 	log.Println("failed to parse json", err)
-				// 	break
-				// }
-				// if !ok {
-				// 	log.Println("this client does not belong to this channel")
-				// 	continue
-				// }
+			for client, userConns := range h.clients {
+				ok, err := CheckUser(message, client)
+				if err != nil {
+					log.Println("failed to parse json", err)
+					break
+				}
+				if !ok {
+					log.Println("this client does not belong to this channel")
+					continue
+				}
 				for _, conn := range userConns {
+					log.Println("going to send message")
 					select {
 					case conn.send <- message:
 					default:
@@ -90,31 +96,32 @@ func (h *Hub) run() {
 }
 
 // check if user is in the channel to send message
-// func CheckUser(message []byte, client string) (bool, error) {
-// 	msg, err := toJSON(message)
-// 	if err != nil {
-// 		log.Println("failed to parse json", err)
-// 		return false, err
-// 	}
-// 	clientUUID, err := uuid.Parse(client)
-// 	if err != nil {
-// 		log.Println("failed to parse json", err)
-// 		return false, err
-// 	}
-// 	msgId, err := uuid.Parse(msg.ChannelID)
-// 	if err != nil {
-// 		log.Println("failed to parse json", err)
-// 		return false, err
-// 	}
-// 	usersChannels, err := db.Db.GetClientChannels(context.Background(), clientUUID)
-// 	if err != nil {
-// 		log.Println("failed to parse json", err)
-// 		return false, err
-// 	}
-// 	for _, channel := range usersChannels {
-// 		if channel == msgId {
-// 			return true, nil
-// 		}
-// 	}
-// 	return false, nil
-// }
+func CheckUser(message []byte, client string) (bool, error) {
+	msg, err := toJSON(message)
+	if err != nil {
+		log.Println("failed to parse json", err)
+		return false, err
+	}
+	clientUUID, err := uuid.Parse(client)
+	if err != nil {
+		log.Println("failed to parse json", err)
+		return false, err
+	}
+	msgId, err := uuid.Parse(msg.ChannelID)
+	if err != nil {
+		log.Println("failed to parse json", err)
+		return false, err
+	}
+
+	usersChannels, err := db.Db.GetClientChannels(context.Background(), clientUUID)
+	if err != nil {
+		log.Println("failed to parse json", err)
+		return false, err
+	}
+	log.Println("userChannels", usersChannels, msgId)
+	if slices.Contains(usersChannels, msgId) {
+		log.Println("true imao")
+		return true, nil
+	}
+	return false, nil
+}
