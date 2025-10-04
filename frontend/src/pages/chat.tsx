@@ -37,18 +37,16 @@ export default function ChatPage() {
     },
   });
 
-  console.log(messages);
-
   const handleSendMessage = () => {
     if (!userId) throw new Error("message is required");
     if (newMessage.trim()) {
       const message: Message = {
-        channel_id: "69f42e0a-c0c5-4dac-b63e-307b3b2eb6ad",
+        channel_id: id,
         id: crypto.randomUUID(),
-        date: new Date().toUTCString(),
+        created_at: new Date().toUTCString(),
         message: newMessage,
         type: "MESSAGE",
-        userId: userId,
+        user_id: userId,
       };
       sendMessage(message);
       setNewMessage("");
@@ -58,10 +56,11 @@ export default function ChatPage() {
     if (message) {
       if (message.type === "MESSAGE") {
         // setMessages((prev) => [...prev, message]);
+        console.log(message);
         queryClient.setQueryData(
-          ["messages", message.channel_id],
+          ["chat", message.channel_id],
           (oldMsg: Message[]) => {
-            if (oldMsg.length) {
+            if (oldMsg && oldMsg.length) {
               return [...oldMsg, message];
             }
             return [message];
@@ -95,7 +94,7 @@ export default function ChatPage() {
             <div>Loading...</div>
           ) : messages && messages.length > 0 ? (
             messages.map((message) => {
-              const isOwn = message.userId === userId;
+              const isOwn = message.user_id === userId;
               return (
                 <div
                   key={message.id}
@@ -143,7 +142,7 @@ export default function ChatPage() {
                       </p>
                       <div className="flex justify-end mt-1">
                         <span className="text-xs">
-                          {format(new Date(message.date), "H:mm")}
+                          {format(new Date(message.created_at), "H:mm")}
                         </span>
                       </div>
                     </div>

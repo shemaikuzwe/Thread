@@ -22,9 +22,9 @@ func AuthMiddleware(c *gin.Context) {
 	payload, err := controllers.VerifyToken(tokenString)
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
-		return;
+		return
 	}
-	c.Set("user", payload)
+	c.Set("user", *payload)
 
 	c.Next()
 }

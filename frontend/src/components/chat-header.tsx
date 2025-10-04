@@ -12,7 +12,7 @@ export default function ChatHeader({ active }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
   const { data: chat, isLoading } = useQuery<Channel>({
-    queryKey: ["chats", id],
+    queryKey: ["chat-header", id],
     queryFn: async () => {
       const res = await api.get(`/chats/${id}`);
       if (res.status !== 200) throw new Error("Failed to fetch chat");
@@ -36,16 +36,15 @@ export default function ChatHeader({ active }: Props) {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">
+              <h1 className="text-lg font-semibold text-gray-900 ">
                 {chat?.name}
               </h1>
               <p className="text-sm text-gray-500">
                 {typeof active === "number"
                   ? active > 0
-                    ? active
+                    ? `${active} online`
                     : ""
-                  : active && "active"}
-                Active
+                  : active && "online"}
               </p>
             </div>
           </div>

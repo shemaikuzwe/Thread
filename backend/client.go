@@ -21,7 +21,7 @@ type Message struct {
 	ChannelID string `json:"channel_id"`
 	UserID    string `json:"user_id"`
 	Type      Type   `json:"type"`
-	Date      string `json:"date"`
+	Date      string `json:"created_at"`
 }
 
 type Type string

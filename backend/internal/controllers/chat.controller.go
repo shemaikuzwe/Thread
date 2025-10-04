@@ -92,28 +92,24 @@ func GetChannelMessagesHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "id is required"})
 		return
 	}
-	uuid, err := uuid.Parse(id)
+	chanID, err := uuid.Parse(id)
+
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	messages, err := db.Db.GetChannelMessages(c.Request.Context(), uuid)
+	messages, err := db.Db.GetChannelMessages(c.Request.Context(), chanID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(200, messages)
 }
-func GetCurrentUser(c *gin.Context) (*Payload, error) {
+func GetCurrentUser(c *gin.Context) (Payload, error) {
 	user, ok := c.Get("user")
 	if !ok {
 		c.JSON(400, gin.H{"error": "user not found"})
-		return nil, errors.New("user not found")
+		return Payload{}, errors.New("user not found")
 	}
-	payload := user.(*Payload)
-	if payload.Id == "" {
-		c.JSON(400, gin.H{"error": "user id is required"})
-		return nil, errors.New("user id is required")
-	}
-	return payload, nil
+	return user.(Payload), nil
 }

@@ -1,10 +1,10 @@
 export interface Message {
   id: string;
-  userId: string;
+  user_id: string;
   channel_id: string;
   message: string;
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED";
-  date: string;
+  created_at: string;
   // status:"PENDING" | "SENT" | "FAILED";
 }
 

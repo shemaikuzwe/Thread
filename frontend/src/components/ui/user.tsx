@@ -20,7 +20,6 @@ export default function User() {
   const name = `${session.user?.first_name ?? ""} ${
     session?.user?.last_name ?? ""
   }`;
-  console.log(session);
   const handleLogout = async () => {
     const res = await api.get("/auth/logout");
     if (res.status !== 200) {
@@ -39,7 +38,7 @@ export default function User() {
               className="rounded-full"
             />
             <AvatarFallback>
-              {/*{name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}*/}U
+              {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
             </AvatarFallback>
           </Avatar>
         </div>

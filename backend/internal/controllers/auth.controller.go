@@ -10,7 +10,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
 
 	"github.com/shemaIkuzwe/websocket/internal/database"
 	"github.com/shemaIkuzwe/websocket/internal/db"
@@ -23,6 +22,7 @@ type Payload struct {
 	FirstName      string `json:"first_name"`
 	LastName       string `json:"last_name"`
 	ProfilePicture string `json:"profile_picture"`
+	jwt.StandardClaims
 }
 
 type SessionStatus string
@@ -170,25 +170,23 @@ func Logout(c *gin.Context) {
 	c.JSON(200, "Logout successfully")
 }
 func GenerateToken(user *database.User) (string, error) {
-	payload := &Payload{
-		Id:             user.ID.String(),
-		Email:          user.Email,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		ProfilePicture: user.ProfilePicture,
-	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":     user.ID.String(),
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-		"iat":     time.Now().Unix(),
-		"payload": *payload,
+		"sub":             user.ID.String(),
+		"exp":             time.Now().Add(time.Hour * 24).Unix(),
+		"iat":             time.Now().Unix(),
+		"id":              user.ID.String(),
+		"email":           user.Email,
+		"first_name":      user.FirstName,
+		"last_name":       user.LastName,
+		"profile_picture": user.ProfilePicture,
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET")))
 	return tokenString, err
 }
 
 func VerifyToken(tokenString string) (*Payload, error) {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
+	payload := &Payload{}
+	token, err := jwt.ParseWithClaims(tokenString, payload, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header)
 		}
@@ -198,19 +196,10 @@ func VerifyToken(tokenString string) (*Payload, error) {
 		return nil, fmt.Errorf("invalid token: %v", err)
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("invalid claims")
-	}
-
-	if float64(time.Now().Unix()) > claims["exp"].(float64) {
+	if float64(time.Now().Unix()) > float64(payload.ExpiresAt) {
 		return nil, fmt.Errorf("token expired")
 	}
-	var payload Payload
-	if err := mapstructure.Decode(claims["payload"], &payload); err != nil {
-		return nil, err
-	}
-	return &payload, nil
+	return payload, nil
 }
 
 func GetToken(c *gin.Context) (string, error) {

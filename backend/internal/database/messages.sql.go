@@ -29,9 +29,11 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) er
 }
 
 const getChannelMessages = `-- name: GetChannelMessages :many
-SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,users.first_name,users.last_name FROM messages INNER JOIN
-users ON messages.user_id = users.id
-WHERE messages.channel_id = $1 LIMIT 10
+SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,users.first_name,users.last_name FROM messages
+INNER JOIN users ON messages.user_id = users.id
+WHERE messages.channel_id = $1
+ORDER BY messages.created_at ASC
+LIMIT 10
 `
 
 type GetChannelMessagesRow struct {
