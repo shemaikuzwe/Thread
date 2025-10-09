@@ -1,6 +1,6 @@
 import Header from "@/components/header";
 import { useSession } from "@/components/providers/session-provider";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router";
 
 export default function HomeLayout() {
   const session = useSession();

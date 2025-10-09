@@ -11,17 +11,13 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
-                  InstaApp
+                  Instant
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed max-w-md">
                   A simple and secure instant messaging app
                 </p>
               </div>
-              <Button
-                size="default"
-                className="text-lg rounded-xl"
-                asChild
-              >
+              <Button size="default" className="text-lg rounded-xl" asChild>
                 <Link to="/register">Get Started</Link>
               </Button>
             </div>

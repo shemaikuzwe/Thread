@@ -1,6 +1,5 @@
 import Github from "@/components/auth/github";
 import Google from "@/components/auth/google";
-import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -35,7 +34,7 @@ export default function RegisterPage() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       if (!res.status.toString().startsWith("2")) {
         const error = await res.data;
@@ -58,7 +57,7 @@ export default function RegisterPage() {
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome to InstaApp
+                Welcome to Instant
               </h1>
               <p className="text-gray-600">Create your account to continue</p>
             </div>

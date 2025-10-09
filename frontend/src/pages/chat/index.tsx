@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/empty";
 import { CreateChat } from "@/components/create-chat";
 import { MessageCircleIcon } from "lucide-react";
-export default function NoChat() {
+export default function Index() {
   return (
     <Empty className="border border-dashed">
       <EmptyHeader>
