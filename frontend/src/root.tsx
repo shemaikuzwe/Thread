@@ -24,9 +24,8 @@ export default function App() {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <SessionProvider>
-              <Outlet />
-            </SessionProvider>
+
+            <Outlet />
           </TooltipProvider>
         </QueryClientProvider>
         <ScrollRestoration />

@@ -9,9 +9,10 @@ import {
 } from "./dropdown-menu";
 import { AvatarImage } from "./avatar";
 import { useSession } from "../providers/session-provider";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router";
 import defaultAvatar from "@/assets/default.png";
 import { api } from "@/lib/axios";
+import { useNavigate } from "react-router";
 
 export default function User() {
   const session = useSession();

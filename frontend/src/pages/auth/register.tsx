@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -19,7 +19,6 @@ export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
   });
-  const navigate = useNavigate();
   const { mutate } = useMutation({
     mutationFn: async (data: RegisterData) => {
       const res = await api.post(
@@ -42,9 +41,7 @@ export default function RegisterPage() {
       }
       return await res.data;
     },
-    onSuccess: () => {
-      navigate("/chat");
-    },
+    onSuccess: () => {},
     onError: () => {
       // TODO: Add toast
     },

@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 
 export default function ChatsList() {
-  const navigate = useNavigate();
   const { data: chats, isLoading } = useQuery<Channel[]>({
     queryKey: ["chats"],
     queryFn: async () => {
@@ -53,7 +51,6 @@ export default function ChatsList() {
               chats.map((chat) => (
                 <div
                   key={chat.id}
-                  onClick={() => navigate(`/chat/${chat.id}`)}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-200"
                 >
                   {/*<span className="text-lg">{chat.icon}</span>*/}

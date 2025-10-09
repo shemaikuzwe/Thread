@@ -1,11 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
-* {
-    font-family: "Poppins", sans-serif;
-    overscroll-behavior: none; /*  this prevents bad over-scroll in mostly firefox */
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

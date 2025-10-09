@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
 import LogoImage from "@/assets/logo.png";
+import { useNavigate } from "react-router";
 
 interface Props {
   className?: string;

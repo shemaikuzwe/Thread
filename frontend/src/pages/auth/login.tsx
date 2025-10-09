@@ -14,7 +14,8 @@ import { loginSchema, type LoginData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 export default function LoginPage() {
   const form = useForm({
