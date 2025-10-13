@@ -146,7 +146,7 @@ func serveWs(hub *Hub, ctx *gin.Context) {
 		return
 	}
 	user, err := controllers.GetCurrentUser(ctx)
-	if err != nil {
+	if err != nil || user.Id == "" {
 		log.Println("error getting user:", err)
 		return
 	}

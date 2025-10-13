@@ -1,7 +1,7 @@
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface Props {

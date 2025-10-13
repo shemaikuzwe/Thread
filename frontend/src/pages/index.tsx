@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
-import Phone from "@/assets/phone.png";
 import { Apple } from "@/components/ui/svgs/apple";
 export default function HomePage() {
   return (
@@ -21,7 +20,7 @@ export default function HomePage() {
                 <Link to="/auth/register">Get Started</Link>
               </Button>
             </div>
-            <img src={Phone} width={330} height={220} />
+            <img src={"/phone.png"} width={330} height={220} />
           </div>
 
           {/* Trust Section */}

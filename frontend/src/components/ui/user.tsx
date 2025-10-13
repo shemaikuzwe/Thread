@@ -8,11 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { AvatarImage } from "./avatar";
-import { useSession } from "../providers/session-provider";
 import { Link } from "react-router";
 import defaultAvatar from "@/assets/default.png";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router";
+import { useSession } from "../providers/session-provider";
 
 export default function User() {
   const session = useSession();

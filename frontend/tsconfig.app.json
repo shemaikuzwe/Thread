@@ -24,10 +24,9 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    }
+      "@/*": ["./src/*"]
+    },
+    "rootDirs": [".", "./.react-router/types"]
   },
-  "include": ["src"]
+  "include": ["src", ".react-router/types/**/*"]
 }

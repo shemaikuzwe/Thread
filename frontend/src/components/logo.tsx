@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import LogoImage from "@/assets/logo.png";
 import { useNavigate } from "react-router";
 
 interface Props {
@@ -15,7 +14,7 @@ export default function Logo({ className }: Props) {
         className,
       )}
     >
-      <img src={LogoImage} width={250} height={100} />
+      <img src={"/logo.png"} width={250} height={100} />
     </div>
   );
 }

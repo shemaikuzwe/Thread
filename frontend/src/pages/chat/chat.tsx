@@ -9,7 +9,7 @@ import type { Message } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat-header";

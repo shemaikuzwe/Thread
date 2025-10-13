@@ -80,7 +80,7 @@ func CredentialLogin(ctx *gin.Context) {
 		})
 		return
 	}
-	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetSameSite(http.SameSiteLaxMikuzwe22@gmail.comode)
 	ctx.SetCookie("auth_token", token, 3600*24, "/", "", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "user logged in",
@@ -148,7 +148,6 @@ func Session(ctx *gin.Context) {
 		})
 		return
 	}
-
 	payload, err := VerifyToken(tokenString)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
