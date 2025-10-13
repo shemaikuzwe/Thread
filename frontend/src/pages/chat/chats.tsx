@@ -1,8 +1,11 @@
 import EmptyChatsList from "@/components/empty-chats-list";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
+import { HashIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export default function ChatsList() {
@@ -23,7 +26,7 @@ export default function ChatsList() {
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Acme Inc</h2>
+          <h2 className="font-bold text-xl">Instant</h2>
           <Button variant="ghost" size="sm">
             <svg
               className="w-5 h-5"
@@ -52,18 +55,28 @@ export default function ChatsList() {
               </div>
             ) : chats && chats.length > 0 ? (
               chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => {
-                    navigate(`/chat/${chat.id}`);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-200"
-                >
-                  {/*<span className="text-lg">{chat.icon}</span>*/}
-                  <span className="font-medium">{chat.name}</span>
-                  {/*{chat.hasNotification && (
+                <div key={chat.id}>
+                  <div
+                    onClick={() => {
+                      navigate(`/chat/${chat.id}`);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left hover:bg-gray-200"
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={""} />
+                      <AvatarFallback>
+                        {chat?.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{chat.name}</span>
+                    {/*{chat.hasNotification && (
                   <div className="w-2 h-2 bg-green-500 rounded-full ml-auto"></div>
                 )}*/}
+                  </div>
+                  <Separator />
                 </div>
               ))
             ) : (

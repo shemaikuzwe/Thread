@@ -19,6 +19,5 @@ export function SessionProvider({
 
 export function useSession() {
   const session = useContext(SessionContext);
-  console.log(session);
   return session;
 }

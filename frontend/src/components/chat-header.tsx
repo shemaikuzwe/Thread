@@ -20,7 +20,7 @@ export default function ChatHeader({ active }: Props) {
     },
   });
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-2">
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
       {isLoading ? (
         <div>Loading ..</div>
       ) : (

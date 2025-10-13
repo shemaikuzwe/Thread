@@ -30,6 +30,7 @@ func main() {
 	router.Use(middleware.AuthMiddleware)
 	hub := newHub()
 	go hub.run()
+
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to our chat server")
 	})

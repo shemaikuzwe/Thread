@@ -14,7 +14,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat-header";
 import EmptyChat from "@/components/empty-messages";
-import { SendHorizontalIcon } from "lucide-react";
+import { ArrowUp, Paperclip, SendHorizontalIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -94,7 +96,7 @@ export default function ChatPage() {
         <ChatHeader active={active} />
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <ScrollArea className="flex-1 overflow-y-auto p-6 space-y-4">
           {isLoading ? (
             <div>Loading...</div>
           ) : messages && messages.length > 0 ? (
@@ -104,7 +106,7 @@ export default function ChatPage() {
                 <div
                   key={message.id}
                   className={cn(
-                    "flex gap-3 ",
+                    "flex gap-3 p-2",
                     isOwn ? "justify-end" : "justify-start",
                   )}
                 >
@@ -164,27 +166,40 @@ export default function ChatPage() {
           ) : (
             <EmptyChat />
           )}
-        </div>
+        </ScrollArea>
+        <div className="w-full z-10">
+          <div className="p-2">
+            <div className="flex items-center gap-2 p-4 border border-border rounded-md focus-within:ring-2 focus-within:ring-ring/50">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="p-2 h-auto flex-shrink-0"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
 
-        {/* Message Input */}
-        <div className="bg-white border-t border-gray-200 p-4">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <Input
-                value={newMessage}
+              <textarea
+                value={newMessage ?? ""}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyUp={handleKeyPress}
-                placeholder={"Message"}
-                className="resize-none border-gray-300"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Send a message..."
+                className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
+                rows={2}
               />
+
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim()}
+                size={"icon"}
+              >
+                <ArrowUp className="w-4 h-4" />
+              </Button>
             </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-              size={"icon"}
-            >
-              <SendHorizontalIcon />
-            </Button>
           </div>
         </div>
       </div>

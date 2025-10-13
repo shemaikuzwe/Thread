@@ -120,7 +120,6 @@ func CheckUser(message []byte, client string) (bool, error) {
 	}
 	log.Println("userChannels", usersChannels, msgId)
 	if slices.Contains(usersChannels, msgId) {
-		log.Println("true imao")
 		return true, nil
 	}
 	return false, nil

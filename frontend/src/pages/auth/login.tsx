@@ -33,7 +33,7 @@ export default function LoginPage() {
       });
     },
     onSuccess: () => {
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     },
     onError: () => {
       // TODO: Add toast
@@ -101,7 +101,11 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter your Password" />
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Enter your Password"
+                          />
                         </FormControl>
                         {/* <FormMessage/> */}
                       </FormItem>

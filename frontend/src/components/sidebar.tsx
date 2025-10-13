@@ -41,7 +41,6 @@ export function ChatSidebar() {
         <img src={Logo} alt="Logo" className="h-8 w-20" />
       </SidebarHeader>
       <SidebarContent className="mt-20">
-
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="flex flex-col gap-5">
@@ -51,7 +50,7 @@ export function ChatSidebar() {
                     tooltip={item.title}
                     className="w-16 h-16 p-0 justify-center"
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="h-10 w-10" />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

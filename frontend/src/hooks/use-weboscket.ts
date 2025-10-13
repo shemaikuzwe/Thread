@@ -7,6 +7,7 @@ const ws = new WebSocket(`${apiUrl}/ws`);
 function useWebSocket() {
   const [message, setMessage] = useState<Message>();
   useEffect(() => {
+    console.log("Websocket initialized");
     ws.onopen = () => {
       console.log("Websocket connected");
       ws.onmessage = (e) => {
