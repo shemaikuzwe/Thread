@@ -21,6 +21,9 @@ export type Channel = {
   created_at: string;
   updated_at: string;
 };
+export interface ChannelWithUsers extends Channel {
+  users: User[];
+}
 
 export interface Session {
   status: "un_authenticated" | "authenticated" | "pending";

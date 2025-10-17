@@ -1,32 +1,41 @@
+import { useEffect, useRef, useState } from "react";
 import type { Message } from "@/lib/types";
-import { useEffect, useState } from "react";
 
 const apiUrl = import.meta.env.VITE_API_URL;
-const ws = new WebSocket(`${apiUrl}/ws`);
 
-function useWebSocket() {
+export function useWebSocket() {
   const [message, setMessage] = useState<Message>();
+  const wsRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
-    console.log("Websocket initialized");
-    ws.onopen = () => {
-      console.log("Websocket connected");
-      ws.onmessage = (e) => {
-        const msg = JSON.parse(e.data) as Message;
-        setMessage(msg);
-      };
+    const socket = new WebSocket(`${apiUrl.replace(/^http/, "ws")}/ws`);
+    wsRef.current = socket;
+
+    socket.onopen = () => {
+      console.log("WebSocket connected");
     };
-    ws.onerror = (e) => {
-      console.log("Something went wrong on our end", e);
+
+    socket.onmessage = (e) => {
+      const msg = JSON.parse(e.data) as Message;
+      setMessage(msg);
     };
-    // return () => ws.close();
+
+    socket.onerror = (e) => {
+      console.error("WebSocket error:", e);
+    };
+
+    return () => {
+      socket.close();
+    };
   }, []);
 
-  const sendMessage = (message: Message) => {
-    if (ws.OPEN) {
-      ws.send(JSON.stringify(message));
+  const sendMessage = (msg: Message) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(msg));
+    } else {
+      console.warn("WebSocket not open. Cannot send message.");
     }
   };
+
   return { message, sendMessage };
 }
-
-export { useWebSocket };

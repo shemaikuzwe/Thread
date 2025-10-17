@@ -1,27 +1,23 @@
-import { api } from "@/lib/axios";
-import type { Channel } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
+import type { Channel, User } from "@/lib/types";
 import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import JoinButton from "./chat/join-button";
 
 interface Props {
+  chat: (Channel & { users: User[] }) | undefined;
   active: number | boolean;
+  join: boolean;
+  loading: boolean;
 }
 
-export default function ChatHeader({ active }: Props) {
+export default function ChatHeader({ active, join, chat, loading }: Props) {
   const { id } = useParams();
+
   if (!id) throw new Error("Missing chat ID");
-  const { data: chat, isLoading } = useQuery<Channel>({
-    queryKey: ["chat-header", id],
-    queryFn: async () => {
-      const res = await api.get(`/chats/${id}`);
-      if (res.status !== 200) throw new Error("Failed to fetch chat");
-      return res.data;
-    },
-  });
+
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      {isLoading ? (
+    <div className="border-b  px-6 py-4 bg-muted/70 flex justify-between">
+      {loading ? (
         <div>Loading ..</div>
       ) : (
         chat && (
@@ -50,6 +46,7 @@ export default function ChatHeader({ active }: Props) {
           </div>
         )
       )}
+      {join && chat && <JoinButton id={chat.id} />}
     </div>
   );
 }

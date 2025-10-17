@@ -1,3 +1,4 @@
+import Search from "@/components/chat/search";
 import EmptyChatsList from "@/components/empty-chats-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -5,14 +6,19 @@ import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { HashIcon } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function ChatsList() {
+  const [search, setSearch] = useState<string>();
   const { data: chats, isLoading } = useQuery<Channel[]>({
-    queryKey: ["chats"],
+    queryKey: ["chats", search],
     queryFn: async () => {
-      const res = await api.get("/chats");
+      const params = new URLSearchParams();
+      if (search && search.trim()) {
+        params.set("search", search);
+      }
+      const res = await api.get(`/chats?${params.toString()}`);
       if (res.status !== 200) {
         throw new Error("Failed to fetch chats");
       }
@@ -46,7 +52,8 @@ export default function ChatsList() {
       </div>
 
       {/* Channels Section */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto py-3">
+        <Search onSearch={setSearch} />
         <div className="p-4">
           <div className="space-y-2">
             {isLoading ? (

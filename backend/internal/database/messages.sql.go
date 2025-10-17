@@ -34,7 +34,9 @@ SELECT messages.id, messages.channel_id, messages.user_id, messages.message, mes
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
-'email', users.email)) AS from
+'email', users.email,
+'profile_picture', users.profile_picture
+)) AS from
 FROM messages
 INNER JOIN users ON messages.user_id = users.id
 WHERE messages.channel_id = $1
