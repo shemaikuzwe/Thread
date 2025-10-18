@@ -10,7 +10,13 @@ import type { ChannelWithUsers } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import JoinButton from "./join-button";
 
-export default function JoinChat({ chat }: { chat: ChannelWithUsers }) {
+export default function JoinChat({
+  chat,
+  setJoin,
+}: {
+  chat: ChannelWithUsers;
+  setJoin: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   return (
     <div className="flex justify-center items-center">
       <Empty>
@@ -29,7 +35,7 @@ export default function JoinChat({ chat }: { chat: ChannelWithUsers }) {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <JoinButton id={chat.id} />
+          <JoinButton id={chat.id} setJoin={setJoin} />
         </EmptyContent>
       </Empty>
     </div>

@@ -8,9 +8,16 @@ interface Props {
   active: number | boolean;
   join: boolean;
   loading: boolean;
+  setJoin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function ChatHeader({ active, join, chat, loading }: Props) {
+export default function ChatHeader({
+  active,
+  join,
+  chat,
+  loading,
+  setJoin,
+}: Props) {
   const { id } = useParams();
 
   if (!id) throw new Error("Missing chat ID");
@@ -46,7 +53,7 @@ export default function ChatHeader({ active, join, chat, loading }: Props) {
           </div>
         )
       )}
-      {join && chat && <JoinButton id={chat.id} />}
+      {join && chat && <JoinButton id={chat.id} setJoin={setJoin} />}
     </div>
   );
 }

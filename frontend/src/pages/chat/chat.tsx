@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import type { ChannelWithUsers, Message } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
@@ -17,6 +14,7 @@ import { useScroll } from "@/hooks/use-scroll";
 import { AutoScroller } from "@/components/chat/auto-scroller";
 import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
+import { useMessages } from "@/hooks/use-messages";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -29,15 +27,7 @@ export default function ChatPage() {
   const userId = session?.user?.id;
   if (!id) throw new Error("id is required");
 
-  const { data: messages, isLoading } = useQuery<Message[]>({
-    queryKey: ["chat", id],
-    queryFn: async () => {
-      const res = await api.get(`/chats/${id}/messages`);
-      if (res.status !== 200) throw new Error("Failed to fetch messages");
-      return res.data;
-    },
-  });
-
+  const { data: messages, isLoading } = useMessages(id);
   const { data: chat, isLoading: loading } = useQuery<ChannelWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
@@ -118,9 +108,13 @@ export default function ChatPage() {
     <div className="h-screen bg-gray-50 flex w-full">
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        <ChatHeader active={active} join={join} loading={loading} chat={chat} />
-
-        {/* Messages Area */}
+        <ChatHeader
+          active={active}
+          join={join}
+          setJoin={setJoin}
+          loading={loading}
+          chat={chat}
+        />
 
         <ScrollArea
           onScrollCapture={handleScroll}
@@ -130,7 +124,7 @@ export default function ChatPage() {
             {isLoading ? (
               <div>Loading...</div>
             ) : join && chat ? (
-              <JoinChat chat={chat} />
+              <JoinChat chat={chat} setJoin={setJoin} />
             ) : (
               <Messages ref={messagesRef} messages={messages} userId={userId} />
             )}

@@ -1,13 +1,11 @@
 import Search from "@/components/chat/search";
 import EmptyChatsList from "@/components/empty-chats-list";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import ChatListItem from "./chats-list-item";
 
 export default function ChatsList() {
   const [search, setSearch] = useState<string>();
@@ -25,10 +23,9 @@ export default function ChatsList() {
       return res.data;
     },
   });
-  const navigate = useNavigate();
 
   return (
-    <div className="w-100 bg-white border-r border-gray-200 flex flex-col">
+    <div className="min-w-80 bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -61,31 +58,7 @@ export default function ChatsList() {
                 Loading...
               </div>
             ) : chats && chats.length > 0 ? (
-              chats.map((chat) => (
-                <div key={chat.id}>
-                  <div
-                    onClick={() => {
-                      navigate(`/chat/${chat.id}`);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left hover:bg-gray-200"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={""} />
-                      <AvatarFallback>
-                        {chat?.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{chat.name}</span>
-                    {/*{chat.hasNotification && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full ml-auto"></div>
-                )}*/}
-                  </div>
-                  <Separator />
-                </div>
-              ))
+              chats.map((chat) => <ChatListItem chat={chat} />)
             ) : (
               <EmptyChatsList />
             )}
