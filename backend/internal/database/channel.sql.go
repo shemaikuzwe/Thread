@@ -16,7 +16,7 @@ import (
 const createChannel = `-- name: CreateChannel :one
 INSERT INTO channels (name, description)
 VALUES ($1, $2)
-RETURNING id, name, description, created_at, updated_at
+RETURNING id, name, description, created_at, updated_at, is_channel, is_private
 `
 
 type CreateChannelParams struct {
@@ -33,6 +33,8 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) (C
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsChannel,
+		&i.IsPrivate,
 	)
 	return i, err
 }
@@ -53,7 +55,7 @@ func (q *Queries) CreateChannelUser(ctx context.Context, arg CreateChannelUserPa
 }
 
 const getAllChannels = `-- name: GetAllChannels :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_channel, channels.is_private,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
@@ -70,6 +72,8 @@ type GetAllChannelsRow struct {
 	Description *string         `json:"description"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
+	IsChannel   bool            `json:"is_channel"`
+	IsPrivate   bool            `json:"is_private"`
 	Users       json.RawMessage `json:"users"`
 }
 
@@ -88,6 +92,8 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsChannel,
+			&i.IsPrivate,
 			&i.Users,
 		); err != nil {
 			return nil, err
@@ -104,7 +110,7 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 }
 
 const getChannelByID = `-- name: GetChannelByID :one
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_channel, channels.is_private,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
@@ -122,6 +128,8 @@ type GetChannelByIDRow struct {
 	Description *string         `json:"description"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
+	IsChannel   bool            `json:"is_channel"`
+	IsPrivate   bool            `json:"is_private"`
 	Users       json.RawMessage `json:"users"`
 }
 
@@ -134,13 +142,15 @@ func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (GetChannelB
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsChannel,
+		&i.IsPrivate,
 		&i.Users,
 	)
 	return i, err
 }
 
 const getChannelsByName = `-- name: GetChannelsByName :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_channel, channels.is_private,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
@@ -158,6 +168,8 @@ type GetChannelsByNameRow struct {
 	Description *string         `json:"description"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
+	IsChannel   bool            `json:"is_channel"`
+	IsPrivate   bool            `json:"is_private"`
 	Users       json.RawMessage `json:"users"`
 }
 
@@ -176,6 +188,8 @@ func (q *Queries) GetChannelsByName(ctx context.Context, name string) ([]GetChan
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsChannel,
+			&i.IsPrivate,
 			&i.Users,
 		); err != nil {
 			return nil, err
@@ -192,15 +206,17 @@ func (q *Queries) GetChannelsByName(ctx context.Context, name string) ([]GetChan
 }
 
 const getChannelsByUserID = `-- name: GetChannelsByUserID :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at,json_agg(json_build_object(
+SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_channel, channels.is_private,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
-'email', users.email)) AS users
-FROM channels INNER JOIN channel_user
-ON channels.id = channel_user.channel_id
-INNER JOIN users ON channel_user.user_id = users.id
-WHERE channel_user.user_id = $1
+'email', users.email
+)) AS users
+FROM channels
+JOIN channel_user cu1 ON channels.id = cu1.channel_id
+JOIN channel_user cu2 ON channels.id = cu2.channel_id
+JOIN users ON cu2.user_id = users.id
+WHERE cu1.user_id = $1
 GROUP BY channels.id
 `
 
@@ -210,6 +226,8 @@ type GetChannelsByUserIDRow struct {
 	Description *string         `json:"description"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
+	IsChannel   bool            `json:"is_channel"`
+	IsPrivate   bool            `json:"is_private"`
 	Users       json.RawMessage `json:"users"`
 }
 
@@ -228,6 +246,8 @@ func (q *Queries) GetChannelsByUserID(ctx context.Context, userID uuid.UUID) ([]
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsChannel,
+			&i.IsPrivate,
 			&i.Users,
 		); err != nil {
 			return nil, err

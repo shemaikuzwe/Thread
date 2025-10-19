@@ -16,6 +16,8 @@ type Channel struct {
 	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	IsChannel   bool      `json:"is_channel"`
+	IsPrivate   bool      `json:"is_private"`
 }
 
 type ChannelUser struct {

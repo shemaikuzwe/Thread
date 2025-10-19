@@ -82,7 +82,7 @@ func (h *Hub) run() {
 					continue
 				}
 				for _, conn := range userConns {
-					log.Println("going to send message")
+
 					select {
 					case conn.send <- message:
 					default:

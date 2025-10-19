@@ -14,6 +14,7 @@ import (
 )
 
 const createMessage = `-- name: CreateMessage :exec
+
 INSERT INTO messages (channel_id, user_id, message)
 VALUES ($1, $2, $3)
 `
@@ -24,6 +25,7 @@ type CreateMessageParams struct {
 	Message   string    `json:"message"`
 }
 
+// LIMIT 10;
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) error {
 	_, err := q.db.ExecContext(ctx, createMessage, arg.ChannelID, arg.UserID, arg.Message)
 	return err
@@ -42,7 +44,6 @@ INNER JOIN users ON messages.user_id = users.id
 WHERE messages.channel_id = $1
 GROUP BY messages.id
 ORDER BY messages.created_at ASC
-LIMIT 10
 `
 
 type GetChannelMessagesRow struct {

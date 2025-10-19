@@ -210,4 +210,5 @@ func handlerCreateMessage(message []byte, userID string) {
 	if err != nil {
 		log.Println("db create message error:", err)
 	}
+	log.Println("Message created")
 }
