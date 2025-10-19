@@ -45,15 +45,11 @@ func (h *Hub) run() {
 				h.clients[userID] = make(map[string]*ClientConn)
 			}
 			h.clients[userID][connID] = conn
-			msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_CONNECTED, Date: time.Now().UTC().String()}
-			message, err := toBYTE(&msg)
-			if err != nil {
-				log.Println("failed to parse json", err)
-				break
-			}
+			// Using valid JSON with double quotes
+			message := []byte(`{"message":"` + strconv.Itoa(len(h.clients)) + `","type":"USER_CONNECTED","date":"` + time.Now().UTC().String() + `"}`)
 			h.broadcast <- message
-		case conn := <-h.unregister:
 
+		case conn := <-h.unregister:
 			if userConns, ok := h.clients[conn.userID]; ok {
 				if _, exists := userConns[conn.connID]; exists {
 					close(userConns[conn.connID].send)
@@ -62,14 +58,11 @@ func (h *Hub) run() {
 				if len(userConns) == 0 {
 					delete(h.clients, conn.userID)
 				}
-				msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_DISCONNECTED, Date: time.Now().UTC().String()}
-				message, err := toBYTE(&msg)
-				if err != nil {
-					log.Println("failed to parse json", err)
-					break
-				}
+				// Using valid JSON with double quotes for the disconnect message
+				message := []byte(`{"message":"` + strconv.Itoa(len(h.clients)) + `","type":"USER_DISCONNECTED","date":"` + time.Now().UTC().String() + `"}`)
 				h.broadcast <- message
 			}
+
 		case message := <-h.broadcast:
 			for client, userConns := range h.clients {
 				ok, err := CheckUser(message, client)
@@ -82,7 +75,7 @@ func (h *Hub) run() {
 					continue
 				}
 				for _, conn := range userConns {
-
+					log.Println("going to send msg", string(message))
 					select {
 					case conn.send <- message:
 					default:
@@ -102,6 +95,12 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
+
+	// System messages are broadcast to all clients
+	if msg.Type == "USER_CONNECTED" || msg.Type == "USER_DISCONNECTED" {
+		return true, nil
+	}
+
 	clientUUID, err := uuid.Parse(client)
 	if err != nil {
 		log.Println("failed to parse json", err)

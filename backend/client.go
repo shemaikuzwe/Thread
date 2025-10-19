@@ -23,7 +23,14 @@ type Message struct {
 	Type      Type   `json:"type"`
 	Date      string `json:"created_at"`
 }
-
+type Notification struct {
+	Message string `json:"message"`
+	Type    Type   `json:"type"`
+	Date    string `json:"created_at"`
+}
+type toByte interface {
+	toByte() ([]byte, error)
+}
 type Type string
 
 const (
@@ -60,6 +67,15 @@ type ClientConn struct {
 
 // Map of userID -> map[connID]*ClientConn
 var clients = make(map[string]map[string]*ClientConn)
+
+func (m *Message) toByte() ([]byte, error) {
+	msg, err := json.Marshal(&m)
+	return msg, err
+}
+func (n *Notification) toByte() ([]byte, error) {
+	msg, err := json.Marshal(&n)
+	return msg, err
+}
 
 func (c *ClientConn) readPump() {
 	defer func() {
@@ -177,11 +193,6 @@ func toJSON(b []byte) (*Message, error) {
 	err := json.Unmarshal(b, &msg)
 	return &msg, err
 }
-func toBYTE(m *Message) ([]byte, error) {
-	msg, err := json.Marshal(m)
-	return msg, err
-}
-
 func handlerCreateMessage(message []byte, userID string) {
 	msg, err := toJSON(message)
 	if err != nil {

@@ -58,7 +58,7 @@ export default function ChatsList() {
                 Loading...
               </div>
             ) : chats && chats.length > 0 ? (
-              chats.map((chat) => <ChatListItem chat={chat} />)
+              chats.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
             ) : (
               <EmptyChatsList />
             )}

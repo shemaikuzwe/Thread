@@ -78,6 +78,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (message) {
+      console.log("message", message);
       if (message.type === "MESSAGE") {
         queryClient.setQueryData(
           ["chat", message.channel_id],
