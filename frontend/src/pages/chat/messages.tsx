@@ -12,31 +12,31 @@ interface Props {
 
 export default function Messages({ messages, userId, ref }: Props) {
   return messages && messages.length > 0 ? (
-    messages.map((message) => {
-      const isOwn = message.user_id === userId;
-      return (
-        <div
-          ref={ref}
-          key={message.id}
-          className={cn(
-            "flex gap-3 p-2",
-            isOwn ? "justify-end" : "justify-start",
-          )}
-        >
-          <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarImage src={``} />
-            <AvatarFallback>
-              {"Shema Ikuzwe"
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-
+    <div className="pb-2" ref={ref}>
+      {messages.map((message) => {
+        const isOwn = message.user_id === userId;
+        return (
           <div
-            className={cn("max-w-xs lg:max-w-md", isOwn ? "order-first" : "")}
+            key={message.id}
+            className={cn(
+              "flex gap-3 p-2",
+              isOwn ? "justify-end" : "justify-start",
+            )}
           >
-            {/* {!message.isOwn && (
+            <Avatar className="w-8 h-8 flex-shrink-0">
+              <AvatarImage src={``} />
+              <AvatarFallback>
+                {"Shema Ikuzwe"
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </AvatarFallback>
+            </Avatar>
+
+            <div
+              className={cn("max-w-xs lg:max-w-md", isOwn ? "order-first" : "")}
+            >
+              {/* {!message.isOwn && (
          <div className="flex items-center gap-2 mb-1">
            <span className="text-sm font-medium text-gray-900">
              {message.sender}
@@ -46,31 +46,32 @@ export default function Messages({ messages, userId, ref }: Props) {
            </span>
          </div>
        )} */}
-            <div
-              className={cn(
-                "rounded-2xl px-4 py-3 min-w-30",
-                isOwn
-                  ? "bg-primary text-white rounded-br-md"
-                  : "bg-gray-100 text-gray-900 rounded-bl-md",
-              )}
-            >
-              <p className="text-sm leading-relaxed">{message.message}</p>
-              <div className="flex justify-end mt-1">
-                <span className="text-xs">
-                  {format(new Date(message.created_at), "H:mm")}
-                </span>
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-3 min-w-30",
+                  isOwn
+                    ? "bg-primary text-white rounded-br-md"
+                    : "bg-gray-100 text-gray-900 rounded-bl-md",
+                )}
+              >
+                <p className="text-sm leading-relaxed">{message.message}</p>
+                <div className="flex justify-end mt-1">
+                  <span className="text-xs">
+                    {format(new Date(message.created_at), "H:mm")}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          {/* {message.isOwn && (
+            {/* {message.isOwn && (
        <Avatar className="w-8 h-8 flex-shrink-0">
          <AvatarImage src="/abstract-geometric-shapes.png" />
          <AvatarFallback>You</AvatarFallback>
        </Avatar>
      )} */}
-        </div>
-      );
-    })
+          </div>
+        );
+      })}
+    </div>
   ) : (
     <EmptyChat />
   );

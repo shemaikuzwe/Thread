@@ -109,7 +109,7 @@ func (c *ClientConn) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.hub.broadcast <- message
-		go handlerCreateMessage(message, c.userID)
+		// go handlerCreateMessage(message, c.userID)
 	}
 }
 

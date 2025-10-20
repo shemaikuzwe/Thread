@@ -77,6 +77,12 @@ export default function ChatPage() {
   } = useScroll<HTMLDivElement>();
 
   useEffect(() => {
+    if (messages) {
+      scrollToBottom();
+    }
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
     if (message) {
       console.log("message", message);
       if (message.type === "MESSAGE") {
@@ -98,15 +104,8 @@ export default function ChatPage() {
       }
     }
   }, [message, queryClient, id]);
-
-  useEffect(() => {
-    console.log("scroll");
-    if (isAtBottom) {
-      scrollToBottom();
-    }
-  }, [messages, isAtBottom, scrollToBottom]);
   return (
-    <div className="h-screen bg-gray-50 flex w-full">
+    <div className="gray-50 flex w-full">
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         <ChatHeader
@@ -119,7 +118,7 @@ export default function ChatPage() {
 
         <ScrollArea
           onScrollCapture={handleScroll}
-          className="flex-1 overflow-y-auto p-6 space-y-4"
+          className="flex-1 p-6 space-y-4 min-h-0"
         >
           <AutoScroller ref={visibilityRef}>
             {isLoading ? (
@@ -131,7 +130,7 @@ export default function ChatPage() {
             )}
           </AutoScroller>
         </ScrollArea>
-        <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-10">
+        <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
           <ScrollAnchor
             isAtBottom={isAtBottom}
             scrollToBottom={scrollToBottom}
@@ -158,8 +157,8 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder="Send a message..."
+                rows={1}
                 className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
-                rows={2}
               />
 
               <Button
