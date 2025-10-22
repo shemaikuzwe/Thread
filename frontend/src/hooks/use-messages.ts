@@ -12,3 +12,10 @@ export const useMessages = (id: string) => {
     },
   });
 };
+export const useActive = (id: string) => {
+  return useQuery<number>({
+    initialData: 0,
+    queryKey: ["active", id],
+    // queryFn: () => 0,
+  });
+};

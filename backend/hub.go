@@ -102,12 +102,10 @@ func (h *Hub) incrementChannel(userId string) {
 		return
 	}
 	for _, channel := range userChannels {
-		log.Println("ranging over channel", channel)
 		channelID := channel.String()
 		info := h.channels[channelID]
 		info.Active++
 		h.channels[channelID] = info
-		log.Println("chan", h.channels)
 		message := []byte(`{"message":"` + strconv.Itoa(info.Active) + `","type":"USER_CONNECTED","channel_id":"` + channelID + `","date":"` + time.Now().UTC().String() + `"}`)
 		h.broadcast <- message
 	}

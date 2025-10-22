@@ -2,30 +2,19 @@ import type { Channel, User } from "@/lib/types";
 import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import JoinButton from "./chat/join-button";
+import { useActive } from "@/hooks/use-messages";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
-  active: Map<
-    string,
-    {
-      active: number;
-    }
-  >;
   join: boolean;
   loading: boolean;
   setJoin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function ChatHeader({
-  active,
-  join,
-  chat,
-  loading,
-  setJoin,
-}: Props) {
+export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
-  const ac = active.get(id)?.active;
+  const { data: active } = useActive(id);
   return (
     <div className="border-b  px-6 py-4 bg-muted/70 flex justify-between">
       {loading ? (
@@ -47,7 +36,7 @@ export default function ChatHeader({
                 {chat?.name}
               </h1>
               <p className="text-sm text-gray-500">
-                {ac && ac > 1 && `${ac} Online`}
+                {active && active > 1 && `${active} Online`}
               </p>
             </div>
           </div>

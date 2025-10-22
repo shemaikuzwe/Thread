@@ -21,7 +21,7 @@ export default function ChatPage() {
   const [join, setJoin] = useState(false);
   const queryClient = useQueryClient();
   const [newMessage, setNewMessage] = useState("");
-  const { message, sendMessage, active } = useWebSocket();
+  const { message, sendMessage } = useWebSocket();
   const session = useSession();
   const userId = session?.user?.id;
   if (!id) throw new Error("id is required");
@@ -101,7 +101,6 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         <ChatHeader
-          active={active}
           join={join}
           setJoin={setJoin}
           loading={loading}

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "@/lib/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export function useWebSocket() {
   const [message, setMessage] = useState<Message>();
   const wsRef = useRef<WebSocket | null>(null);
-  const [active, setActive] = useState<Map<string, { active: number }>>(
-    new Map(),
-  );
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const socket = new WebSocket(`${apiUrl.replace(/^http/, "ws")}/ws`);
     wsRef.current = socket;
@@ -21,11 +21,9 @@ export function useWebSocket() {
       const msg = JSON.parse(e.data) as Message;
       console.log(msg);
       if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
-        return setActive((prev) => {
-          const newMap = new Map(prev); // create a copy
-          newMap.set(msg.channel_id, { active: Number(msg.message) });
-          return newMap; // return new reference
-        });
+        queryClient.setQueryData(["active", msg.channel_id], () =>
+          Number(msg.message),
+        );
       }
       setMessage(msg);
     };
@@ -37,7 +35,7 @@ export function useWebSocket() {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [queryClient]);
 
   const sendMessage = (msg: Message) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -47,5 +45,5 @@ export function useWebSocket() {
     }
   };
 
-  return { message, sendMessage, active };
+  return { message, sendMessage };
 }
