@@ -1,5 +1,5 @@
 import { api } from "@/lib/axios";
-import type { Message } from "@/lib/types";
+import type { Message, MessageStatus } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useMessages = (id: string) => {
@@ -17,5 +17,11 @@ export const useActive = (id: string) => {
     initialData: 0,
     queryKey: ["active", id],
     // queryFn: () => 0,
+  });
+};
+
+export const useMessageStatus = (id: string) => {
+  return useQuery<MessageStatus>({
+    queryKey: ["msg-status", id],
   });
 };
