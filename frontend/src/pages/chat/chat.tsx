@@ -21,8 +21,7 @@ export default function ChatPage() {
   const [join, setJoin] = useState(false);
   const queryClient = useQueryClient();
   const [newMessage, setNewMessage] = useState("");
-  const { message, sendMessage } = useWebSocket();
-  const [active, setActive] = useState(0);
+  const { message, sendMessage, active } = useWebSocket();
   const session = useSession();
   const userId = session?.user?.id;
   if (!id) throw new Error("id is required");
@@ -84,7 +83,6 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (message) {
-      console.log("message", message);
       if (message.type === "MESSAGE") {
         queryClient.setQueryData(
           ["chat", message.channel_id],
@@ -95,12 +93,6 @@ export default function ChatPage() {
             return [message];
           },
         );
-      }
-      if (message.type == "USER_CONNECTED") {
-        setActive(Number(message.message));
-      }
-      if (message.type === "USER_DISCONNECTED") {
-        setActive(Number(message.message));
       }
     }
   }, [message, queryClient, id]);

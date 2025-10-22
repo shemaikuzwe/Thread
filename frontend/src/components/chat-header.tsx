@@ -5,7 +5,12 @@ import JoinButton from "./chat/join-button";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
-  active: number | boolean;
+  active: Map<
+    string,
+    {
+      active: number;
+    }
+  >;
   join: boolean;
   loading: boolean;
   setJoin: React.Dispatch<React.SetStateAction<boolean>>;
@@ -19,9 +24,8 @@ export default function ChatHeader({
   setJoin,
 }: Props) {
   const { id } = useParams();
-
   if (!id) throw new Error("Missing chat ID");
-
+  const ac = active.get(id)?.active;
   return (
     <div className="border-b  px-6 py-4 bg-muted/70 flex justify-between">
       {loading ? (
@@ -43,11 +47,7 @@ export default function ChatHeader({
                 {chat?.name}
               </h1>
               <p className="text-sm text-gray-500">
-                {typeof active === "number"
-                  ? active > 0
-                    ? `${active} online`
-                    : ""
-                  : active && "online"}
+                {ac && ac > 1 && `${ac} Online`}
               </p>
             </div>
           </div>
