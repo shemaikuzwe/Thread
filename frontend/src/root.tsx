@@ -6,30 +6,16 @@ import { Links, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "./index.css";
 import type { Route } from "./+types/root";
 import { authMiddleware, userContext } from "./middleware";
-import { ThemeProvider } from "./components/theme-provider";
-import { commitSession, getSession } from "./sessions.server";
-import type { Theme } from "./lib/types";
+import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const session = context.get(userContext);
-  const cookie = await getSession(request.headers.get("cookie"));
-  return { session, theme: cookie.get("theme") };
+  return { session };
 }
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
 
-export async function action({ request }: Route.ActionArgs) {
-  //TODO:validate body
-  const formData = await request.formData();
-  console.log("received req");
-  console.log("formData", formData);
-  const theme = formData.get("theme");
-  if (!theme) return;
-  const cookie = await getSession(request.headers.get("Cookie"));
-  cookie.set("theme", theme as string);
-  commitSession(cookie);
-}
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <html lang="en">
@@ -45,10 +31,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            defaultTheme="system"
-            cookieTheme={loaderData.theme as Theme}
-          >
+          <ThemeProvider attribute={"class"} defaultTheme="system">
             <TooltipProvider>
               <Toaster />
               <Sonner />
