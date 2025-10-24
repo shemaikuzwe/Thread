@@ -13,6 +13,7 @@ import defaultAvatar from "@/assets/default.png";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router";
 import { useSession } from "../providers/session-provider";
+import ThemeToggle from "../theme-toggle";
 
 export default function User() {
   const session = useSession();
@@ -47,6 +48,7 @@ export default function User() {
       <DropdownMenuContent>
         <DropdownMenuLabel>{session.user?.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <ThemeToggle />
         <DropdownMenuItem asChild>
           <Link to={`/settings?tab=profile`}>Profile</Link>
         </DropdownMenuItem>

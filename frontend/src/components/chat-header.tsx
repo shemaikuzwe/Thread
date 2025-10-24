@@ -3,6 +3,13 @@ import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import JoinButton from "./chat/join-button";
 import { useActive } from "@/hooks/use-messages";
+import ThemeToggle from "./theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { EllipsisVerticalIcon } from "lucide-react";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
@@ -43,6 +50,17 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
         )
       )}
       {join && chat && <JoinButton id={chat.id} setJoin={setJoin} />}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <EllipsisVerticalIcon className="h-5 w-5" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <div className="flex flex-col gap-2 bg-card p-2">
+            <ThemeToggle />
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

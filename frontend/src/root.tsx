@@ -6,14 +6,26 @@ import { Links, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "./index.css";
 import type { Route } from "./+types/root";
 import { authMiddleware, userContext } from "./middleware";
+import { ThemeProvider } from "./components/theme-provider";
+import { commitSession, getSession } from "./sessions.server";
 
 const queryClient = new QueryClient();
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const session = context.get(userContext);
-  return { session };
+  const cookie = await getSession(request.headers.get("cookie"));
+  return { session, theme: cookie.get("theme") };
 }
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
+
+export async function action({ request }: Route.ActionArgs) {
+  //TODO:validate body
+  const { theme } = await request.json();
+  console.log("received req");
+  const cookie = await getSession(request.headers.get("Cookie"));
+  cookie.set("theme", theme);
+  commitSession(cookie);
+}
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <html lang="en">
@@ -29,13 +41,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <SessionProvider session={loaderData.session}>
-              <Outlet />
-            </SessionProvider>
-          </TooltipProvider>
+          <ThemeProvider defaultTheme="system" cookieTheme={loaderData.theme}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <SessionProvider session={loaderData.session}>
+                <Outlet />
+              </SessionProvider>
+            </TooltipProvider>
+          </ThemeProvider>
         </QueryClientProvider>
         <ScrollRestoration />
         <Scripts />

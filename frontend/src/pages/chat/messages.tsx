@@ -48,10 +48,8 @@ export default function Messages({ messages, userId, ref }: Props) {
        )} */}
               <div
                 className={cn(
-                  "rounded-2xl px-4 py-3 min-w-30",
-                  isOwn
-                    ? "bg-primary text-white rounded-br-md"
-                    : "bg-gray-100 text-gray-900 rounded-bl-md",
+                  "rounded-2xl px-4 py-3 min-w-30 rounded-br-md",
+                  isOwn ? "bg-primary text-white" : "bg-secondary",
                 )}
               >
                 <p className="text-sm leading-relaxed">{message.message}</p>
