@@ -9,7 +9,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between lg:px-40 md:px-10 sm:px-5">
             <div className="space-y-8">
               <div className="space-y-6">
-                <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
                   Instant
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed max-w-md">
@@ -25,7 +25,7 @@ export default function HomePage() {
 
           {/* Trust Section */}
           <div className="text-center mt-4 mb-5">
-            <p className="text-2xl text-gray-700 font-medium mb-5">
+            <p className="text-2xl font-medium mb-5">
               Trusted by 10,000+ users
             </p>
 

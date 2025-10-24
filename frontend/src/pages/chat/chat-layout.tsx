@@ -1,8 +1,7 @@
 import { ChatSidebar } from "@/components/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Outlet } from "react-router";
-import ChatsList from "./chats";
-
+import ChatsList from "./chats-list";
 export default function ChatLayout() {
   return (
     <SidebarProvider defaultOpen={false}>

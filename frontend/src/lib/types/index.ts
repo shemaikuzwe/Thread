@@ -3,7 +3,7 @@ export interface Message {
   user_id: string;
   channel_id: string;
   message: string;
-  type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED";
+  type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS";
   created_at: string;
   from: {
     id: string;
@@ -14,6 +14,12 @@ export interface Message {
   };
 }
 
+export type MessageStatus = {
+  status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
+};
+
+export type Theme = "dark" | "light" | "system";
+
 export type Channel = {
   id: string;
   name: string;
@@ -21,6 +27,9 @@ export type Channel = {
   created_at: string;
   updated_at: string;
 };
+export interface ChannelWithUsers extends Channel {
+  users: User[];
+}
 
 export interface Session {
   status: "un_authenticated" | "authenticated" | "pending";

@@ -24,6 +24,11 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan *ClientConn
+	channels   Channels
+}
+
+type Channels map[string]struct {
+	Active int
 }
 
 func newHub() *Hub {
@@ -32,6 +37,7 @@ func newHub() *Hub {
 		register:   make(chan *ClientConn),
 		unregister: make(chan *ClientConn),
 		clients:    make(map[string]map[string]*ClientConn),
+		channels:   make(Channels),
 	}
 }
 
@@ -43,17 +49,11 @@ func (h *Hub) run() {
 			connID := conn.connID
 			if h.clients[userID] == nil {
 				h.clients[userID] = make(map[string]*ClientConn)
+				go h.incrementChannel(userID)
 			}
 			h.clients[userID][connID] = conn
-			msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_CONNECTED, Date: time.Now().UTC().String()}
-			message, err := toBYTE(&msg)
-			if err != nil {
-				log.Println("failed to parse json", err)
-				break
-			}
-			h.broadcast <- message
-		case conn := <-h.unregister:
 
+		case conn := <-h.unregister:
 			if userConns, ok := h.clients[conn.userID]; ok {
 				if _, exists := userConns[conn.connID]; exists {
 					close(userConns[conn.connID].send)
@@ -61,15 +61,12 @@ func (h *Hub) run() {
 				}
 				if len(userConns) == 0 {
 					delete(h.clients, conn.userID)
+					go h.decrementChannel(conn.userID)
 				}
-				msg := Message{Message: strconv.Itoa(len(h.clients)), Type: USER_DISCONNECTED, Date: time.Now().UTC().String()}
-				message, err := toBYTE(&msg)
-				if err != nil {
-					log.Println("failed to parse json", err)
-					break
-				}
+				message := []byte(`{"message":"` + strconv.Itoa(len(h.clients)) + `","type":"USER_DISCONNECTED","date":"` + time.Now().UTC().String() + `"}`)
 				h.broadcast <- message
 			}
+
 		case message := <-h.broadcast:
 			for client, userConns := range h.clients {
 				ok, err := CheckUser(message, client)
@@ -82,7 +79,6 @@ func (h *Hub) run() {
 					continue
 				}
 				for _, conn := range userConns {
-					log.Println("going to send message")
 					select {
 					case conn.send <- message:
 					default:
@@ -92,6 +88,46 @@ func (h *Hub) run() {
 				}
 			}
 		}
+	}
+}
+func (h *Hub) incrementChannel(userId string) {
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		log.Println("failed to parse user id", err)
+		return
+	}
+	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	if err != nil {
+		log.Println("failed to get client channels", err)
+		return
+	}
+	for _, channel := range userChannels {
+		channelID := channel.String()
+		info := h.channels[channelID]
+		info.Active++
+		h.channels[channelID] = info
+		message := []byte(`{"message":"` + strconv.Itoa(info.Active) + `","type":"USER_CONNECTED","channel_id":"` + channelID + `","date":"` + time.Now().UTC().String() + `"}`)
+		h.broadcast <- message
+	}
+}
+func (h *Hub) decrementChannel(userId string) {
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		log.Println("failed to parse user id", err)
+		return
+	}
+	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	if err != nil {
+		log.Println("failed to get client channels", err)
+		return
+	}
+	for _, channel := range userChannels {
+		channelID := channel.String()
+		info := h.channels[channelID]
+		info.Active--
+		h.channels[channelID] = info
+		message := []byte(`{"message":"` + strconv.Itoa(info.Active) + `","type":"USER_CONNECTED","channel_id":"` + channelID + `","date":"` + time.Now().UTC().String() + `"}`)
+		h.broadcast <- message
 	}
 }
 
@@ -118,7 +154,6 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	log.Println("userChannels", usersChannels, msgId)
 	if slices.Contains(usersChannels, msgId) {
 		return true, nil
 	}

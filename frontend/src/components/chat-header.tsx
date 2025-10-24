@@ -1,28 +1,32 @@
-import { api } from "@/lib/axios";
-import type { Channel } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
+import type { Channel, User } from "@/lib/types";
 import { useParams } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import JoinButton from "./chat/join-button";
+import { useActive } from "@/hooks/use-messages";
+import ThemeToggle from "./theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { EllipsisVerticalIcon } from "lucide-react";
+import { ChatHeaderSkelton } from "./ui/chat-skeltons";
 
 interface Props {
-  active: number | boolean;
+  chat: (Channel & { users: User[] }) | undefined;
+  join: boolean;
+  loading: boolean;
+  setJoin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function ChatHeader({ active }: Props) {
+export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
-  const { data: chat, isLoading } = useQuery<Channel>({
-    queryKey: ["chat-header", id],
-    queryFn: async () => {
-      const res = await api.get(`/chats/${id}`);
-      if (res.status !== 200) throw new Error("Failed to fetch chat");
-      return res.data;
-    },
-  });
+  const { data: active } = useActive(id);
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      {isLoading ? (
-        <div>Loading ..</div>
+    <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
+      {loading ? (
+        <ChatHeaderSkelton />
       ) : (
         chat && (
           <div className="flex items-center gap-3">
@@ -36,20 +40,26 @@ export default function ChatHeader({ active }: Props) {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 ">
-                {chat?.name}
-              </h1>
+              <h1 className="text-lg font-semibold ">{chat?.name}</h1>
               <p className="text-sm text-gray-500">
-                {typeof active === "number"
-                  ? active > 0
-                    ? `${active} online`
-                    : ""
-                  : active && "online"}
+                {active && active > 1 && `${active} Online`}
               </p>
             </div>
           </div>
         )
       )}
+      {join && chat && <JoinButton id={chat.id} setJoin={setJoin} />}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <EllipsisVerticalIcon className="h-5 w-5" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <div className="flex flex-col gap-2 bg-card p-2">
+            <ThemeToggle />
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

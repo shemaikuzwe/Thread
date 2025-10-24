@@ -50,6 +50,7 @@ func main() {
 	router.GET("/chats", controllers.GetChannelsHandler)
 	router.POST("/chats", controllers.CreateChannelHandler)
 	router.GET("/chats/:id", controllers.GetChannelByIdHandler)
+	router.GET("/chats/:id/join", controllers.JoinChannelHandler)
 	router.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)
 
 	log.Println("Starting server at http://localhost:8000")

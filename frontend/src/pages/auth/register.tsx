@@ -50,13 +50,11 @@ export default function RegisterPage() {
     <div>
       <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-xl w-120 h-165 shadow-xl p-8">
+          <div className="bg-card rounded-xl w-120 h-165 shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome to Instant
-              </h1>
-              <p className="text-gray-600">Create your account to continue</p>
+              <h1 className="text-3xl font-bold  mb-2">Welcome to Instant</h1>
+              <p>Create your account to continue</p>
             </div>
 
             {/* OAuth Buttons */}
@@ -68,12 +66,10 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+                <div className="w-full border-t"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">
-                  Or continue with email
-                </span>
+                <span className="px-4">Or continue with email</span>
               </div>
             </div>
 
@@ -179,7 +175,7 @@ export default function RegisterPage() {
 
             {/* Sign up link */}
             <div className="text-center mt-6">
-              <p className="text-gray-600">
+              <p>
                 Have an account?{" "}
                 <Link to="/login" className="text-primary font-medium">
                   Login

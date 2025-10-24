@@ -1,30 +1,34 @@
+import Search from "@/components/chat/search";
 import EmptyChatsList from "@/components/empty-chats-list";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { HashIcon } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
+import ChatListItem from "./chats-list-item";
+import { ChatListSkelton } from "@/components/ui/chat-skeltons";
 
 export default function ChatsList() {
+  const [search, setSearch] = useState<string>();
   const { data: chats, isLoading } = useQuery<Channel[]>({
-    queryKey: ["chats"],
+    queryKey: ["chats", search],
     queryFn: async () => {
-      const res = await api.get("/chats");
+      const params = new URLSearchParams();
+      if (search && search.trim()) {
+        params.set("search", search);
+      }
+      const res = await api.get(`/chats?${params.toString()}`);
       if (res.status !== 200) {
         throw new Error("Failed to fetch chats");
       }
       return res.data;
     },
   });
-  const navigate = useNavigate();
 
   return (
-    <div className="w-100 bg-white border-r border-gray-200 flex flex-col">
+    <div className="min-w-80  border-r border-border flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-xl">Instant</h2>
           <Button variant="ghost" size="sm">
@@ -46,39 +50,14 @@ export default function ChatsList() {
       </div>
 
       {/* Channels Section */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto py-3">
+        <Search onSearch={setSearch} />
         <div className="p-4">
           <div className="space-y-2">
             {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                Loading...
-              </div>
+              <ChatListSkelton />
             ) : chats && chats.length > 0 ? (
-              chats.map((chat) => (
-                <div key={chat.id}>
-                  <div
-                    onClick={() => {
-                      navigate(`/chat/${chat.id}`);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left hover:bg-gray-200"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={""} />
-                      <AvatarFallback>
-                        {chat?.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{chat.name}</span>
-                    {/*{chat.hasNotification && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full ml-auto"></div>
-                )}*/}
-                  </div>
-                  <Separator />
-                </div>
-              ))
+              chats.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
             ) : (
               <EmptyChatsList />
             )}

@@ -12,3 +12,7 @@ sql:
             nullable: true # this overrides default sql.NullString
             go_type:
               type: "*string"
+          - db_type: "boolean"
+            nullable: true # this overrides default sql.NullString
+            go_type:
+              type: "*bool"
