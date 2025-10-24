@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import type { ChannelWithUsers, Message, MessageStatus } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
-import { useParams, useSubmit } from "react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat-header";
 import { ArrowUp, Paperclip } from "lucide-react";
@@ -16,6 +16,7 @@ import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
 import { useMessages } from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
+import { useIsTyping } from "@/hooks";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -26,6 +27,7 @@ export default function ChatPage() {
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
 
+  const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
   const { data: chat, isLoading: loading } = useQuery<ChannelWithUsers>({
     queryKey: ["chat-header", id],
@@ -44,32 +46,44 @@ export default function ChatPage() {
     }
   }, [chat, userId]);
 
-  const handleSendMessage = (
-    type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
-    payload?: MessageStatus,
-  ) => {
-    if (!userId) throw new Error("message is required");
+  const handleSendMessage = useCallback(
+    (
+      type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
+      payload?: MessageStatus,
+    ) => {
+      if (!userId) throw new Error("message is required");
 
-    if (type === "MESSAGE" && !newMessage.trim()) return;
-    const message: Message = {
-      channel_id: id,
-      id: crypto.randomUUID(),
-      created_at: new Date().toUTCString(),
-      message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
-      type: type,
-      user_id: userId,
-      from: {
-        id: userId,
-        email: session?.user?.email ?? "",
-        first_name: session?.user?.first_name ?? "",
-        last_name: session?.user?.last_name ?? "",
-        profile_picture: session?.user?.profile_picture ?? "",
-      },
-    };
-    sendMessage(message);
-    setNewMessage("");
-  };
+      if (type === "MESSAGE" && !newMessage.trim()) return;
+      const message: Message = {
+        channel_id: id,
+        id: crypto.randomUUID(),
+        created_at: new Date().toUTCString(),
+        message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
+        type: type,
+        user_id: userId,
+        from: {
+          id: userId,
+          email: session?.user?.email ?? "",
+          first_name: session?.user?.first_name ?? "",
+          last_name: session?.user?.last_name ?? "",
+          profile_picture: session?.user?.profile_picture ?? "",
+        },
+      };
+      sendMessage(message);
+      if (type === "MESSAGE") {
+        setNewMessage("");
+      }
+    },
+    [sendMessage, id, session, newMessage, userId],
+  );
 
+  useEffect(() => {
+    if (isTyping) {
+      handleSendMessage("MESSAGE_STATUS", { status: "TYPING" });
+    } else {
+      handleSendMessage("MESSAGE_STATUS", { status: "DEFAULT" });
+    }
+  }, [isTyping]);
   const {
     isAtBottom,
     scrollToBottom,
@@ -130,17 +144,14 @@ export default function ChatPage() {
                 value={newMessage ?? ""}
                 onChange={(e) => {
                   setNewMessage(e.target.value);
-                  // handleSendMessage("MESSAGE_STATUS", { status: "TYPING" });
+                  handleTyping();
                 }}
                 onKeyDown={(e) => {
-                  // handleSendMessage("MESSAGE_STATUS", { status: "DEFAULT" });
                   if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
                     handleSendMessage("MESSAGE");
                   }
                 }}
-                // onKeyUp={() =>
-                //   handleSendMessage("MESSAGE_STATUS", { status: "TYPING" })
-                // }
                 placeholder="Send a message..."
                 rows={1}
                 className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"

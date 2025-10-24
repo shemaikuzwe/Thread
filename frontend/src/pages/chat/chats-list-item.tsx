@@ -28,7 +28,9 @@ export default function ChatListItem({ chat }: { chat: Channel }) {
         <div className="flex flex-col gap-1 justify-center items-start">
           <span className="font-medium">{chat.name}</span>
           {msgStatus?.status === "TYPING" ? (
-            <span>Typing...</span>
+            <span className="text-sm text-primary font-semibold">
+              typing...
+            </span>
           ) : messages && messages.length > 0 ? (
             <span className="text-muted-foreground/90 text-sm">
               {messages[messages.length - 1].message}
