@@ -6,6 +6,7 @@ import type { Channel } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ChatListItem from "./chats-list-item";
+import { ChatListSkelton } from "@/components/ui/chat-skeltons";
 
 export default function ChatsList() {
   const [search, setSearch] = useState<string>();
@@ -54,9 +55,7 @@ export default function ChatsList() {
         <div className="p-4">
           <div className="space-y-2">
             {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                Loading...
-              </div>
+              <ChatListSkelton />
             ) : chats && chats.length > 0 ? (
               chats.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
             ) : (

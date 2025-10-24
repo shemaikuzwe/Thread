@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
+import { ChatHeaderSkelton } from "./ui/chat-skeltons";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
@@ -23,9 +24,9 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   if (!id) throw new Error("Missing chat ID");
   const { data: active } = useActive(id);
   return (
-    <div className="border-b  px-6 py-4 bg-muted/70 flex justify-between">
+    <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
       {loading ? (
-        <div>Loading ..</div>
+        <ChatHeaderSkelton />
       ) : (
         chat && (
           <div className="flex items-center gap-3">
@@ -39,9 +40,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 ">
-                {chat?.name}
-              </h1>
+              <h1 className="text-lg font-semibold ">{chat?.name}</h1>
               <p className="text-sm text-gray-500">
                 {active && active > 1 && `${active} Online`}
               </p>

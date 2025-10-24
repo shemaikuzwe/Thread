@@ -13,9 +13,13 @@ export interface Message {
     profile_picture: string;
   };
 }
+
 export type MessageStatus = {
   status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
 };
+
+export type Theme = "dark" | "light" | "system";
+
 export type Channel = {
   id: string;
   name: string;

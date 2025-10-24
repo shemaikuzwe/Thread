@@ -8,6 +8,7 @@ import type { Route } from "./+types/root";
 import { authMiddleware, userContext } from "./middleware";
 import { ThemeProvider } from "./components/theme-provider";
 import { commitSession, getSession } from "./sessions.server";
+import type { Theme } from "./lib/types";
 
 const queryClient = new QueryClient();
 
@@ -20,10 +21,13 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
 
 export async function action({ request }: Route.ActionArgs) {
   //TODO:validate body
-  const { theme } = await request.json();
+  const formData = await request.formData();
   console.log("received req");
+  console.log("formData", formData);
+  const theme = formData.get("theme");
+  if (!theme) return;
   const cookie = await getSession(request.headers.get("Cookie"));
-  cookie.set("theme", theme);
+  cookie.set("theme", theme as string);
   commitSession(cookie);
 }
 export default function App({ loaderData }: Route.ComponentProps) {
@@ -41,7 +45,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" cookieTheme={loaderData.theme}>
+          <ThemeProvider
+            defaultTheme="system"
+            cookieTheme={loaderData.theme as Theme}
+          >
             <TooltipProvider>
               <Toaster />
               <Sonner />

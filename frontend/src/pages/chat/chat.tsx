@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import type { ChannelWithUsers, Message, MessageStatus } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
-import { useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useSubmit } from "react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat-header";
 import { ArrowUp, Paperclip } from "lucide-react";
@@ -15,6 +15,7 @@ import { AutoScroller } from "@/components/chat/auto-scroller";
 import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
 import { useMessages } from "@/hooks/use-messages";
+import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -100,7 +101,7 @@ export default function ChatPage() {
         >
           <AutoScroller ref={visibilityRef}>
             {isLoading ? (
-              <div>Loading...</div>
+              <ChatMessagesSkelton />
             ) : join && chat ? (
               <JoinChat chat={chat} setJoin={setJoin} />
             ) : (

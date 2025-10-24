@@ -1,11 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-type Theme = "dark" | "light" | "system";
+import { useTheme as useReactRouterTheme } from "@/lib/theme";
+import type { Theme } from "@/lib/types";
+import { createContext, useContext, useEffect } from "react";
+import { useFetcher } from "react-router";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
-  cookieTheme?: Theme;
+  cookieTheme: Theme | undefined;
 };
 
 type ThemeProviderState = {
@@ -26,22 +27,13 @@ export function ThemeProvider({
   cookieTheme,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (cookieTheme) return cookieTheme;
-    return defaultTheme;
-  });
-  const handleThemeChange = async (theme: Theme) => {
-    const res = await fetch("/", {
-      method: "POST",
-      body: JSON.stringify({ theme: theme }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!res.ok) {
-      throw new Error("failed to set new theme");
-    }
-  };
+  const fetcher = useFetcher();
+  const [theme, setTheme] = useReactRouterTheme(
+    cookieTheme,
+    fetcher,
+    defaultTheme,
+  );
+
   useEffect(() => {
     const root = window.document.documentElement;
 
@@ -62,10 +54,7 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      setTheme(theme);
-      handleThemeChange(theme);
-    },
+    setTheme,
   };
 
   return (

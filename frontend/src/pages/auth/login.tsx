@@ -43,13 +43,11 @@ export default function LoginPage() {
     <div>
       <main className="px-6 ">
         <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-3xl w-120 shadow-xl p-8">
+          <div className="rounded-3xl bg-card w-120 shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back
-              </h1>
-              <p className="text-gray-600">Sign in to your Instant account</p>
+              <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
+              <p>Sign in to your Instant account</p>
             </div>
 
             {/* OAuth Buttons */}
@@ -119,12 +117,9 @@ export default function LoginPage() {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4 border-gray-300 rounded"
+                      className="h-4 w-4  rounded"
                     />
-                    <label
-                      htmlFor="remember-me"
-                      className="ml-2 block text-sm text-gray-700"
-                    >
+                    <label htmlFor="remember-me" className="ml-2 block text-sm">
                       Remember me
                     </label>
                   </div>
@@ -136,7 +131,7 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12  text-white font-semibold rounded-xl mt-6"
+                  className="w-full h-12 font-semibold rounded-xl mt-6"
                 >
                   Sign in
                 </Button>
@@ -145,7 +140,7 @@ export default function LoginPage() {
 
             {/* Sign up link */}
             <div className="text-center mt-6">
-              <p className="text-gray-600">
+              <p>
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-primary font-medium">
                   Sign up

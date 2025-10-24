@@ -43,14 +43,14 @@ export function ChatSidebar() {
       <SidebarContent className="mt-20">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="flex flex-col gap-5">
+            <SidebarMenu className="flex justify-center items-center w-full h-full flex-col gap-5">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    className="w-16 h-16 p-0 justify-center"
+                    // className="justify-center"
                   >
-                    <item.icon className="h-10 w-10" />
+                    <item.icon className="h-20 w-20" />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
