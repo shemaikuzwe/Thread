@@ -42,7 +42,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
             <div>
               <h1 className="text-lg font-semibold ">{chat?.name}</h1>
               <p className="text-sm text-gray-500">
-                {active && active > 1 && `${active} Online`}
+                {active > 1 && `${active} Online`}
               </p>
             </div>
           </div>

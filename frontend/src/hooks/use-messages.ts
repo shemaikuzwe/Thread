@@ -16,12 +16,18 @@ export const useActive = (id: string) => {
   return useQuery<number>({
     initialData: 0,
     queryKey: ["active", id],
-    // queryFn: () => 0,
+    queryFn: () => 0,
+    enabled: false,
   });
 };
 
 export const useMessageStatus = (id: string) => {
   return useQuery<MessageStatus>({
+    initialData: { status: "DEFAULT" },
     queryKey: ["msg-status", id],
+    queryFn: () => {
+      return { status: "DEFAULT" };
+    },
+    enabled: false,
   });
 };
