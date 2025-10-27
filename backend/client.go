@@ -214,8 +214,8 @@ func handlerCreateMessage(message []byte, userID string) {
 
 	err = db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
 		ChannelID: chanUUID,
-		UserID:    userUUID,
-		Message:   msg.Message,
+		UserID:         userUUID,
+		Message:        msg.Message,
 	})
 
 	if err != nil {

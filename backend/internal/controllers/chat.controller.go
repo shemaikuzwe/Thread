@@ -20,7 +20,7 @@ func GetChannelsHandler(c *gin.Context) {
 	search := strings.TrimSpace(c.Query("search"))
 	if search != "" {
 		pattern := "%" + search + "%"
-		channels, err := db.Db.GetChannelsByName(c.Request.Context(), pattern)
+		channels, err := db.Db.GetChannelsByName(c.Request.Context(), &pattern)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -52,8 +52,9 @@ func CreateChannelHandler(c *gin.Context) {
 		return
 	}
 	channel, err := db.Db.CreateChannel(c.Request.Context(), database.CreateChannelParams{
-		Name:        body.Name,
+		Name:        &body.Name,
 		Description: &body.Description,
+		Type:        database.ChannelTypeGroup,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -72,7 +73,7 @@ func CreateChannelHandler(c *gin.Context) {
 	//create Relation channel_user
 	err = db.Db.CreateChannelUser(c.Request.Context(), database.CreateChannelUserParams{
 		UserID:    uuid,
-		ChannelID: channel.ID,
+		ChannelID: channel,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -80,6 +81,43 @@ func CreateChannelHandler(c *gin.Context) {
 	}
 	c.JSON(201, channel)
 }
+
+func CreateDMChannel(c *gin.Context) {
+	var body struct {
+		UserID string `json:"user_id"`
+	}
+	err := c.BindJSON(&body)
+	if err != nil {
+		c.JSON(400, gin.H{"json error": err.Error()})
+		return
+	}
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "user not found"})
+		return
+	}
+	user1, err := uuid.Parse(user.Id)
+	if err != nil {
+		c.JSON(400, gin.H{"parse1 error": err.Error()})
+		return
+	}
+	user2, err := uuid.Parse(body.UserID)
+	if err != nil {
+		c.JSON(400, gin.H{"parse2 error": err.Error()})
+		return
+	}
+	chanID, err := db.Db.CreateDMChannel(c.Request.Context(), database.ChannelTypeDm)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	err = db.Db.CreateDMChannelUsers(c.Request.Context(), database.CreateDMChannelUsersParams{ChannelID: chanID,
+		UserID:   user1,
+		UserID_2: user2,
+	})
+	c.JSON(201, gin.H{"message": "DM chat  created"})
+}
+
 func GetChannelByIdHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

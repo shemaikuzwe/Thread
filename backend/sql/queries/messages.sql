@@ -16,3 +16,4 @@ ORDER BY messages.created_at ASC;
 -- name: CreateMessage :exec
 INSERT INTO messages (channel_id, user_id, message)
 VALUES ($1, $2, $3);
+

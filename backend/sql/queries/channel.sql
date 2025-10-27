@@ -1,11 +1,20 @@
 -- name: CreateChannel :one
-INSERT INTO channels (name, description)
-VALUES ($1, $2)
-RETURNING *;
+INSERT INTO channels (name, description, type)
+VALUES ($1, $2, $3)
+RETURNING id;
 
 -- name: CreateChannelUser :exec
 INSERT INTO channel_user (channel_id, user_id)
 VALUES ($1, $2);
+
+-- name: CreateDMChannel :one
+INSERT INTO channels (type)
+VALUES ($1)
+RETURNING id;
+
+-- name: CreateDMChannelUsers :exec
+INSERT INTO channel_user (channel_id, user_id)
+VALUES ($1, $2),($1, $3);
 
 -- name: GetAllChannels :many
 SELECT channels.*,json_agg(json_build_object(
@@ -62,6 +71,16 @@ INNER JOIN users ON channel_user.user_id = users.id
 WHERE channels.id = $1
 GROUP BY channels.id;
 
+-- name: GetDMChannel :one
+SELECT c.id, c.type
+FROM channels c
+JOIN channel_user cu1 ON c.id = cu1.channel_id
+JOIN channel_user cu2 ON c.id = cu2.channel_id
+WHERE c.type = 'dm'
+  AND cu1.user_id = $1
+  AND cu2.user_id = $2
+GROUP BY c.id
+HAVING COUNT(DISTINCT cu1.user_id) = 1 AND COUNT(DISTINCT cu2.user_id) = 1;
 
 -- name: JoinChannel :exec
 

@@ -27,6 +27,7 @@ func main() {
 		AllowHeaders:     []string{"Content-Type"},
 		AllowCredentials: true,
 	}))
+	// v1 :=gin.RouterGroup(*router.RouterGroup.Group("/v1"))
 	router.Use(middleware.AuthMiddleware)
 	hub := newHub()
 	go hub.run()
@@ -49,6 +50,7 @@ func main() {
 
 	router.GET("/chats", controllers.GetChannelsHandler)
 	router.POST("/chats", controllers.CreateChannelHandler)
+	router.POST("/chats/dm", controllers.CreateDMChannel)
 	router.GET("/chats/:id", controllers.GetChannelByIdHandler)
 	router.GET("/chats/:id/join", controllers.JoinChannelHandler)
 	router.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)

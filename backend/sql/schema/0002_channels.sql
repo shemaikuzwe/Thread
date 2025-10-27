@@ -2,7 +2,7 @@
 
 CREATE TABLE channels(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
   description TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT now(),
   updated_at TIMESTAMP NOT NULL DEFAULT now()

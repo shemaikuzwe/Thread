@@ -5,19 +5,63 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type ChannelType string
+
+const (
+	ChannelTypeGroup ChannelType = "group"
+	ChannelTypeDm    ChannelType = "dm"
+)
+
+func (e *ChannelType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ChannelType(s)
+	case string:
+		*e = ChannelType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ChannelType: %T", src)
+	}
+	return nil
+}
+
+type NullChannelType struct {
+	ChannelType ChannelType `json:"channel_type"`
+	Valid       bool        `json:"valid"` // Valid is true if ChannelType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullChannelType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ChannelType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ChannelType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullChannelType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ChannelType), nil
+}
+
 type Channel struct {
-	ID          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	IsChannel   bool      `json:"is_channel"`
-	IsPrivate   bool      `json:"is_private"`
+	ID          uuid.UUID   `json:"id"`
+	Name        *string     `json:"name"`
+	Description *string     `json:"description"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+	IsPrivate   bool        `json:"is_private"`
+	Type        ChannelType `json:"type"`
 }
 
 type ChannelUser struct {
