@@ -36,13 +36,6 @@ type activeInfo struct {
 	Users  []string `json:"users"`
 }
 
-type OutgoingMessage struct {
-	Message   activeInfo `json:"message"`
-	Type      string     `json:"type"`
-	ChannelID string     `json:"channel_id"`
-	Date      string     `json:"date"`
-}
-
 func newHub() *Hub {
 	return &Hub{
 		broadcast:  make(chan []byte, 256),
@@ -116,16 +109,16 @@ func (h *Hub) incrementChannel(userId string) {
 		channelID := channel.String()
 		info := h.channels[channelID]
 		info.Active++
-		h.channels[channelID] = info
 		info.users = append(info.users, userId)
+		h.channels[channelID] = info
 		activeInfo := activeInfo{Active: info.Active, Users: info.users}
-		outgoingMsg := OutgoingMessage{
+		msg := Message{
 			Message:   activeInfo,
 			Type:      "USER_CONNECTED",
 			ChannelID: channelID,
 			Date:      time.Now().UTC().String(),
 		}
-		message, err := json.Marshal(outgoingMsg)
+		message, err := json.Marshal(msg)
 		if err != nil {
 			log.Println("failed to marshal outgoing message", err)
 			continue
@@ -148,16 +141,23 @@ func (h *Hub) decrementChannel(userId string) {
 		channelID := channel.String()
 		info := h.channels[channelID]
 		info.Active--
-		info.users = append(info.users, userId)
+
+		// Find and remove the user from the slice
+		for i, u := range info.users {
+			if u == userId {
+				info.users = append(info.users[:i], info.users[i+1:]...)
+				break
+			}
+		}
 		h.channels[channelID] = info
 		activeInfo := activeInfo{Active: info.Active, Users: info.users}
-		outgoingMsg := OutgoingMessage{
+		msg := Message{
 			Message:   activeInfo,
 			Type:      "USER_DISCONNECTED",
 			ChannelID: channelID,
 			Date:      time.Now().UTC().String(),
 		}
-		message, err := json.Marshal(outgoingMsg)
+		message, err := json.Marshal(msg)
 		if err != nil {
 			log.Println("failed to marshal outgoing message", err)
 			continue
@@ -168,7 +168,7 @@ func (h *Hub) decrementChannel(userId string) {
 
 // check if user is in the channel to send message
 func CheckUser(message []byte, client string) (bool, error) {
-	msg := &OutgoingMessage{}
+	msg := &Message{}
 	err := json.Unmarshal(message, msg)
 	if err != nil {
 		log.Println("failed to parse json", err)

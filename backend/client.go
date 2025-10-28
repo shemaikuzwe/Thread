@@ -17,11 +17,11 @@ import (
 )
 
 type Message struct {
-	Message   string `json:"message"`
-	ChannelID string `json:"channel_id"`
-	UserID    string `json:"user_id"`
-	Type      Type   `json:"type"`
-	Date      string `json:"created_at"`
+	Message   interface{} `json:"message"`
+	ChannelID string      `json:"channel_id"`
+	UserID    string      `json:"user_id"`
+	Type      Type        `json:"type"`
+	Date      string      `json:"created_at"`
 }
 type Notification struct {
 	Message string `json:"message"`
@@ -109,7 +109,7 @@ func (c *ClientConn) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.hub.broadcast <- message
-		// go handlerCreateMessage(message, c.userID)
+		go handlerCreateMessage(message, c.userID)
 	}
 }
 
@@ -187,16 +187,20 @@ func serveWs(hub *Hub, ctx *gin.Context) {
 	go client.writePump()
 	go client.readPump()
 }
-
-func toJSON(b []byte) (*Message, error) {
-	msg := Message{}
-	err := json.Unmarshal(b, &msg)
-	return &msg, err
-}
 func handlerCreateMessage(message []byte, userID string) {
-	msg, err := toJSON(message)
+	var msg struct {
+		Message   string `json:"message"`
+		ChannelID string `json:"channel_id"`
+		UserID    string `json:"user_id"`
+		Type      Type   `json:"type"`
+		Date      string `json:"created_at"`
+	}
+	err := json.Unmarshal(message, &msg)
 	if err != nil {
 		log.Println("json parse error:", err)
+		return
+	}
+	if msg.Type != "MESSAGE" {
 		return
 	}
 
@@ -214,8 +218,8 @@ func handlerCreateMessage(message []byte, userID string) {
 
 	err = db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
 		ChannelID: chanUUID,
-		UserID:         userUUID,
-		Message:        msg.Message,
+		UserID:    userUUID,
+		Message:   msg.Message,
 	})
 
 	if err != nil {
