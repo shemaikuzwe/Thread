@@ -2,7 +2,7 @@ import Search from "@/components/chat/search";
 import EmptyChatsList from "@/components/empty-chats-list";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/axios";
-import type { Channel } from "@/lib/types";
+import type { ChannelWithUsers } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ChatListItem from "./chats-list-item";
@@ -10,7 +10,7 @@ import { ChatListSkelton } from "@/components/ui/chat-skeltons";
 
 export default function ChatsList() {
   const [search, setSearch] = useState<string>();
-  const { data: chats, isLoading } = useQuery<Channel[]>({
+  const { data: chats, isLoading } = useQuery<ChannelWithUsers[]>({
     queryKey: ["chats", search],
     queryFn: async () => {
       const params = new URLSearchParams();

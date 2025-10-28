@@ -11,6 +11,7 @@ import {
 } from "./ui/dropdown-menu";
 import { EllipsisVerticalIcon } from "lucide-react";
 import { ChatHeaderSkelton } from "./ui/chat-skeltons";
+import { useChatName } from "@/hooks";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
@@ -23,6 +24,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
   const { data: active } = useActive(id);
+  const { name } = useChatName(chat);
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
       {loading ? (
@@ -33,14 +35,15 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
             <Avatar className="w-8 h-8">
               <AvatarImage src={""} />
               <AvatarFallback>
-                {chat?.name
+                {name
                   .split(" ")
                   .map((n) => n[0])
-                  .join("")}
+                  .join("")
+                  .toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-lg font-semibold ">{chat?.name}</h1>
+              <h1 className="text-lg font-semibold ">{name}</h1>
               <p className="text-sm text-gray-500">
                 {active > 1 && `${active} Online`}
               </p>

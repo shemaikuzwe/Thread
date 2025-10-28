@@ -36,7 +36,7 @@ SELECT channels.*,json_agg(json_build_object(
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
-WHERE channels.name ILIKE $1
+WHERE channels.name ILIKE $1 OR (users.first_name ILIKE $1 AND channels.type='dm')
 GROUP BY channels.id;
 
 -- name: GetChannelsByUserID :many

@@ -1,13 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useChatName } from "@/hooks";
 import { useMessages, useMessageStatus } from "@/hooks/use-messages";
-import type { Channel } from "@/lib/types";
+import type { ChannelWithUsers } from "@/lib/types";
 import { useNavigate } from "react-router";
 
-export default function ChatListItem({ chat }: { chat: Channel }) {
+export default function ChatListItem({ chat }: { chat: ChannelWithUsers }) {
   const navigate = useNavigate();
   const { data: messages } = useMessages(chat.id);
   const { data: msgStatus } = useMessageStatus(chat.id);
+  const { name } = useChatName(chat);
   return (
     <div>
       <div
@@ -19,14 +21,15 @@ export default function ChatListItem({ chat }: { chat: Channel }) {
         <Avatar className="w-8 h-8">
           <AvatarImage src={""} />
           <AvatarFallback>
-            {chat?.name
+            {name
               .split(" ")
               .map((n) => n[0])
-              .join("")}
+              .join("")
+              .toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col gap-1 justify-center items-start">
-          <span className="font-medium">{chat.name}</span>
+          <span className="font-medium">{name}</span>
           {msgStatus?.status === "TYPING" ? (
             <span className="text-sm text-primary font-semibold">
               typing...

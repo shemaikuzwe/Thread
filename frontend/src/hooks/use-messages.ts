@@ -17,7 +17,7 @@ export const useActive = (id: string) => {
     initialData: 0,
     queryKey: ["active", id],
     queryFn: () => 0,
-    enabled: false,
+    enabled: false, //prevents auto execution of queryFn
   });
 };
 

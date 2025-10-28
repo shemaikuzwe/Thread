@@ -5,10 +5,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/shemaIkuzwe/websocket/internal/database"
 )
 
 var Db *database.Queries
+var redisClient *redis.Client
 
 func ConnectDb() {
 	dbUrl := os.Getenv("DATABASE_URL")
@@ -22,4 +24,16 @@ func ConnectDb() {
 	}
 	Db = database.New(conn)
 	log.Println("Connected to the database")
+}
+
+func ConnectRedis() {
+	redisUrl := os.Getenv("REDIS_URL")
+	if redisUrl == "" {
+		log.Fatal("No redis url found")
+	}
+	opt, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		log.Fatal("Failed to parse redis url", err)
+	}
+	redisClient = redis.NewClient(opt)
 }

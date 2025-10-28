@@ -15,6 +15,7 @@ import (
 func init() {
 	utils.LoadEnv()
 	db.ConnectDb()
+	db.ConnectRedis()
 }
 
 func main() {
@@ -27,33 +28,35 @@ func main() {
 		AllowHeaders:     []string{"Content-Type"},
 		AllowCredentials: true,
 	}))
-	// v1 :=gin.RouterGroup(*router.RouterGroup.Group("/v1"))
-	router.Use(middleware.AuthMiddleware)
+
+	v1 := gin.RouterGroup(*router.RouterGroup.Group("/v1"))
+	v1.Use(middleware.AuthMiddleware)
+
 	hub := newHub()
 	go hub.run()
 
 	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, "Welcome to our chat server")
+		c.JSON(200, "Welcome to our server")
 	})
-	router.GET("/ws", func(c *gin.Context) {
+	v1.GET("/ws", func(c *gin.Context) {
 		serveWs(hub, c)
 	})
 
-	router.POST("/auth/signup", controllers.SignUp)
-	router.Any("/auth/login", controllers.HandleLogin)
-	router.GET("auth/callback/google", controllers.HandleGoogleCallback)
-	router.GET("/auth/session", controllers.Session)
-	router.GET("/auth/logout", controllers.Logout)
+	v1.POST("/auth/signup", controllers.SignUp)
+	v1.Any("/auth/login", controllers.HandleLogin)
+	v1.GET("auth/callback/google", controllers.HandleGoogleCallback)
+	v1.GET("/auth/session", controllers.Session)
+	v1.GET("/auth/logout", controllers.Logout)
 
-	router.GET("/users", controllers.GetUsersHandler)
-	router.GET("/users/:id", controllers.GetUserHandler)
+	v1.GET("/users", controllers.GetUsersHandler)
+	v1.GET("/users/:id", controllers.GetUserHandler)
 
-	router.GET("/chats", controllers.GetChannelsHandler)
-	router.POST("/chats", controllers.CreateChannelHandler)
-	router.POST("/chats/dm", controllers.CreateDMChannel)
-	router.GET("/chats/:id", controllers.GetChannelByIdHandler)
-	router.GET("/chats/:id/join", controllers.JoinChannelHandler)
-	router.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)
+	v1.GET("/chats", controllers.GetChannelsHandler)
+	v1.POST("/chats", controllers.CreateChannelHandler)
+	v1.POST("/chats/dm", controllers.CreateDMChannel)
+	v1.GET("/chats/:id", controllers.GetChannelByIdHandler)
+	v1.GET("/chats/:id/join", controllers.JoinChannelHandler)
+	v1.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")
