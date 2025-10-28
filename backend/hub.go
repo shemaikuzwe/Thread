@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,6 +29,18 @@ type Hub struct {
 
 type Channels map[string]struct {
 	Active int
+	users  []string
+}
+type activeInfo struct {
+	Active int      `json:"active"`
+	Users  []string `json:"users"`
+}
+
+type OutgoingMessage struct {
+	Message   activeInfo `json:"message"`
+	Type      string     `json:"type"`
+	ChannelID string     `json:"channel_id"`
+	Date      string     `json:"date"`
 }
 
 func newHub() *Hub {
@@ -63,8 +75,6 @@ func (h *Hub) run() {
 					delete(h.clients, conn.userID)
 					go h.decrementChannel(conn.userID)
 				}
-				message := []byte(`{"message":"` + strconv.Itoa(len(h.clients)) + `","type":"USER_DISCONNECTED","date":"` + time.Now().UTC().String() + `"}`)
-				h.broadcast <- message
 			}
 
 		case message := <-h.broadcast:
@@ -101,12 +111,25 @@ func (h *Hub) incrementChannel(userId string) {
 		log.Println("failed to get client channels", err)
 		return
 	}
+
 	for _, channel := range userChannels {
 		channelID := channel.String()
 		info := h.channels[channelID]
 		info.Active++
 		h.channels[channelID] = info
-		message := []byte(`{"message":"` + strconv.Itoa(info.Active) + `","type":"USER_CONNECTED","channel_id":"` + channelID + `","date":"` + time.Now().UTC().String() + `"}`)
+		info.users = append(info.users, userId)
+		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		outgoingMsg := OutgoingMessage{
+			Message:   activeInfo,
+			Type:      "USER_CONNECTED",
+			ChannelID: channelID,
+			Date:      time.Now().UTC().String(),
+		}
+		message, err := json.Marshal(outgoingMsg)
+		if err != nil {
+			log.Println("failed to marshal outgoing message", err)
+			continue
+		}
 		h.broadcast <- message
 	}
 }
@@ -125,15 +148,28 @@ func (h *Hub) decrementChannel(userId string) {
 		channelID := channel.String()
 		info := h.channels[channelID]
 		info.Active--
+		info.users = append(info.users, userId)
 		h.channels[channelID] = info
-		message := []byte(`{"message":"` + strconv.Itoa(info.Active) + `","type":"USER_CONNECTED","channel_id":"` + channelID + `","date":"` + time.Now().UTC().String() + `"}`)
+		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		outgoingMsg := OutgoingMessage{
+			Message:   activeInfo,
+			Type:      "USER_DISCONNECTED",
+			ChannelID: channelID,
+			Date:      time.Now().UTC().String(),
+		}
+		message, err := json.Marshal(outgoingMsg)
+		if err != nil {
+			log.Println("failed to marshal outgoing message", err)
+			continue
+		}
 		h.broadcast <- message
 	}
 }
 
 // check if user is in the channel to send message
 func CheckUser(message []byte, client string) (bool, error) {
-	msg, err := toJSON(message)
+	msg := &OutgoingMessage{}
+	err := json.Unmarshal(message, msg)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err

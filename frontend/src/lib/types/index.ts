@@ -2,7 +2,7 @@ export interface Message {
   id: string;
   user_id: string;
   channel_id: string;
-  message: string;
+  message: any;
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS";
   created_at: string;
   from: {
@@ -49,4 +49,9 @@ export interface User {
   last_name: string;
   email: string;
   profile_picture: string;
+}
+
+export interface Active {
+  active: number;
+  users: string[];
 }

@@ -12,6 +12,7 @@ import {
 import { EllipsisVerticalIcon } from "lucide-react";
 import { ChatHeaderSkelton } from "./ui/chat-skeltons";
 import { useChatName } from "@/hooks";
+import { useSession } from "./providers/session-provider";
 
 interface Props {
   chat: (Channel & { users: User[] }) | undefined;
@@ -25,6 +26,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   if (!id) throw new Error("Missing chat ID");
   const { data: active } = useActive(id);
   const { name } = useChatName(chat);
+  const isOnline = chat?.type === "dm" && active.users.length === 2;
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
       {loading ? (
@@ -45,7 +47,12 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
             <div>
               <h1 className="text-lg font-semibold ">{name}</h1>
               <p className="text-sm text-gray-500">
-                {active > 1 && `${active} Online`}
+                {isOnline
+                  ? "Online"
+                  : active &&
+                    chat.type === "group" &&
+                    active.active > 1 &&
+                    `${active.active} Online`}
               </p>
             </div>
           </div>

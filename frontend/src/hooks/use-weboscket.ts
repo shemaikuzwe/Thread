@@ -23,9 +23,12 @@ export function useWebSocket() {
       const msg = JSON.parse(e.data) as Message;
       console.log(msg);
       if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
-        queryClient.setQueryData(["active", msg.channel_id], () =>
-          Number(msg.message),
-        );
+        queryClient.setQueryData(["active", msg.channel_id], () => {
+          return {
+            active: Number(msg.message.active),
+            users: msg.message.users,
+          };
+        });
       }
       if (msg.type === "MESSAGE") {
         queryClient.setQueryData(

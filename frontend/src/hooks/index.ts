@@ -29,7 +29,9 @@ export function useIsTyping(delay = 1000) {
   return { isTyping, handleTyping };
 }
 
-export function useChatName(chat: ChannelWithUsers | undefined) {
+export function useChatName(chat: ChannelWithUsers | undefined): {
+  name: string;
+} {
   const data = useSession();
   if (!chat) return { name: "" };
   let name = chat.name;
