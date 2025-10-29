@@ -17,6 +17,7 @@ import ScrollAnchor from "./scroll-anchor";
 import { useMessages } from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
+import { FileCard } from "@/components/chat/file-card";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -26,7 +27,8 @@ export default function ChatPage() {
   const session = useSession();
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<string[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
   const { data: chat, isLoading: loading } = useQuery<ChannelWithUsers>({
@@ -98,6 +100,31 @@ export default function ChatPage() {
     }
   }, [messages, scrollToBottom]);
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.currentTarget.files;
+    if (!fileList || !fileList.length) return;
+
+    const newFiles: string[] = [];
+
+    for (const file of Array.from(fileList)) {
+      const reader = new FileReader();
+
+      const fileData = await new Promise<string | ArrayBuffer | null>(
+        (resolve, reject) => {
+          reader.onload = (event) => resolve(event.target?.result ?? null);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file); // for images/base64
+          // reader.readAsText(file); // for text files
+          // reader.readAsArrayBuffer(file); // for PDFs/videos
+        },
+      );
+
+      if (fileData) newFiles.push(fileData as string);
+    }
+
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+  console.log(files);
   return (
     <div className="gray-50 flex w-full">
       {/* Main Chat Area */}
@@ -130,39 +157,62 @@ export default function ChatPage() {
           />
         </div>
         <div className="w-full z-10">
-          <div className="p-2">
-            <div className="flex items-center gap-2 p-4 border border-border rounded-md focus-within:ring-2 focus-within:ring-ring/50">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="p-2 h-auto flex-shrink-0"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
-              <textarea
-                value={newMessage ?? ""}
-                onChange={(e) => {
-                  setNewMessage(e.target.value);
-                  handleTyping();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage("MESSAGE");
-                  }
-                }}
-                placeholder="Send a message..."
-                rows={1}
-                className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
-              />
-              <Button
-                onClick={() => handleSendMessage("MESSAGE")}
-                disabled={!newMessage.trim()}
-                size={"icon"}
-              >
-                <ArrowUp className="w-4 h-4" />
-              </Button>
+          <div className="p-2 flex flex-col w-full h-full">
+            <div className="flex flex-col w-full h-full gap-2 p-4 border border-border rounded-md focus-within:ring-2 focus-within:ring-ring/50">
+              {files.length > 0 && (
+                <div className="flex gap-5 justify-start items-center">
+                  {files.map((file, index) => (
+                    <FileCard
+                      key={index}
+                      file={{ url: file }}
+                      handleRemove={() => {
+                        setFiles(files.filter((_, idx) => idx !== index));
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center w-full h-full">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 h-auto flex-shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleUpload}
+                  className="hidden"
+                  multiple
+                />
+                <textarea
+                  value={newMessage ?? ""}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    handleTyping();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage("MESSAGE");
+                    }
+                  }}
+                  placeholder="Send a message..."
+                  rows={1}
+                  className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
+                />
+                <Button
+                  onClick={() => handleSendMessage("MESSAGE")}
+                  disabled={!newMessage.trim()}
+                  size={"icon"}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

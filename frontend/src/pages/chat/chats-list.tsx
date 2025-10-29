@@ -24,6 +24,7 @@ export default function ChatsList() {
       return res.data;
     },
   });
+  console.log(chats);
 
   return (
     <div className="min-w-80  border-r border-border flex flex-col">
