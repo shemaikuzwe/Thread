@@ -6,7 +6,7 @@ export function Avatar() {
 function ChatListItem() {
   return (
     <div>
-      <div className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left hover:bg-muted">
+      <div className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left">
         <Avatar />
         <div className="flex flex-col gap-2 justify-center items-start">
           <Skeleton className="w-40 h-4" />

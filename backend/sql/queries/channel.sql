@@ -36,7 +36,7 @@ SELECT channels.*,json_agg(json_build_object(
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
-WHERE channels.name ILIKE $1 OR (users.first_name ILIKE $1 AND channels.type='dm')
+WHERE channels.name ILIKE $1 OR ((users.first_name ILIKE $1 OR users.last_name ILIKE $1 ) AND channels.type='dm')
 GROUP BY channels.id;
 
 -- name: GetChannelsByUserID :many
@@ -82,6 +82,12 @@ WHERE c.type = 'dm'
 GROUP BY c.id
 HAVING COUNT(DISTINCT cu1.user_id) = 1 AND COUNT(DISTINCT cu2.user_id) = 1;
 
+-- name: GetChannelAndUser :many
+
+SELECT c.id,c.name,'group' as type FROM channels c WHERE c.name ILIKE $1 AND c.is_private=false
+UNION
+SELECT DISTINCT u.id,CONCAT(u.first_name,' ',u.last_name) as name,'user' as type FROM users u
+WHERE u.first_name ILIKE $1 OR u.last_name ILIKE $1;
 -- name: JoinChannel :exec
 
 INSERT INTO channel_user (channel_id, user_id)

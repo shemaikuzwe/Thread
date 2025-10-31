@@ -14,5 +14,6 @@ export default [
     route("/chat", "pages/chat/index.tsx"),
     route("/chat/:id", "pages/chat/chat.tsx"),
   ]),
+  route("/api/uploadthing", "pages/api.uploadthing.ts"),
   route("*", "pages/not-found.tsx"),
 ] satisfies RouteConfig;

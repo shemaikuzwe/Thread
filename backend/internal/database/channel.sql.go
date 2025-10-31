@@ -131,6 +131,43 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 	return items, nil
 }
 
+const getChannelAndUser = `-- name: GetChannelAndUser :many
+
+SELECT c.id,c.name,'group' as type FROM channels c WHERE c.name ILIKE $1
+UNION
+SELECT u.id,CONCAT(u.first_name,' ',u.last_name) as name,'user' as type FROM users u
+WHERE u.first_name ILIKE $1 OR u.last_name ILIKE $1
+`
+
+type GetChannelAndUserRow struct {
+	ID   uuid.UUID `json:"id"`
+	Name *string   `json:"name"`
+	Type string    `json:"type"`
+}
+
+func (q *Queries) GetChannelAndUser(ctx context.Context, name *string) ([]GetChannelAndUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getChannelAndUser, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetChannelAndUserRow
+	for rows.Next() {
+		var i GetChannelAndUserRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Type); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getChannelByID = `-- name: GetChannelByID :one
 SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_private, channels.type,json_agg(json_build_object(
 'id', users.id,
@@ -180,7 +217,7 @@ SELECT channels.id, channels.name, channels.description, channels.created_at, ch
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id
 INNER JOIN users ON channel_user.user_id = users.id
-WHERE channels.name ILIKE $1 OR (users.first_name ILIKE $1 AND channels.type='dm')
+WHERE channels.name ILIKE $1 OR ((users.first_name ILIKE $1 OR users.last_name ILIKE $1 ) AND channels.type='dm')
 GROUP BY channels.id
 `
 

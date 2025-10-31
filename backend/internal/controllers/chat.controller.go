@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"errors"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -106,6 +108,19 @@ func CreateDMChannel(c *gin.Context) {
 		c.JSON(400, gin.H{"parse2 error": err.Error()})
 		return
 	}
+	//Check if channel already exists
+	channel, err := db.Db.GetDMChannel(c.Request.Context(), database.GetDMChannelParams{
+		UserID:   user1,
+		UserID_2: user2,
+	})
+	if err != nil {
+		log.Println("error", err)
+	}
+	log.Println("existing", channel)
+	if channel.ID.String() != "" {
+		c.JSON(http.StatusOK, gin.H{"id": channel.ID.String()})
+		return
+	}
 	chanID, err := db.Db.CreateDMChannel(c.Request.Context(), database.ChannelTypeDm)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -115,7 +130,7 @@ func CreateDMChannel(c *gin.Context) {
 		UserID:   user1,
 		UserID_2: user2,
 	})
-	c.JSON(201, gin.H{"message": "DM chat  created"})
+	c.JSON(201, gin.H{"id": chanID.String()})
 }
 
 func GetChannelByIdHandler(c *gin.Context) {
@@ -192,4 +207,17 @@ func GetCurrentUser(c *gin.Context) (Payload, error) {
 		return Payload{}, errors.New("user not found")
 	}
 	return user.(Payload), nil
+}
+func GetNewChatsHandler(c *gin.Context) {
+	search := c.Query("search")
+	if search == "" {
+		c.JSON(http.StatusOK, gin.H{})
+	}
+	pattern := "%" + search + "%"
+	chats, err := db.Db.GetChannelAndUser(c.Request.Context(), &pattern)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, chats)
 }

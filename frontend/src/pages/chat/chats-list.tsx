@@ -1,30 +1,38 @@
 import Search from "@/components/chat/search";
 import EmptyChatsList from "@/components/empty-chats-list";
-import { Button } from "@/components/ui/button";
 import { api } from "@/lib/axios";
 import type { ChannelWithUsers } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ChatListItem from "./chats-list-item";
 import { ChatListSkelton } from "@/components/ui/chat-skeltons";
+import NewChat from "./new-chat";
 
 export default function ChatsList() {
   const [search, setSearch] = useState<string>();
   const { data: chats, isLoading } = useQuery<ChannelWithUsers[]>({
-    queryKey: ["chats", search],
+    queryKey: ["chats"],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (search && search.trim()) {
-        params.set("search", search);
-      }
-      const res = await api.get(`/chats?${params.toString()}`);
+      const res = await api.get(`/chats`);
       if (res.status !== 200) {
         throw new Error("Failed to fetch chats");
       }
       return res.data;
     },
   });
-  console.log(chats);
+  const filteredChats = search
+    ? chats &&
+      chats.filter(
+        (chat) =>
+          chat?.name?.toLowerCase().includes(search.toLowerCase()) ||
+          (chat.type === "dm" &&
+            chat.users.filter(
+              (user) =>
+                user.first_name.toLowerCase().includes(search.toLowerCase()) ||
+                user.last_name.toLowerCase().includes(search.toLowerCase()),
+            ).length > 0),
+      )
+    : chats;
 
   return (
     <div className="min-w-80  border-r border-border flex flex-col">
@@ -32,21 +40,7 @@ export default function ChatsList() {
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-xl">Instant</h2>
-          <Button variant="ghost" size="sm">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </Button>
+          <NewChat />
         </div>
       </div>
 
@@ -57,8 +51,10 @@ export default function ChatsList() {
           <div className="space-y-2">
             {isLoading ? (
               <ChatListSkelton />
-            ) : chats && chats.length > 0 ? (
-              chats.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
+            ) : filteredChats && filteredChats?.length > 0 ? (
+              filteredChats.map((chat) => (
+                <ChatListItem key={chat.id} chat={chat} />
+              ))
             ) : (
               <EmptyChatsList />
             )}

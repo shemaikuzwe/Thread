@@ -48,12 +48,14 @@ func main() {
 	v1.GET("/auth/session", controllers.Session)
 	v1.GET("/auth/logout", controllers.Logout)
 
+	// TODO:Protect this users route admin only
 	v1.GET("/users", controllers.GetUsersHandler)
 	v1.GET("/users/:id", controllers.GetUserHandler)
 
 	v1.GET("/chats", controllers.GetChannelsHandler)
 	v1.POST("/chats", controllers.CreateChannelHandler)
 	v1.POST("/chats/dm", controllers.CreateDMChannel)
+	v1.GET("/chats/new", controllers.GetNewChatsHandler) //This will be used to get users and channels to create new chat from
 	v1.GET("/chats/:id", controllers.GetChannelByIdHandler)
 	v1.GET("/chats/:id/join", controllers.JoinChannelHandler)
 	v1.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)

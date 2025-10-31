@@ -18,6 +18,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
+import { useUploadThing } from "@/lib/utils";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ export default function ChatPage() {
   const session = useSession();
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
+  const { startUpload, isUploading } = useUploadThing("videoAndImage");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<string[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
@@ -54,7 +56,10 @@ export default function ChatPage() {
       payload?: MessageStatus,
     ) => {
       if (!userId) throw new Error("message is required");
-
+      if (files.length) {
+        // startUpload()
+        //handle upload
+      }
       if (type === "MESSAGE" && !newMessage.trim()) return;
       const message: Message = {
         channel_id: id,
@@ -207,7 +212,7 @@ export default function ChatPage() {
                 />
                 <Button
                   onClick={() => handleSendMessage("MESSAGE")}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || !files.length}
                   size={"icon"}
                 >
                   <ArrowUp className="w-4 h-4" />

@@ -22,7 +22,7 @@ export type Theme = "dark" | "light" | "system";
 
 export type Channel = {
   id: string;
-  name: string;
+  name: string | null;
   type: "group" | "dm";
   description: string;
   created_at: string;
