@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/use-weboscket";
-import type { ChannelWithUsers, Message, MessageStatus } from "@/lib/types";
+import type { ChatWithUsers, Message, MessageStatus } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
-import ChatHeader from "@/components/chat-header";
+import ChatHeader from "@/components/chat/chat-header.tsx";
 import { ArrowUp, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
@@ -33,7 +33,7 @@ export default function ChatPage() {
   const [files, setFiles] = useState<string[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
-  const { data: chat, isLoading: loading } = useQuery<ChannelWithUsers>({
+  const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
       const res = await api.get(`/chats/${id}`);

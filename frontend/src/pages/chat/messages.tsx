@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import EmptyChat from "@/components/empty-messages";
+import EmptyChat from "@/components/chat/empty-messages.tsx";
 
 interface Props {
   ref: React.RefObject<HTMLDivElement | null>;

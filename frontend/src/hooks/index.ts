@@ -1,5 +1,5 @@
 import { useSession } from "@/components/providers/session-provider";
-import type { ChannelWithUsers } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import { useState, useEffect, useRef } from "react";
 
 export function useIsTyping(delay = 1000) {
@@ -29,7 +29,7 @@ export function useIsTyping(delay = 1000) {
   return { isTyping, handleTyping };
 }
 
-export function useChatName(chat: ChannelWithUsers | undefined): {
+export function useChatName(chat: ChatWithUsers | undefined): {
   name: string;
 } {
   const data = useSession();

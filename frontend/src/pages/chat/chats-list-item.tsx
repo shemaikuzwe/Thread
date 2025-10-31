@@ -2,10 +2,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useChatName } from "@/hooks";
 import { useMessages, useMessageStatus } from "@/hooks/use-messages";
-import type { ChannelWithUsers } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import { useNavigate } from "react-router";
 
-export default function ChatListItem({ chat }: { chat: ChannelWithUsers }) {
+export default function ChatListItem({ chat }: { chat: ChatWithUsers }) {
   const navigate = useNavigate();
   const { data: messages } = useMessages(chat.id);
   const { data: msgStatus } = useMessageStatus(chat.id);

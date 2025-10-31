@@ -1,20 +1,20 @@
-import type { Channel, User } from "@/lib/types";
+import type { Chat, User } from "@/lib/types";
 import { useParams } from "react-router";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import JoinButton from "./chat/join-button";
-import { useActive } from "@/hooks/use-messages";
-import ThemeToggle from "./theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
+import JoinButton from "./join-button.tsx";
+import { useOnline } from "@/hooks/use-messages.ts";
+import ThemeToggle from "../theme-toggle.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu.tsx";
 import { EllipsisVerticalIcon } from "lucide-react";
-import { ChatHeaderSkelton } from "./ui/chat-skeltons";
+import { ChatHeaderSkelton } from "../ui/chat-skeltons.tsx";
 import { useChatName } from "@/hooks";
 
 interface Props {
-  chat: (Channel & { users: User[] }) | undefined;
+  chat: (Chat & { users: User[] }) | undefined;
   join: boolean;
   loading: boolean;
   setJoin: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,9 +23,9 @@ interface Props {
 export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
-  const { data: active } = useActive(id);
+  const { data: online } = useOnline(id);
   const { name } = useChatName(chat);
-  const isOnline = chat?.type === "dm" && active && active.users.length === 2;
+  const isOnline = chat?.type === "dm" && online && online.users.length === 2;
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
       {loading ? (
@@ -47,11 +47,11 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
               <h1 className="text-lg font-semibold ">{name}</h1>
               <p className="text-sm text-gray-500">
                 {isOnline
-                  ? "Online"
-                  : active &&
+                  ? "online"
+                  : online &&
                     chat.type === "group" &&
-                    active.active > 1 &&
-                    `${active.active} Online`}
+                    online.online > 1 &&
+                    `${online.online} Online`}
               </p>
             </div>
           </div>

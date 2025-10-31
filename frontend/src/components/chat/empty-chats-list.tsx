@@ -5,10 +5,10 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { Button } from "./ui/button";
+} from "@/components/ui/empty.tsx";
+import { Button } from "../ui/button.tsx";
 import { MessageCircleIcon } from "lucide-react";
-import { CreateChat } from "./create-chat";
+import { CreateChat } from "./create-chat.tsx";
 
 export default function EmptyChatsList() {
   return (

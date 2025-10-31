@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
   DialogClose,
@@ -7,15 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { createChatSchema, type CreateChatData } from "@/lib/schema";
+} from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { createChatSchema, type CreateChatData } from "@/lib/schema.ts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
-import { api } from "@/lib/axios";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form.tsx";
+import { api } from "@/lib/axios.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "./ui/textarea";
+import { Textarea } from "../ui/textarea.tsx";
 interface Props {
   children: React.ReactNode;
 }

@@ -18,7 +18,7 @@ type Result = {
 
 export default function NewChat() {
   const [search, setSearch] = useState<string>();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const { data, isLoading } = useQuery<Result[]>({
     queryKey: ["new-chat", search],
     queryFn: async () => {
@@ -26,7 +26,7 @@ export default function NewChat() {
       if (search) {
         params.set("search", search);
       }
-      const res = await api.get(`/chats/new?${params.toString()}`);
+      const res = await api.get(`/chats?${params.toString()}`);
       if (!res.data) {
         return null;
       }

@@ -133,9 +133,9 @@ func (q *Queries) GetAllChannels(ctx context.Context) ([]GetAllChannelsRow, erro
 
 const getChannelAndUser = `-- name: GetChannelAndUser :many
 
-SELECT c.id,c.name,'group' as type FROM channels c WHERE c.name ILIKE $1
+SELECT c.id,c.name,'group' as type FROM channels c WHERE c.name ILIKE $1 AND c.is_private=false
 UNION
-SELECT u.id,CONCAT(u.first_name,' ',u.last_name) as name,'user' as type FROM users u
+SELECT DISTINCT u.id,CONCAT(u.first_name,' ',u.last_name) as name,'user' as type FROM users u
 WHERE u.first_name ILIKE $1 OR u.last_name ILIKE $1
 `
 
@@ -206,62 +206,6 @@ func (q *Queries) GetChannelByID(ctx context.Context, id uuid.UUID) (GetChannelB
 		&i.Users,
 	)
 	return i, err
-}
-
-const getChannelsByName = `-- name: GetChannelsByName :many
-SELECT channels.id, channels.name, channels.description, channels.created_at, channels.updated_at, channels.is_private, channels.type,json_agg(json_build_object(
-'id', users.id,
-'first_name', users.first_name,
-'last_name', users.last_name,
-'email', users.email)) AS users
-FROM channels INNER JOIN channel_user
-ON channels.id = channel_user.channel_id
-INNER JOIN users ON channel_user.user_id = users.id
-WHERE channels.name ILIKE $1 OR ((users.first_name ILIKE $1 OR users.last_name ILIKE $1 ) AND channels.type='dm')
-GROUP BY channels.id
-`
-
-type GetChannelsByNameRow struct {
-	ID          uuid.UUID       `json:"id"`
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
-	IsPrivate   bool            `json:"is_private"`
-	Type        ChannelType     `json:"type"`
-	Users       json.RawMessage `json:"users"`
-}
-
-func (q *Queries) GetChannelsByName(ctx context.Context, name *string) ([]GetChannelsByNameRow, error) {
-	rows, err := q.db.QueryContext(ctx, getChannelsByName, name)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetChannelsByNameRow
-	for rows.Next() {
-		var i GetChannelsByNameRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsPrivate,
-			&i.Type,
-			&i.Users,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getChannelsByUserID = `-- name: GetChannelsByUserID :many

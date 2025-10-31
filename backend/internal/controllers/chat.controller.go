@@ -17,12 +17,12 @@ type channel struct {
 	Description string `json:"description"`
 }
 
-func GetChannelsHandler(c *gin.Context) {
+func GetChatsHandler(c *gin.Context) {
 	user, err := GetCurrentUser(c)
 	search := strings.TrimSpace(c.Query("search"))
 	if search != "" {
 		pattern := "%" + search + "%"
-		channels, err := db.Db.GetChannelsByName(c.Request.Context(), &pattern)
+		channels, err := db.Db.GetChannelAndUser(c.Request.Context(), &pattern)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -84,7 +84,7 @@ func CreateChannelHandler(c *gin.Context) {
 	c.JSON(201, channel)
 }
 
-func CreateDMChannel(c *gin.Context) {
+func CreateDMChat(c *gin.Context) {
 	var body struct {
 		UserID string `json:"user_id"`
 	}
@@ -133,7 +133,7 @@ func CreateDMChannel(c *gin.Context) {
 	c.JSON(201, gin.H{"id": chanID.String()})
 }
 
-func GetChannelByIdHandler(c *gin.Context) {
+func GetChatsByIdHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, gin.H{"error": "id is required"})
@@ -181,7 +181,7 @@ func JoinChannelHandler(c *gin.Context) {
 	}
 	c.JSON(201, gin.H{"message": "Joined channel"})
 }
-func GetChannelMessagesHandler(c *gin.Context) {
+func GetChatMessagesHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, gin.H{"error": "id is required"})
@@ -207,17 +207,4 @@ func GetCurrentUser(c *gin.Context) (Payload, error) {
 		return Payload{}, errors.New("user not found")
 	}
 	return user.(Payload), nil
-}
-func GetNewChatsHandler(c *gin.Context) {
-	search := c.Query("search")
-	if search == "" {
-		c.JSON(http.StatusOK, gin.H{})
-	}
-	pattern := "%" + search + "%"
-	chats, err := db.Db.GetChannelAndUser(c.Request.Context(), &pattern)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, chats)
 }

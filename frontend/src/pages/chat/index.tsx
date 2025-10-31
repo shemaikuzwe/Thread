@@ -6,7 +6,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateChat } from "@/components/create-chat";
+import { CreateChat } from "@/components/chat/create-chat.tsx";
 import { MessageCircleIcon } from "lucide-react";
 
 export default function Index() {

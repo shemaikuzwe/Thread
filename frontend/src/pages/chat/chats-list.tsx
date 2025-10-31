@@ -1,7 +1,7 @@
 import Search from "@/components/chat/search";
-import EmptyChatsList from "@/components/empty-chats-list";
+import EmptyChatsList from "@/components/chat/empty-chats-list.tsx";
 import { api } from "@/lib/axios";
-import type { ChannelWithUsers } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ChatListItem from "./chats-list-item";
@@ -10,7 +10,7 @@ import NewChat from "./new-chat";
 
 export default function ChatsList() {
   const [search, setSearch] = useState<string>();
-  const { data: chats, isLoading } = useQuery<ChannelWithUsers[]>({
+  const { data: chats, isLoading } = useQuery<ChatWithUsers[]>({
     queryKey: ["chats"],
     queryFn: async () => {
       const res = await api.get(`/chats`);

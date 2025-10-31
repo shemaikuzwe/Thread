@@ -6,7 +6,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { ChannelWithUsers } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import JoinButton from "./join-button";
 
@@ -14,7 +14,7 @@ export default function JoinChat({
   chat,
   setJoin,
 }: {
-  chat: ChannelWithUsers;
+  chat: ChatWithUsers;
   setJoin: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
@@ -25,7 +25,7 @@ export default function JoinChat({
             <Avatar>
               <AvatarImage src={""} />
               <AvatarFallback>
-                {chat.name.slice(0, chat.name.length - 1).toUpperCase()}
+                {chat?.name?.slice(0, chat?.name.length - 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </EmptyMedia>

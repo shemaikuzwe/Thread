@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,8 +23,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:5173"},
-		// AllowAllOrigins:  true,
+		AllowOrigins:     []string{os.Getenv("CLIENT_APP_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type"},
 		AllowCredentials: true,
@@ -52,13 +52,12 @@ func main() {
 	v1.GET("/users", controllers.GetUsersHandler)
 	v1.GET("/users/:id", controllers.GetUserHandler)
 
-	v1.GET("/chats", controllers.GetChannelsHandler)
+	v1.GET("/chats", controllers.GetChatsHandler)
 	v1.POST("/chats", controllers.CreateChannelHandler)
-	v1.POST("/chats/dm", controllers.CreateDMChannel)
-	v1.GET("/chats/new", controllers.GetNewChatsHandler) //This will be used to get users and channels to create new chat from
-	v1.GET("/chats/:id", controllers.GetChannelByIdHandler)
+	v1.POST("/chats/dm", controllers.CreateDMChat)
+	v1.GET("/chats/:id", controllers.GetChatsByIdHandler)
 	v1.GET("/chats/:id/join", controllers.JoinChannelHandler)
-	v1.GET("/chats/:id/messages", controllers.GetChannelMessagesHandler)
+	v1.GET("/chats/:id/messages", controllers.GetChatMessagesHandler)
 
 	log.Println("Starting server at http://localhost:8000")
 	err := router.Run(":8000")

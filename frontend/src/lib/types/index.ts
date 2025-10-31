@@ -18,9 +18,8 @@ export type MessageStatus = {
   status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
 };
 
-export type Theme = "dark" | "light" | "system";
 
-export type Channel = {
+export type Chat = {
   id: string;
   name: string | null;
   type: "group" | "dm";
@@ -28,7 +27,7 @@ export type Channel = {
   created_at: string;
   updated_at: string;
 };
-export interface ChannelWithUsers extends Channel {
+export interface ChatWithUsers extends Chat {
   users: User[];
 }
 
@@ -51,7 +50,7 @@ export interface User {
   profile_picture: string;
 }
 
-export interface Active {
-  active: number;
+export interface Online {
+  online: number;
   users: string[];
 }

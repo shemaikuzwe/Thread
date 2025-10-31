@@ -1,5 +1,5 @@
 import { api } from "@/lib/axios";
-import type { Active, Message, MessageStatus } from "@/lib/types";
+import type { Online, Message, MessageStatus } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useMessages = (id: string) => {
@@ -12,12 +12,12 @@ export const useMessages = (id: string) => {
     },
   });
 };
-export const useActive = (id: string) => {
-  return useQuery<Active>({
-    initialData: { active: 0, users: [] },
-    queryKey: ["active", id],
+export const useOnline = (id: string) => {
+  return useQuery<Online>({
+    initialData: { online: 0, users: [] },
+    queryKey: ["online", id],
     queryFn: () => {
-      return { active: 0, users: [] };
+      return { online: 0, users: [] };
     },
     enabled: false, //prevents auto execution of queryFn
   });

@@ -22,7 +22,7 @@ export function useWebSocket() {
     socket.onmessage = (e) => {
       const msg = JSON.parse(e.data) as Message;
       if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
-        queryClient.setQueryData(["active", msg.channel_id], () => {
+        queryClient.setQueryData(["online", msg.channel_id], () => {
           return {
             active: Number(msg.message.active),
             users: msg.message.users,
