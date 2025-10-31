@@ -32,17 +32,16 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) er
 }
 
 const getChannelMessages = `-- name: GetChannelMessages :many
-SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,json_agg(json_build_object(
+SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
 'email', users.email,
 'profile_picture', users.profile_picture
-)) AS from
+) AS from
 FROM messages
 INNER JOIN users ON messages.user_id = users.id
 WHERE messages.channel_id = $1
-GROUP BY messages.id
 ORDER BY messages.created_at ASC
 `
 

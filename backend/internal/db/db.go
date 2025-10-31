@@ -10,7 +10,7 @@ import (
 )
 
 var Db *database.Queries
-var redisClient *redis.Client
+var RedisClient *redis.Client
 
 func ConnectDb() {
 	dbUrl := os.Getenv("DATABASE_URL")
@@ -35,5 +35,6 @@ func ConnectRedis() {
 	if err != nil {
 		log.Fatal("Failed to parse redis url", err)
 	}
-	redisClient = redis.NewClient(opt)
+	RedisClient = redis.NewClient(opt)
+	log.Println("Connected to the redis")
 }

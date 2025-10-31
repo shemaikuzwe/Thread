@@ -64,4 +64,5 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to start server")
 	}
+	defer db.RedisClient.Close()
 }

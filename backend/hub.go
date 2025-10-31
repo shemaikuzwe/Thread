@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"slices"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shemaIkuzwe/websocket/internal/cache"
 	"github.com/shemaIkuzwe/websocket/internal/db"
 )
 
@@ -184,8 +186,7 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-
-	usersChannels, err := db.Db.GetClientChannels(context.Background(), clientUUID)
+	usersChannels, err := getUserChannels(clientUUID)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
@@ -194,4 +195,24 @@ func CheckUser(message []byte, client string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
+	key := fmt.Sprintf("chats:%s", userId)
+	cached, ok, err := cache.Get[[]uuid.UUID](key)
+	if ok && err == nil {
+		log.Println("Cache hit!")
+		return cached, nil
+	}
+	usersChannels, err := db.Db.GetClientChannels(context.Background(), userId)
+	if err != nil {
+		log.Println("failed to parse json", err)
+		return nil, err
+	}
+	log.Println("Cache miss!")
+	err = cache.Set(key, usersChannels, int(time.Hour)*24)
+	if err != nil {
+		log.Println("unable to set cache", err)
+	}
+	return usersChannels, nil
 }

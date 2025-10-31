@@ -23,14 +23,7 @@ type Message struct {
 	Type      Type        `json:"type"`
 	Date      string      `json:"created_at"`
 }
-type Notification struct {
-	Message string `json:"message"`
-	Type    Type   `json:"type"`
-	Date    string `json:"created_at"`
-}
-type toByte interface {
-	toByte() ([]byte, error)
-}
+
 type Type string
 
 const (
@@ -70,10 +63,6 @@ var clients = make(map[string]map[string]*ClientConn)
 
 func (m *Message) toByte() ([]byte, error) {
 	msg, err := json.Marshal(&m)
-	return msg, err
-}
-func (n *Notification) toByte() ([]byte, error) {
-	msg, err := json.Marshal(&n)
 	return msg, err
 }
 

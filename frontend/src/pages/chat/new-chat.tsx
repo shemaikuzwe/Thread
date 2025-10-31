@@ -7,6 +7,7 @@ import SearchInput from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useNavigate } from "react-router";
 
@@ -38,7 +39,10 @@ export default function NewChat() {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger>
-        <Button size={"sm"}>New</Button>
+        <Button size={"sm"}>
+          <span className="sr-only">New</span>
+          <PlusIcon />
+        </Button>
       </DialogTrigger>
       <DialogContent className="w-150 min-h-80 flex flex-col gap-2">
         <SearchInput

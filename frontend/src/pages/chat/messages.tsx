@@ -15,6 +15,8 @@ export default function Messages({ messages, userId, ref }: Props) {
     <div className="pb-2" ref={ref}>
       {messages.map((message) => {
         const isOwn = message.user_id === userId;
+        const fullName = message.from.first_name + " " + message.from.last_name;
+        // console.log("fullName", fullName);
         return (
           <div
             key={message.id}
@@ -26,10 +28,11 @@ export default function Messages({ messages, userId, ref }: Props) {
             <Avatar className="w-8 h-8 flex-shrink-0">
               <AvatarImage src={``} />
               <AvatarFallback>
-                {"Shema Ikuzwe"
+                {fullName
                   .split(" ")
                   .map((n) => n[0])
-                  .join("")}
+                  .join("")
+                  .toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
@@ -48,12 +51,12 @@ export default function Messages({ messages, userId, ref }: Props) {
        )} */}
               <div
                 className={cn(
-                  "rounded-2xl px-4 py-3 min-w-30 rounded-br-md",
+                  "rounded-2xl px-3 py-2 min-w-30 rounded-br-md",
                   isOwn ? "bg-primary text-white" : "bg-secondary",
                 )}
               >
                 <p className="text-sm leading-relaxed">{message.message}</p>
-                <div className="flex justify-end mt-1">
+                <div className="flex justify-end">
                   <span className="text-xs">
                     {format(new Date(message.created_at), "H:mm")}
                   </span>
