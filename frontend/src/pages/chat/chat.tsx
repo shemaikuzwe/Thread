@@ -12,7 +12,7 @@ import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Loader2, Loader2Icon, Paperclip } from "lucide-react";
+import { ArrowUp, Loader2Icon, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -98,7 +98,7 @@ export default function ChatPage() {
         setFiles([]);
       }
     },
-    [sendMessage, id, session, newMessage, userId, startUpload],
+    [sendMessage, id, session, newMessage, files, userId, startUpload],
   );
 
   useEffect(() => {

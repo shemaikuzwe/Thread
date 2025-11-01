@@ -19,10 +19,10 @@ VALUES ($1,$2,$3,$4)
 `
 
 type CreateFilesParams struct {
-	Url       string    `json:"url"`
-	Type      string    `json:"type"`
-	Size      int32     `json:"size"`
-	MessageID uuid.UUID `json:"message_id"`
+	Url       string     `json:"url"`
+	Type      string     `json:"type"`
+	Size      int32      `json:"size"`
+	MessageID *uuid.UUID `json:"message_id"`
 }
 
 func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error {
@@ -74,8 +74,9 @@ SELECT
         'type', f.type,
         'size', f.size
       )
-    ) FILTER (WHERE f.id IS NOT NULL)
-  ) AS files
+    ) FILTER (WHERE f.id IS NOT NULL),
+    '[]'::json
+  )::jsonb AS files
 FROM messages m
 INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
@@ -92,7 +93,7 @@ type GetChannelMessagesRow struct {
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	From      json.RawMessage `json:"from"`
-	Files     interface{}     `json:"files"`
+	Files     json.RawMessage `json:"files"`
 }
 
 func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) ([]GetChannelMessagesRow, error) {

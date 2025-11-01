@@ -49,16 +49,19 @@ export default function Messages({ messages, userId, ref }: Props) {
            </span>
          </div>
        )} */}
-              {/*{message.files.length > 0 && (
-                <div>
-                  {message.files.map((file) => (
-                    <div className="w-40 h-40">
-                      <img src={file.url} className="w-40 h-40" />
+              {message.files.length > 0 && (
+                <div className="mb-2">
+                  {message.files.map((file, index) => (
+                    <div key={index} className="w-40 h-40">
+                      <img
+                        src={file.url}
+                        className="w-40 h-40 rounded-md"
+                        alt={file.name}
+                      />
                     </div>
                   ))}
                 </div>
               )}
-*/}
               <div
                 className={cn(
                   "rounded-2xl px-3 py-2 min-w-30 rounded-br-md",

@@ -70,13 +70,13 @@ type ChannelUser struct {
 }
 
 type File struct {
-	ID        uuid.UUID `json:"id"`
-	Url       string    `json:"url"`
-	Type      string    `json:"type"`
-	Size      int32     `json:"size"`
-	MessageID uuid.UUID `json:"message_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uuid.UUID  `json:"id"`
+	Url       string     `json:"url"`
+	Type      string     `json:"type"`
+	Size      int32      `json:"size"`
+	MessageID *uuid.UUID `json:"message_id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type Message struct {

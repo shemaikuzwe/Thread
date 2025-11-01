@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +36,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
+	maxMessageSize = 512000
 )
 
 var (
@@ -182,7 +181,7 @@ type File struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
 	Type string `json:"type"`
-	Size string `json:"size"`
+	Size int    `json:"size"`
 }
 
 func handlerCreateMessage(message []byte, userID string) {
@@ -224,22 +223,19 @@ func handlerCreateMessage(message []byte, userID string) {
 	if len(msg.Files) > 0 {
 		// TODO:Use bulk insert
 		for _, file := range msg.Files {
-			size, err := strconv.Atoi(file.Size)
-			if err != nil {
-				log.Println("Error", err)
-				return
-			}
 			err = db.Db.CreateFiles(context.Background(), database.CreateFilesParams{
 				Url:       file.Url,
 				Type:      file.Type,
-				Size:      int32(size),
-				MessageID: msgId,
+				Size:      int32(file.Size),
+				MessageID: &msgId,
 			})
+			if err != nil {
+				log.Println("error creating file", err)
+
+			}
 		}
 	}
-
 	if err != nil {
 		log.Println("db create message error:", err)
 	}
-	log.Println("Message created")
 }

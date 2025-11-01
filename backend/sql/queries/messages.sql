@@ -18,7 +18,7 @@ SELECT
       )
     ) FILTER (WHERE f.id IS NOT NULL),
     '[]'::json
-  ) AS files
+  )::jsonb AS files
 FROM messages m
 INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
