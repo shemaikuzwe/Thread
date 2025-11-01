@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,11 +18,11 @@ import (
 )
 
 type Message struct {
-	Message   interface{} `json:"message"`
-	ChannelID string      `json:"channel_id"`
-	UserID    string      `json:"user_id"`
-	Type      Type        `json:"type"`
-	Date      string      `json:"created_at"`
+	Message   any    `json:"message"`
+	ChannelID string `json:"channel_id"`
+	UserID    string `json:"user_id"`
+	Type      Type   `json:"type"`
+	Date      string `json:"created_at"`
 }
 
 type Type string
@@ -176,10 +177,20 @@ func serveWs(hub *Hub, ctx *gin.Context) {
 	go client.writePump()
 	go client.readPump()
 }
+
+type File struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+	Type string `json:"type"`
+	Size string `json:"size"`
+}
+
 func handlerCreateMessage(message []byte, userID string) {
+
 	var msg struct {
 		Message   string `json:"message"`
 		ChannelID string `json:"channel_id"`
+		Files     []File `json:"files"`
 		UserID    string `json:"user_id"`
 		Type      Type   `json:"type"`
 		Date      string `json:"created_at"`
@@ -205,11 +216,27 @@ func handlerCreateMessage(message []byte, userID string) {
 		return
 	}
 
-	err = db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
+	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
 		ChannelID: chanUUID,
 		UserID:    userUUID,
 		Message:   msg.Message,
 	})
+	if len(msg.Files) > 0 {
+		// TODO:Use bulk insert
+		for _, file := range msg.Files {
+			size, err := strconv.Atoi(file.Size)
+			if err != nil {
+				log.Println("Error", err)
+				return
+			}
+			err = db.Db.CreateFiles(context.Background(), database.CreateFilesParams{
+				Url:       file.Url,
+				Type:      file.Type,
+				Size:      int32(size),
+				MessageID: msgId,
+			})
+		}
+	}
 
 	if err != nil {
 		log.Println("db create message error:", err)

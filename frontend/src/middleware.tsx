@@ -1,6 +1,6 @@
 import { createContext, redirect, RouterContextProvider } from "react-router";
 import type { Session } from "./lib/types";
-import { api } from "./lib/axios";
+import { auth } from "./lib/server";
 
 export const userContext = createContext<Session | null>(null);
 
@@ -13,16 +13,11 @@ export async function authMiddleware({
   request: Request;
   context: Readonly<RouterContextProvider>;
 }) {
-  const res = await api.get("/auth/session", {
-    headers: {
-      Cookie: request.headers.get("Cookie") || "",
-    },
-  });
-  if (!res.data) {
-    throw new Error("Something went wrong");
-  }
-  const user = res.data as Session;
+  const user = await auth(request);
   const url = new URL(request.url).pathname;
+  if (url.startsWith("/api")) {
+    return;
+  }
   const isLoggedIn = user.status === "authenticated";
   if (isLoggedIn && publicRoutes.includes(url)) {
     throw redirect("/chat");

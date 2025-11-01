@@ -1,10 +1,9 @@
 import { XIcon } from "lucide-react";
 import { Button } from "../ui/button";
+import type { UploadFile } from "@/lib/types";
 
 interface Props {
-  file: {
-    url: string;
-  };
+  file: UploadFile;
   handleRemove: () => void;
 }
 export function FileCard({ file, handleRemove }: Props) {
@@ -20,7 +19,11 @@ export function FileCard({ file, handleRemove }: Props) {
           <XIcon />
         </Button>
       </div>
-      <img src={file.url} alt="file-preview" className="h-35 rounded-md w-40" />
+      <img
+        src={file.dataUrl}
+        alt={file.file.name}
+        className="h-35 rounded-md w-40"
+      />
     </div>
   );
 }

@@ -13,10 +13,33 @@ import (
 	"github.com/google/uuid"
 )
 
-const createMessage = `-- name: CreateMessage :exec
+const createFiles = `-- name: CreateFiles :exec
+INSERT INTO files(url,type,size,message_id)
+VALUES ($1,$2,$3,$4)
+`
+
+type CreateFilesParams struct {
+	Url       string    `json:"url"`
+	Type      string    `json:"type"`
+	Size      int32     `json:"size"`
+	MessageID uuid.UUID `json:"message_id"`
+}
+
+func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error {
+	_, err := q.db.ExecContext(ctx, createFiles,
+		arg.Url,
+		arg.Type,
+		arg.Size,
+		arg.MessageID,
+	)
+	return err
+}
+
+const createMessage = `-- name: CreateMessage :one
 
 INSERT INTO messages (channel_id, user_id, message)
 VALUES ($1, $2, $3)
+RETURNING id
 `
 
 type CreateMessageParams struct {
@@ -26,23 +49,39 @@ type CreateMessageParams struct {
 }
 
 // LIMIT 10;
-func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) error {
-	_, err := q.db.ExecContext(ctx, createMessage, arg.ChannelID, arg.UserID, arg.Message)
-	return err
+func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, createMessage, arg.ChannelID, arg.UserID, arg.Message)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const getChannelMessages = `-- name: GetChannelMessages :many
-SELECT messages.id, messages.channel_id, messages.user_id, messages.message, messages.created_at, messages.updated_at,json_build_object(
-'id', users.id,
-'first_name', users.first_name,
-'last_name', users.last_name,
-'email', users.email,
-'profile_picture', users.profile_picture
-) AS from
-FROM messages
-INNER JOIN users ON messages.user_id = users.id
-WHERE messages.channel_id = $1
-ORDER BY messages.created_at ASC
+SELECT
+  m.id, m.channel_id, m.user_id, m.message, m.created_at, m.updated_at,
+  json_build_object(
+    'id', u.id,
+    'first_name', u.first_name,
+    'last_name', u.last_name,
+    'email', u.email,
+    'profile_picture', u.profile_picture
+  ) AS "from",
+  COALESCE(
+    json_agg(
+      json_build_object(
+        'id', f.id,
+        'url', f.url,
+        'type', f.type,
+        'size', f.size
+      )
+    ) FILTER (WHERE f.id IS NOT NULL)
+  ) AS files
+FROM messages m
+INNER JOIN users u ON m.user_id = u.id
+LEFT JOIN files f ON f.message_id = m.id
+WHERE m.channel_id = $1
+GROUP BY m.id, u.id
+ORDER BY m.created_at ASC
 `
 
 type GetChannelMessagesRow struct {
@@ -53,6 +92,7 @@ type GetChannelMessagesRow struct {
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	From      json.RawMessage `json:"from"`
+	Files     interface{}     `json:"files"`
 }
 
 func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) ([]GetChannelMessagesRow, error) {
@@ -72,6 +112,7 @@ func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) (
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.From,
+			&i.Files,
 		); err != nil {
 			return nil, err
 		}

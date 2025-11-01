@@ -12,9 +12,9 @@ sql:
             nullable: true
             go_type:
               type: "*string"
-          - column: "channels.name"
-            go_type:
-              type: "*string"
+          # - column: "channels.name"
+          #   go_type:
+          #     type: "*string"
           - db_type: "text"
             nullable: true # this overrides default sql.NullString
             go_type:
@@ -23,3 +23,7 @@ sql:
             nullable: true # this overrides default sql.NullString
             go_type:
               type: "*bool"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              type: "*uuid.UUID"

@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/use-weboscket";
-import type { ChatWithUsers, Message, MessageStatus } from "@/lib/types";
+import type {
+  ChatWithUsers,
+  Message,
+  MessageStatus,
+  UploadFile,
+} from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Paperclip } from "lucide-react";
+import { ArrowUp, Loader2, Loader2Icon, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -19,6 +24,8 @@ import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
 import { useUploadThing } from "@/lib/utils";
+import type { ClientUploadedFileData } from "uploadthing/types";
+import type { UploadRouter } from "../api.uploadthing";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -30,7 +37,7 @@ export default function ChatPage() {
   if (!id || !userId) throw new Error("id is required");
   const { startUpload, isUploading } = useUploadThing("videoAndImage");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<string[]>([]);
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
@@ -51,20 +58,29 @@ export default function ChatPage() {
   }, [chat, userId]);
 
   const handleSendMessage = useCallback(
-    (
+    async (
       type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
       payload?: MessageStatus,
     ) => {
       if (!userId) throw new Error("message is required");
-      if (files.length) {
-        // startUpload()
-        //handle upload
+      let uploaded: ClientUploadedFileData<UploadRouter>[] | undefined = [];
+      if (files.length && type === "MESSAGE") {
+        uploaded = await startUpload(files.map((f) => f.file));
+        console.log(uploaded);
       }
       if (type === "MESSAGE" && !newMessage.trim()) return;
+
       const message: Message = {
         channel_id: id,
         id: crypto.randomUUID(),
         created_at: new Date().toUTCString(),
+        files:
+          uploaded?.map((upload) => ({
+            name: upload.name,
+            type: upload.type,
+            url: upload.ufsUrl,
+            size: upload.size,
+          })) ?? [],
         message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
         type: type,
         user_id: userId,
@@ -79,9 +95,10 @@ export default function ChatPage() {
       sendMessage(message);
       if (type === "MESSAGE") {
         setNewMessage("");
+        setFiles([]);
       }
     },
-    [sendMessage, id, session, newMessage, userId],
+    [sendMessage, id, session, newMessage, userId, startUpload],
   );
 
   useEffect(() => {
@@ -109,27 +126,27 @@ export default function ChatPage() {
     const fileList = e.currentTarget.files;
     if (!fileList || !fileList.length) return;
 
-    const newFiles: string[] = [];
+    const newFiles: UploadFile[] = [];
 
     for (const file of Array.from(fileList)) {
       const reader = new FileReader();
 
-      const fileData = await new Promise<string | ArrayBuffer | null>(
+      const fileUrl = await new Promise<string | ArrayBuffer | null>(
         (resolve, reject) => {
           reader.onload = (event) => resolve(event.target?.result ?? null);
           reader.onerror = (error) => reject(error);
+
           reader.readAsDataURL(file); // for images/base64
           // reader.readAsText(file); // for text files
           // reader.readAsArrayBuffer(file); // for PDFs/videos
         },
       );
 
-      if (fileData) newFiles.push(fileData as string);
+      if (fileUrl) newFiles.push({ dataUrl: fileUrl, file });
     }
 
     setFiles((prev) => [...prev, ...newFiles]);
   };
-  console.log(files);
   return (
     <div className="gray-50 flex w-full">
       {/* Main Chat Area */}
@@ -169,7 +186,7 @@ export default function ChatPage() {
                   {files.map((file, index) => (
                     <FileCard
                       key={index}
-                      file={{ url: file }}
+                      file={file}
                       handleRemove={() => {
                         setFiles(files.filter((_, idx) => idx !== index));
                       }}
@@ -212,10 +229,16 @@ export default function ChatPage() {
                 />
                 <Button
                   onClick={() => handleSendMessage("MESSAGE")}
-                  disabled={!newMessage.trim() || !files.length}
+                  disabled={
+                    (!newMessage.trim() && !files.length) || isUploading
+                  }
                   size={"icon"}
                 >
-                  <ArrowUp className="w-4 h-4" />
+                  {isUploading ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <ArrowUp className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>

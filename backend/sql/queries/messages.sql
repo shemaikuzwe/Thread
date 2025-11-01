@@ -1,17 +1,37 @@
 -- name: GetChannelMessages :many
-SELECT messages.*,json_build_object(
-'id', users.id,
-'first_name', users.first_name,
-'last_name', users.last_name,
-'email', users.email,
-'profile_picture', users.profile_picture
-) AS from
-FROM messages
-INNER JOIN users ON messages.user_id = users.id
-WHERE messages.channel_id = $1
-ORDER BY messages.created_at ASC;
+SELECT
+  m.*,
+  json_build_object(
+    'id', u.id,
+    'first_name', u.first_name,
+    'last_name', u.last_name,
+    'email', u.email,
+    'profile_picture', u.profile_picture
+  ) AS "from",
+  COALESCE(
+    json_agg(
+      json_build_object(
+        'id', f.id,
+        'url', f.url,
+        'type', f.type,
+        'size', f.size
+      )
+    ) FILTER (WHERE f.id IS NOT NULL),
+    '[]'::json
+  ) AS files
+FROM messages m
+INNER JOIN users u ON m.user_id = u.id
+LEFT JOIN files f ON f.message_id = m.id
+WHERE m.channel_id = $1
+GROUP BY m.id, u.id
+ORDER BY m.created_at ASC;
 -- LIMIT 10;
 
--- name: CreateMessage :exec
+-- name: CreateMessage :one
 INSERT INTO messages (channel_id, user_id, message)
-VALUES ($1, $2, $3);
+VALUES ($1, $2, $3)
+RETURNING id;
+
+-- name: CreateFiles :exec
+INSERT INTO files(url,type,size,message_id)
+VALUES ($1,$2,$3,$4);

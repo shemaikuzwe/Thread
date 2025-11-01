@@ -1,8 +1,15 @@
+type MessageFile = {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+};
 export interface Message {
   id: string;
   user_id: string;
   channel_id: string;
   message: any;
+  files: MessageFile[];
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS";
   created_at: string;
   from: {
@@ -17,7 +24,10 @@ export interface Message {
 export type MessageStatus = {
   status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
 };
-
+export interface UploadFile {
+  dataUrl: string | ArrayBuffer | null;
+  file: File;
+}
 
 export type Chat = {
   id: string;

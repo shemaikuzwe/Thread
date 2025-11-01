@@ -1,8 +1,7 @@
 import { createRouteHandler, createUploadthing } from "uploadthing/remix";
 import { UploadThingError } from "uploadthing/server";
 import type { FileRouter } from "uploadthing/types";
-import { api } from "../lib/axios";
-import type { Session } from "../lib/types";
+import { auth } from "@/lib/server";
 
 const f = createUploadthing();
 
@@ -12,16 +11,8 @@ export const uploadRouter = {
     video: { maxFileSize: "16MB" },
   })
     .middleware(async ({ event }) => {
-      const res = await api.get("/auth/session", {
-        headers: {
-          Cookie: event.headers.get("Cookie") || "",
-        },
-      });
-      if (!res.data) {
-        throw new Error("Something went wrong");
-      }
-      const session = res.data as Session;
-      if (session.status === "authenticated" || !session.user) {
+      const session = await auth(event.request);
+      if (session.status !== "authenticated" || !session.user) {
         throw new UploadThingError("User not found");
       }
       return { userId: session.user.id };
@@ -34,4 +25,6 @@ export const uploadRouter = {
 
 export type UploadRouter = typeof uploadRouter;
 
-export const { loader, action } = createRouteHandler({ router: uploadRouter });
+const handler = createRouteHandler({ router: uploadRouter });
+export const loader = handler.loader;
+export const action = handler.action;

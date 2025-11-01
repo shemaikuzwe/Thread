@@ -49,6 +49,16 @@ export default function Messages({ messages, userId, ref }: Props) {
            </span>
          </div>
        )} */}
+              {/*{message.files.length > 0 && (
+                <div>
+                  {message.files.map((file) => (
+                    <div className="w-40 h-40">
+                      <img src={file.url} className="w-40 h-40" />
+                    </div>
+                  ))}
+                </div>
+              )}
+*/}
               <div
                 className={cn(
                   "rounded-2xl px-3 py-2 min-w-30 rounded-br-md",
