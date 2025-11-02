@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
+import { Separator } from "@/components/ui/separator";
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -58,16 +59,14 @@ export default function RegisterPage() {
             </div>
 
             {/* OAuth Buttons */}
-            <div className="flex flex-col gap-2">
+            <div className="flex  mb-6 justify-between gap-2">
               <Google />
               <Github />
             </div>
 
             {/* Divider */}
             <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t"></div>
-              </div>
+              <Separator />
               <div className="relative flex justify-center text-sm">
                 <span className="px-4">Or continue with email</span>
               </div>
@@ -89,7 +88,6 @@ export default function RegisterPage() {
                         <Input
                           type="email"
                           placeholder="Enter your email"
-                          className="h-12 w-full rounded-xl border-2"
                           {...field}
                         />
                       </FormControl>
@@ -166,7 +164,7 @@ export default function RegisterPage() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full h-12 font-semibold rounded-xl mt-6"
+                  className="w-full font-semibold rounded-xl mt-6"
                 >
                   Sign Up
                 </Button>

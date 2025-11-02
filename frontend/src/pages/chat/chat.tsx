@@ -63,12 +63,11 @@ export default function ChatPage() {
       payload?: MessageStatus,
     ) => {
       if (!userId) throw new Error("message is required");
+      if (type === "MESSAGE" && !newMessage.trim() && !files.length) return;
       let uploaded: ClientUploadedFileData<UploadRouter>[] | undefined = [];
       if (files.length && type === "MESSAGE") {
         uploaded = await startUpload(files.map((f) => f.file));
-        console.log(uploaded);
       }
-      if (type === "MESSAGE" && !newMessage.trim()) return;
 
       const message: Message = {
         channel_id: id,

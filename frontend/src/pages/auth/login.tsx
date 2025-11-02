@@ -9,6 +9,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import { loginSchema, type LoginData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,16 +52,14 @@ export default function LoginPage() {
             </div>
 
             {/* OAuth Buttons */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-6 flex gap-2 justify-between ">
               <Google />
               <Github />
             </div>
 
             {/* Divider */}
             <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t"></div>
-              </div>
+              <Separator />
               <div className="relative flex justify-center text-sm">
                 <span className="px-4">Or continue with email</span>
               </div>
@@ -81,7 +80,6 @@ export default function LoginPage() {
                           <Input
                             type="email"
                             placeholder="Enter your email"
-                            className="h-12 rounded-xl border-2"
                             {...field}
                           />
                         </FormControl>

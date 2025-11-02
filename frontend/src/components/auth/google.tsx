@@ -24,7 +24,7 @@ export default function Google() {
   return (
     <Button
       variant="outline"
-      className="w-full h-12 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-medium bg-transparent"
+      className="h-12 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-medium bg-transparent"
       onClick={handleGoogleLogin}
     >
       <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">

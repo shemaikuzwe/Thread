@@ -67,16 +67,19 @@ SELECT
     'profile_picture', u.profile_picture
   ) AS "from",
   COALESCE(
-    json_agg(
-      json_build_object(
-        'id', f.id,
-        'url', f.url,
-        'type', f.type,
-        'size', f.size
-      )
-    ) FILTER (WHERE f.id IS NOT NULL),
-    '[]'::json
-  )::jsonb AS files
+  json_arrayagg(
+    json_build_object(
+      'id', f.id,
+      'url', f.url,
+      'type', f.type,
+      'size', f.size
+    )
+    ORDER BY f.id
+    ABSENT ON NULL
+  ) FILTER (WHERE f.id IS NOT NULL),
+  '[]'
+  )::json
+  AS files
 FROM messages m
 INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id

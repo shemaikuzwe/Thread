@@ -10,10 +10,10 @@ export default function Header() {
           <Logo />
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium">
+          <a href="#" className="font-medium">
             Home
           </a>
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium">
+          <a href="#" className="font-medium">
             Features
           </a>
           <Button asChild variant={"ghost"}>

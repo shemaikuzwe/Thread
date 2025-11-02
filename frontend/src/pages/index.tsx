@@ -12,7 +12,7 @@ export default function HomePage() {
                 <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
                   Instant
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed max-w-md">
+                <p className="text-xl leading-relaxed max-w-md">
                   A simple and secure instant messaging app
                 </p>
               </div>

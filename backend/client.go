@@ -36,7 +36,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512000
+	maxMessageSize = 512000 // Upgrade this to allown large mesages
 )
 
 var (

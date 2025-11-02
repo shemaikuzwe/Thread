@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
-
+import Logo2 from "@/assets/logo2.png";
 interface Props {
   className?: string;
 }
@@ -14,7 +14,8 @@ export default function Logo({ className }: Props) {
         className,
       )}
     >
-      <img src={"/logo.png"} width={250} height={100} />
+      <img src={Logo2} alt="logo" width={50} />
+      <span className="font-bold text-xl">Instant</span>
     </div>
   );
 }
