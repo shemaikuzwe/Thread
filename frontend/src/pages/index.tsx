@@ -10,13 +10,13 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                  Instant
+                  Thread
                 </h1>
                 <p className="text-xl leading-relaxed max-w-md">
-                  A simple and secure instant messaging app
+                  A simple and secure Thread messaging app
                 </p>
               </div>
-              <Button size="default" className="text-lg rounded-xl" asChild>
+              <Button size="default" asChild>
                 <Link to="/auth/register">Get Started</Link>
               </Button>
             </div>

@@ -1,4 +1,10 @@
-import { Home, MessageCircle, MoreHorizontal, Bell } from "lucide-react";
+import {
+  Home,
+  MessageCircle,
+  MoreHorizontal,
+  Bell,
+  PhoneIcon,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -12,7 +18,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import User from "./ui/user";
-import Logo from "@/assets/logo2.png";
 
 // Menu items
 const items = [
@@ -23,6 +28,10 @@ const items = [
   {
     title: "DMs",
     icon: MessageCircle,
+  },
+  {
+    title: "Calls",
+    icon: PhoneIcon,
   },
   {
     title: "Notifications",
@@ -38,7 +47,7 @@ export function ChatSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <img src={Logo} alt="Logo" className="h-8 w-20" />
+        <img src={"/logo.png"} alt="Logo" className="h-12 w-30" />
       </SidebarHeader>
       <SidebarContent className="mt-20">
         <SidebarGroup>

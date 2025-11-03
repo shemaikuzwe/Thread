@@ -1,5 +1,4 @@
-import Github from "@/components/auth/github";
-import Google from "@/components/auth/google";
+import { OAuthProviders } from "@/components/auth/providers";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -41,22 +40,16 @@ export default function LoginPage() {
     },
   });
   return (
-    <div>
-      <main className="px-6 ">
+    <div className="mt-10 flex justify-center items-center">
+      <main className="px-6">
         <div className="max-w-md mx-auto">
-          <div className="rounded-3xl bg-card w-120 shadow-xl p-8">
+          <div className="w-100 bg-card shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-              <p>Sign in to your Instant account</p>
+              <p>Sign in to your Thread account</p>
             </div>
-
-            {/* OAuth Buttons */}
-            <div className="space-y-3 mb-6 flex gap-2 justify-between ">
-              <Google />
-              <Github />
-            </div>
-
+            <OAuthProviders />
             {/* Divider */}
             <div className="relative mb-6">
               <Separator />
@@ -127,10 +120,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 font-semibold rounded-xl mt-6"
-                >
+                <Button type="submit" className="w-full font-semibold mt-6">
                   Sign in
                 </Button>
               </form>

@@ -7,7 +7,7 @@ import SearchInput from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
-import { PlusIcon } from "lucide-react";
+import { PenBoxIcon, PlusIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useNavigate } from "react-router";
 
@@ -41,7 +41,7 @@ export default function NewChat() {
       <DialogTrigger>
         <Button size={"sm"}>
           <span className="sr-only">New</span>
-          <PlusIcon />
+          <PenBoxIcon />
         </Button>
       </DialogTrigger>
       <DialogContent className="w-150 min-h-80 flex flex-col gap-2">

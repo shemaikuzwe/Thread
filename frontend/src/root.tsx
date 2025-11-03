@@ -26,7 +26,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <title>Instant</title>
+        <title>Thread</title>
         <Links />
       </head>
       <body>

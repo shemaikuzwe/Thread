@@ -61,7 +61,7 @@ export default function Messages({ messages, userId, ref }: Props) {
               {message.message.trim() && (
                 <div
                   className={cn(
-                    "rounded-2xl px-3 py-2 min-w-30 rounded-br-md",
+                    "rounded-md px-3 py-2 min-w-30 rounded-br-md",
                     isOwn ? "bg-primary text-white" : "bg-secondary",
                   )}
                 >

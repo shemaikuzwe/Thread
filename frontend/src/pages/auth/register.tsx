@@ -1,5 +1,3 @@
-import Github from "@/components/auth/github";
-import Google from "@/components/auth/google";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,6 +14,7 @@ import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { Separator } from "@/components/ui/separator";
+import { OAuthProviders } from "@/components/auth/providers";
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -48,22 +47,16 @@ export default function RegisterPage() {
     },
   });
   return (
-    <div>
+    <div className="flex justify-center items-center">
       <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-card rounded-xl w-120 h-165 shadow-xl p-8">
+          <div className="bg-card  w-105  shadow-xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold  mb-2">Welcome to Instant</h1>
+              <h1 className="text-3xl font-bold  mb-2">Welcome to Thread</h1>
               <p>Create your account to continue</p>
             </div>
-
-            {/* OAuth Buttons */}
-            <div className="flex  mb-6 justify-between gap-2">
-              <Google />
-              <Github />
-            </div>
-
+            <OAuthProviders />
             {/* Divider */}
             <div className="relative mb-6">
               <Separator />
@@ -162,10 +155,7 @@ export default function RegisterPage() {
                     )}
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full font-semibold rounded-xl mt-6"
-                >
+                <Button type="submit" className="w-full font-semibold  mt-6">
                   Sign Up
                 </Button>
               </form>

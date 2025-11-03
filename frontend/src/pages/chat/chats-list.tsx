@@ -39,7 +39,7 @@ export default function ChatsList() {
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-xl">Instant</h2>
+          <h2 className="font-bold text-xl">Thread</h2>
           <NewChat />
         </div>
       </div>
