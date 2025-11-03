@@ -6,6 +6,6 @@ COPY . .
 
 RUN go mod download
 
-RUN go build -o
+RUN go build -o websocket
 
 CMD ["/app/websocket"]

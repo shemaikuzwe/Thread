@@ -26,10 +26,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <link rel="favicon" href="/favicon.ico" />
         <title>Thread</title>
         <Links />
       </head>
       <body>
+        <Scripts />
         <QueryClientProvider client={queryClient}>
           <ThemeProvider attribute={"class"} defaultTheme="system">
             <TooltipProvider>
@@ -42,7 +44,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </ThemeProvider>
         </QueryClientProvider>
         <ScrollRestoration />
-        <Scripts />
       </body>
     </html>
   );
