@@ -1,6 +1,5 @@
 import type { Chat, User } from "@/lib/types";
 import { useParams } from "react-router";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
 import JoinButton from "./join-button.tsx";
 import { useOnline } from "@/hooks/use-messages.ts";
 import ThemeToggle from "../theme-toggle.tsx";
@@ -11,7 +10,8 @@ import {
 } from "../ui/dropdown-menu.tsx";
 import { EllipsisVerticalIcon } from "lucide-react";
 import { ChatHeaderSkelton } from "../ui/chat-skeltons.tsx";
-import { useChatName } from "@/hooks";
+import ChatAvatar from "../ui/user-avatar.tsx";
+import { useChatMeta } from "@/hooks/index.ts";
 
 interface Props {
   chat: (Chat & { users: User[] }) | undefined;
@@ -24,8 +24,8 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
   const { data: online } = useOnline(id);
-  const { name } = useChatName(chat);
   const isOnline = chat?.type === "dm" && online && online.users.length === 2;
+  const { name } = useChatMeta(chat);
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
       {loading ? (
@@ -33,16 +33,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
       ) : (
         chat && (
           <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={""} />
-              <AvatarFallback>
-                {name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <ChatAvatar type="chat" chat={chat} />
             <div>
               <h1 className="text-lg font-semibold ">{name}</h1>
               <p className="text-sm text-gray-500">

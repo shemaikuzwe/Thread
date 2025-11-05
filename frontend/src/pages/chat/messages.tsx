@@ -1,23 +1,21 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import EmptyChat from "@/components/chat/empty-messages.tsx";
-import { CheckCheckIcon } from "lucide-react";
 import { Meta } from "./message-meta";
+import ChatAvatar from "@/components/ui/user-avatar";
 
 interface Props {
   ref: React.RefObject<HTMLDivElement | null>;
   messages: Message[] | undefined;
   userId: string | undefined;
+  chatType?: "dm" | "group";
 }
 
-export default function Messages({ messages, userId, ref }: Props) {
+export default function Messages({ messages, userId, ref, chatType }: Props) {
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={ref}>
       {messages.map((message) => {
         const isOwn = message.user_id === userId;
-        const fullName = message.from.first_name + " " + message.from.last_name;
         const existsMessageText = message.message.trim() !== "";
         return (
           <div
@@ -27,17 +25,13 @@ export default function Messages({ messages, userId, ref }: Props) {
               isOwn ? "justify-end" : "justify-start",
             )}
           >
-            <Avatar className="w-8 h-8 flex-shrink-0">
-              <AvatarImage src={``} />
-              <AvatarFallback>
-                {fullName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-
+            <div className="w-8 h-8 flex-shrink-0">
+              <ChatAvatar
+                type="user"
+                user={message.from}
+                showDropDown={!isOwn && chatType === "group"}
+              />
+            </div>
             <div
               className={cn("max-w-xs lg:max-w-md", isOwn ? "order-first" : "")}
             >

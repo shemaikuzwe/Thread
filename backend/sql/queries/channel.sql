@@ -21,6 +21,7 @@ SELECT channels.*,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
+'profile_picture',users.profile_picture,
 'email', users.email)) AS users
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id
@@ -32,7 +33,8 @@ SELECT channels.*,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
-'email', users.email
+'email', users.email,
+'profile_picture',users.profile_picture
 )) AS users
 FROM channels
 JOIN channel_user cu1 ON channels.id = cu1.channel_id
@@ -52,6 +54,7 @@ SELECT channels.*,json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
+'profile_picture',users.profile_picture,
 'email', users.email)) AS users
 FROM channels INNER JOIN channel_user
 ON channels.id = channel_user.channel_id

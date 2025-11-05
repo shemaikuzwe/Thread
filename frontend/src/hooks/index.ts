@@ -29,12 +29,14 @@ export function useIsTyping(delay = 1000) {
   return { isTyping, handleTyping };
 }
 
-export function useChatName(chat: ChatWithUsers | undefined): {
+export function useChatMeta(chat: ChatWithUsers | undefined): {
   name: string;
+  avatar?: string;
 } {
   const data = useSession();
   if (!chat) return { name: "" };
   let name = chat.name;
+  let avatar: string | undefined = "";
   if (chat.type === "dm") {
     const filteredUsers = chat.users.filter(
       (user) => user.id != data?.user?.id,
@@ -42,6 +44,7 @@ export function useChatName(chat: ChatWithUsers | undefined): {
     const fullName =
       filteredUsers[0].first_name + " " + filteredUsers[0].last_name;
     name = fullName;
+    avatar = filteredUsers[0]?.profile_picture;
   }
-  return { name };
+  return { name: name || "", avatar };
 }

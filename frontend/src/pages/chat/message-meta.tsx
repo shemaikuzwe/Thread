@@ -1,7 +1,7 @@
 import type { Status } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatDate } from "date-fns";
-import { CheckCheckIcon, Clock12Icon, ClockIcon } from "lucide-react";
+import { CheckCheckIcon, ClockIcon, InfoIcon } from "lucide-react";
 
 interface Props {
   time: Date | string;
@@ -15,7 +15,7 @@ export function Meta({ time, className, status = "SENT" }: Props) {
         return <ClockIcon className="h-4 w-4" />;
       }
       case "FAILED": {
-        return <Clock12Icon className="h-4 w-4 text-destructive" />;
+        return <InfoIcon className="h-4 w-4 text-destructive" />;
       }
       default:
         return <CheckCheckIcon className="h-4 w-4" />;

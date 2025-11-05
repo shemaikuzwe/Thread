@@ -198,7 +198,12 @@ export default function ChatPage() {
             ) : join && chat ? (
               <JoinChat chat={chat} setJoin={setJoin} />
             ) : (
-              <Messages ref={messagesRef} messages={messages} userId={userId} />
+              <Messages
+                ref={messagesRef}
+                messages={messages}
+                chatType={chat?.type}
+                userId={userId}
+              />
             )}
           </AutoScroller>
         </ScrollArea>
