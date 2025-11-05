@@ -1,4 +1,5 @@
 import { OAuthProviders } from "@/components/auth/providers";
+import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -40,22 +41,25 @@ export default function LoginPage() {
     },
   });
   return (
-    <div className="mt-10 flex justify-center items-center">
+    <div className="flex justify-center items-center w-full">
       <main className="px-6">
         <div className="max-w-md mx-auto">
           <div className="w-100 bg-card shadow-xl p-8">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
+
+            <div className="text-center flex flex-col justify-center items-center mb-8">
+              <Logo />
+              <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
               <p>Sign in to your Thread account</p>
             </div>
             <OAuthProviders />
             {/* Divider */}
-            <div className="relative mb-6">
-              <Separator />
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4">Or continue with email</span>
-              </div>
+            <div className="flex items-center gap-4 my-6">
+              <Separator className="flex-1" />
+              <span className="text-sm text-muted-foreground font-medium">
+                Or
+              </span>
+              <Separator className="flex-1" />
             </div>
             <Form {...form}>
               <form
@@ -130,7 +134,7 @@ export default function LoginPage() {
             <div className="text-center mt-6">
               <p>
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-primary font-medium">
+                <Link to="/auth/register" className="text-primary font-medium">
                   Sign up
                 </Link>
               </p>

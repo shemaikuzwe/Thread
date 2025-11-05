@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { Separator } from "@/components/ui/separator";
 import { OAuthProviders } from "@/components/auth/providers";
+import Logo from "@/components/logo";
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -50,22 +51,23 @@ export default function RegisterPage() {
     <div className="flex justify-center items-center">
       <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-card  w-105  shadow-xl p-8">
+          <div className="bg-card  w-105  shadow-xl p-6">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold  mb-2">Welcome to Thread</h1>
+            <div className="flex flex-col justify-center items-center text-center mb-8">
+              <Logo />
+              <h1 className="text-2xl font-bold  mb-2">Welcome to Thread</h1>
               <p>Create your account to continue</p>
             </div>
             <OAuthProviders />
             {/* Divider */}
-            <div className="relative mb-6">
-              <Separator />
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4">Or continue with email</span>
-              </div>
-            </div>
 
-            {/* Email/Password Form */}
+            <div className="flex items-center gap-4 my-6">
+              <Separator className="flex-1" />
+              <span className="text-sm text-muted-foreground font-medium">
+                Or
+              </span>
+              <Separator className="flex-1" />
+            </div>
             <Form {...form}>
               <form
                 className="space-y-4"
@@ -98,7 +100,7 @@ export default function RegisterPage() {
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter your FirstName"
+                            placeholder="Enter your First Name"
                           />
                         </FormControl>
                       </FormItem>
@@ -113,7 +115,7 @@ export default function RegisterPage() {
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter your FirstName"
+                            placeholder="Enter your Last Name"
                           />
                         </FormControl>
                       </FormItem>
@@ -148,7 +150,7 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             type="password"
-                            placeholder="ConfirmPassword"
+                            placeholder="Confirm password"
                           />
                         </FormControl>
                       </FormItem>
@@ -162,7 +164,7 @@ export default function RegisterPage() {
             </Form>
 
             {/* Sign up link */}
-            <div className="text-center mt-6">
+            <div className="text-center mt-3">
               <p>
                 Have an account?{" "}
                 <Link to="/login" className="text-primary font-medium">
