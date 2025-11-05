@@ -9,6 +9,7 @@ export interface Message {
   user_id: string;
   channel_id: string;
   message: any;
+  status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS";
   created_at: string;
@@ -20,7 +21,7 @@ export interface Message {
     profile_picture: string;
   };
 }
-
+//CURRENT MESSAGE
 export type MessageStatus = {
   status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
 };
@@ -28,6 +29,8 @@ export interface UploadFile {
   dataUrl: string | ArrayBuffer | null;
   file: File;
 }
+//Message in general
+export type Status = "PENDING" | "FAILED" | "SENT";
 
 export type Chat = {
   id: string;

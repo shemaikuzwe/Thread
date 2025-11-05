@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Message } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
+import { sleep } from "@/lib/utils";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -21,7 +22,7 @@ export function useWebSocket() {
 
     socket.onmessage = (e) => {
       const msg = JSON.parse(e.data) as Message;
-      console.log(msg);
+      // console.log(msg);
       if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
         queryClient.setQueryData(["online", msg.channel_id], () => {
           return {
@@ -33,11 +34,14 @@ export function useWebSocket() {
       if (msg.type === "MESSAGE") {
         queryClient.setQueryData(
           ["chat", msg.channel_id],
-          (oldMsg: Message[]) => {
-            if (oldMsg && oldMsg.length) {
-              return [...oldMsg, msg];
+          (oldMsg: Message[] = []) => {
+            const exists = oldMsg.some((m) => m.id === msg.id);
+            if (exists) {
+              return oldMsg.map((m) =>
+                m.id === msg.id ? { ...m, status: "SENT" } : m,
+              );
             }
-            return [msg];
+            return [...oldMsg, msg];
           },
         );
       }
@@ -58,9 +62,8 @@ export function useWebSocket() {
     };
   }, [queryClient, userId]);
 
-  const sendMessage = <T>(msg: T) => {
+  const sendMessage = async <T>(msg: T) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log("sending msg", msg);
       wsRef.current.send(JSON.stringify(msg));
     } else {
       console.warn("WebSocket not open. Cannot send message.");

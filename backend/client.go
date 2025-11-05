@@ -17,6 +17,7 @@ import (
 )
 
 type Message struct {
+	ID        string `json:"id"`
 	Message   any    `json:"message"`
 	ChannelID string `json:"channel_id"`
 	UserID    string `json:"user_id"`
@@ -60,11 +61,6 @@ type ClientConn struct {
 
 // Map of userID -> map[connID]*ClientConn
 var clients = make(map[string]map[string]*ClientConn)
-
-func (m *Message) toByte() ([]byte, error) {
-	msg, err := json.Marshal(&m)
-	return msg, err
-}
 
 func (c *ClientConn) readPump() {
 	defer func() {
@@ -187,6 +183,7 @@ type File struct {
 func handlerCreateMessage(message []byte, userID string) {
 
 	var msg struct {
+		ID        string `json:"id"`
 		Message   string `json:"message"`
 		ChannelID string `json:"channel_id"`
 		Files     []File `json:"files"`
@@ -202,7 +199,11 @@ func handlerCreateMessage(message []byte, userID string) {
 	if msg.Type != "MESSAGE" {
 		return
 	}
-
+	id, err := uuid.Parse(msg.ID)
+	if err != nil {
+		log.Println("Invalid message uuuid", err)
+		return
+	}
 	chanUUID, err := uuid.Parse(msg.ChannelID)
 	if err != nil {
 		log.Println("invalid channel id:", err)
@@ -216,6 +217,7 @@ func handlerCreateMessage(message []byte, userID string) {
 	}
 
 	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
+		ID:        id,
 		ChannelID: chanUUID,
 		UserID:    userUUID,
 		Message:   msg.Message,

@@ -3,6 +3,8 @@ import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import EmptyChat from "@/components/chat/empty-messages.tsx";
+import { CheckCheckIcon } from "lucide-react";
+import { Meta } from "./message-meta";
 
 interface Props {
   ref: React.RefObject<HTMLDivElement | null>;
@@ -49,7 +51,8 @@ export default function Messages({ messages, userId, ref }: Props) {
                         alt={file.name}
                       />
                       {!existsMessageText && (
-                        <Time
+                        <Meta
+                          status={message?.status}
                           className="absolute bottom-1 right-1 text-white bg-black/50 rounded-md px-1"
                           time={message.created_at}
                         />
@@ -61,12 +64,12 @@ export default function Messages({ messages, userId, ref }: Props) {
               {message.message.trim() && (
                 <div
                   className={cn(
-                    "rounded-md px-3 py-2 min-w-30 rounded-br-md",
+                    "rounded-md pl-2 pr-1 py-2 min-w-30 rounded-br-md",
                     isOwn ? "bg-primary text-white" : "bg-secondary",
                   )}
                 >
                   <p className="text-sm leading-relaxed">{message.message}</p>
-                  <Time time={message.created_at} />
+                  <Meta status={message?.status} time={message.created_at} />
                 </div>
               )}
             </div>
@@ -76,19 +79,5 @@ export default function Messages({ messages, userId, ref }: Props) {
     </div>
   ) : (
     <EmptyChat />
-  );
-}
-
-export function Time({
-  time,
-  className,
-}: {
-  time: Date | string;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex justify-end", className)}>
-      <span className="text-xs">{format(new Date(time), "H:mm")}</span>
-    </div>
   );
 }

@@ -27,7 +27,7 @@ function useScroll<T extends HTMLElement>() {
       if (isAtBottom && !isVisible) {
         messagesRef.current.scrollIntoView({
           block: "end",
-          behavior: "Thread",
+          behavior: "smooth",
         });
       }
     }

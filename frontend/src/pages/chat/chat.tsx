@@ -9,7 +9,7 @@ import type {
 } from "@/lib/types";
 import { useSession } from "@/components/providers/session-provider";
 import { useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
 import { ArrowUp, Loader2Icon, Paperclip } from "lucide-react";
@@ -40,6 +40,7 @@ export default function ChatPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
+  const queryClient = useQueryClient();
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
@@ -64,21 +65,16 @@ export default function ChatPage() {
     ) => {
       if (!userId) throw new Error("message is required");
       if (type === "MESSAGE" && !newMessage.trim() && !files.length) return;
-      let uploaded: ClientUploadedFileData<UploadRouter>[] | undefined = [];
-      if (files.length && type === "MESSAGE") {
-        uploaded = await startUpload(files.map((f) => f.file));
-      }
-
       const message: Message = {
         channel_id: id,
         id: crypto.randomUUID(),
         created_at: new Date().toUTCString(),
         files:
-          uploaded?.map((upload) => ({
-            name: upload.name,
-            type: upload.type,
-            url: upload.ufsUrl,
-            size: upload.size,
+          files.map((f) => ({
+            name: f.file.name,
+            size: f.file.size,
+            type: f.file.type,
+            url: f.dataUrl as string,
           })) ?? [],
         message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
         type: type,
@@ -91,13 +87,48 @@ export default function ChatPage() {
           profile_picture: session?.user?.profile_picture ?? "",
         },
       };
-      sendMessage(message);
+      //Optimistic ui
+      if (type === "MESSAGE") {
+        queryClient.setQueryData(
+          ["chat", message.channel_id],
+          (oldMsg: Message[]): Message[] => {
+            if (oldMsg && oldMsg.length) {
+              return [...oldMsg, { ...message, status: "PENDING" }];
+            }
+            return [{ ...message, status: "PENDING" }];
+          },
+        );
+      }
       if (type === "MESSAGE") {
         setNewMessage("");
         setFiles([]);
       }
+      if (files.length && type === "MESSAGE") {
+        const uploaded = await startUpload(files.map((f) => f.file));
+        sendMessage({
+          ...message,
+          files:
+            uploaded?.map((upload) => ({
+              name: upload.name,
+              type: upload.type,
+              url: upload.ufsUrl,
+              size: upload.size,
+            })) ?? [],
+        });
+      } else {
+        sendMessage(message);
+      }
     },
-    [sendMessage, id, session, newMessage, files, userId, startUpload],
+    [
+      sendMessage,
+      id,
+      session,
+      newMessage,
+      files,
+      queryClient,
+      userId,
+      startUpload,
+    ],
   );
 
   useEffect(() => {
