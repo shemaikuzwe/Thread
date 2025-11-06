@@ -16,9 +16,9 @@ export default function ChatListItem({ chat }: { chat: ChatWithUsers }) {
         onClick={() => {
           navigate(`/chat/${chat.id}`);
         }}
-        className="w-full flex items-center gap-3 rounded-md px-3 h-16 hover:bg-muted"
+        className="w-full flex items-center gap-3 rounded-md px-1.5 h-16 hover:bg-muted"
       >
-        <div className="w-7">
+        <div className="w-9">
           <ChatAvatar type="chat" chat={chat} />
         </div>
         <div className="flex flex-col gap-1 justify-center items-start">

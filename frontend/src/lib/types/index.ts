@@ -1,4 +1,4 @@
-type MessageFile = {
+export type MessageFile = {
   name: string;
   url: string;
   type: string;
@@ -26,7 +26,7 @@ export type MessageStatus = {
   status: "TYPING" | "RECORDING_AUDIO" | "DEFAULT";
 };
 export interface UploadFile {
-  dataUrl: string | ArrayBuffer | null;
+  dataUrl: string;
   file: File;
 }
 //Message in general

@@ -6,9 +6,13 @@ import { auth } from "@/lib/server";
 const f = createUploadthing();
 
 export const uploadRouter = {
-  videoAndImage: f({
+  media: f({
     image: { maxFileSize: "4MB" },
     video: { maxFileSize: "16MB" },
+    audio: { maxFileSize: "8MB" },
+    pdf: { maxFileSize: "64MB" },
+    text: { maxFileSize: "64KB" },
+    blob: { maxFileSize: "64MB" },
   })
     .middleware(async ({ event }) => {
       const session = await auth(event.request);

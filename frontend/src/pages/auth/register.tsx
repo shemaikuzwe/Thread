@@ -55,8 +55,7 @@ export default function RegisterPage() {
             {/* Header */}
             <div className="flex flex-col justify-center items-center text-center mb-8">
               <Logo />
-              <h1 className="text-2xl font-bold  mb-2">Welcome to Thread</h1>
-              <p>Create your account to continue</p>
+              <h1 className="text-md leading-6 font-bold">Sign up to Thread</h1>
             </div>
             <OAuthProviders />
             {/* Divider */}

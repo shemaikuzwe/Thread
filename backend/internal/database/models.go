@@ -72,6 +72,7 @@ type ChannelUser struct {
 type File struct {
 	ID        uuid.UUID  `json:"id"`
 	Url       string     `json:"url"`
+	Name      string     `json:"name"`
 	Type      string     `json:"type"`
 	Size      int32      `json:"size"`
 	MessageID *uuid.UUID `json:"message_id"`

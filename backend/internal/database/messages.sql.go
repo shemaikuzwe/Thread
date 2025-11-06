@@ -14,12 +14,13 @@ import (
 )
 
 const createFiles = `-- name: CreateFiles :exec
-INSERT INTO files(url,type,size,message_id)
-VALUES ($1,$2,$3,$4)
+INSERT INTO files(url,name,type,size,message_id)
+VALUES ($1,$2,$3,$4,$5)
 `
 
 type CreateFilesParams struct {
 	Url       string     `json:"url"`
+	Name      string     `json:"name"`
 	Type      string     `json:"type"`
 	Size      int32      `json:"size"`
 	MessageID *uuid.UUID `json:"message_id"`
@@ -28,6 +29,7 @@ type CreateFilesParams struct {
 func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error {
 	_, err := q.db.ExecContext(ctx, createFiles,
 		arg.Url,
+		arg.Name,
 		arg.Type,
 		arg.Size,
 		arg.MessageID,
@@ -78,7 +80,8 @@ SELECT
       'id', f.id,
       'url', f.url,
       'type', f.type,
-      'size', f.size
+      'size', f.size,
+      'name',f.name
     )
     ORDER BY f.id
     ABSENT ON NULL

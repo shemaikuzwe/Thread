@@ -14,7 +14,8 @@ SELECT
       'id', f.id,
       'url', f.url,
       'type', f.type,
-      'size', f.size
+      'size', f.size,
+      'name',f.name
     )
     ORDER BY f.id
     ABSENT ON NULL
@@ -36,5 +37,5 @@ VALUES ($1, $2, $3 ,$4)
 RETURNING id;
 
 -- name: CreateFiles :exec
-INSERT INTO files(url,type,size,message_id)
-VALUES ($1,$2,$3,$4);
+INSERT INTO files(url,name,type,size,message_id)
+VALUES ($1,$2,$3,$4,$5);

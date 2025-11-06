@@ -229,6 +229,7 @@ func handlerCreateMessage(message []byte, userID string) {
 				Url:       file.Url,
 				Type:      file.Type,
 				Size:      int32(file.Size),
+				Name:      file.Name,
 				MessageID: &msgId,
 			})
 			if err != nil {

@@ -41,7 +41,7 @@ export default function LoginPage() {
     },
   });
   return (
-    <div className="flex justify-center items-center w-full">
+    <div className="flex justify-center rounded-md items-center w-full">
       <main className="px-6">
         <div className="max-w-md mx-auto">
           <div className="w-100 bg-card shadow-xl p-8">
@@ -49,8 +49,7 @@ export default function LoginPage() {
 
             <div className="text-center flex flex-col justify-center items-center mb-8">
               <Logo />
-              <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
-              <p>Sign in to your Thread account</p>
+              <h1 className="text-md leading-6 font-bold">Sign in to Thread</h1>
             </div>
             <OAuthProviders />
             {/* Divider */}

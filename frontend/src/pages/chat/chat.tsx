@@ -24,8 +24,7 @@ import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
 import { useUploadThing } from "@/lib/utils";
-import type { ClientUploadedFileData } from "uploadthing/types";
-import type { UploadRouter } from "../api.uploadthing";
+import { toast } from "sonner";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -35,7 +34,7 @@ export default function ChatPage() {
   const session = useSession();
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
-  const { startUpload, isUploading } = useUploadThing("videoAndImage");
+  const { startUpload, isUploading } = useUploadThing("media");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
@@ -105,6 +104,9 @@ export default function ChatPage() {
       }
       if (files.length && type === "MESSAGE") {
         const uploaded = await startUpload(files.map((f) => f.file));
+        if (!uploaded?.length) {
+          toast.error("Failed to upload files");
+        }
         sendMessage({
           ...message,
           files:
@@ -165,14 +167,18 @@ export default function ChatPage() {
         (resolve, reject) => {
           reader.onload = (event) => resolve(event.target?.result ?? null);
           reader.onerror = (error) => reject(error);
-
           reader.readAsDataURL(file); // for images/base64
-          // reader.readAsText(file); // for text files
+          // else if (
+          //   file.type.startsWith("text/") ||
+          //   file.type.startsWith("application/json")
+          // ) {
+          //   reader.readAsText(file);
+          // }
           // reader.readAsArrayBuffer(file); // for PDFs/videos
         },
       );
 
-      if (fileUrl) newFiles.push({ dataUrl: fileUrl, file });
+      if (fileUrl) newFiles.push({ dataUrl: fileUrl as string, file });
     }
 
     setFiles((prev) => [...prev, ...newFiles]);
@@ -264,9 +270,7 @@ export default function ChatPage() {
                 />
                 <Button
                   onClick={() => handleSendMessage("MESSAGE")}
-                  disabled={
-                    (!newMessage.trim() && !files.length) || isUploading
-                  }
+                  disabled={!newMessage.trim() && !files.length}
                   size={"icon"}
                 >
                   {isUploading ? (

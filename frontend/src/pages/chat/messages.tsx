@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import EmptyChat from "@/components/chat/empty-messages.tsx";
 import { Meta } from "./message-meta";
 import ChatAvatar from "@/components/ui/user-avatar";
+import { FilePreview } from "@/components/chat/file-preview";
 
 interface Props {
   ref: React.RefObject<HTMLDivElement | null>;
@@ -32,18 +33,12 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
                 showDropDown={!isOwn && chatType === "group"}
               />
             </div>
-            <div
-              className={cn("max-w-xs lg:max-w-md", isOwn ? "order-first" : "")}
-            >
+            <div className={cn(" lg:max-w-md", isOwn ? "order-first" : "")}>
               {message.files.length > 0 && (
                 <div className="mb-2">
                   {message.files.map((file, index) => (
-                    <div key={index} className="w-40 h-40 relative">
-                      <img
-                        src={file.url}
-                        className="w-40 h-40 rounded-md"
-                        alt={file.name}
-                      />
+                    <div key={index} className="w-55 h-55 relative">
+                      <FilePreview file={file} />
                       {!existsMessageText && (
                         <Meta
                           status={message?.status}

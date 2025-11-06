@@ -56,12 +56,12 @@ export function User({
           <DropdownMenuLabel>{`${user.first_name} ${user.last_name}`}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to={`/settings?tab=profile`}>
+            <Link to={"#"}>
               <MessageCircle className="h-1 w-1" /> Message
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to={`/settings?tab=settings`}>
+            <Link to={`#`}>
               <InfoIcon className="h-1 w-1" /> Info
             </Link>
           </DropdownMenuItem>
@@ -74,9 +74,9 @@ export function Chat({ chat }: { chat: ChatWithUsers }) {
   const { name, avatar } = useChatMeta(chat);
   return (
     <div>
-      <Avatar className="rounded-full">
-        <AvatarImage src={avatar ?? ""} />
-        <AvatarFallback className="rounded-full">
+      <Avatar className="rounded-full w-8 h-8">
+        <AvatarImage src={avatar ?? ""} className="rounded-full w-8 h-8" />
+        <AvatarFallback className="rounded-full w-8 h-8">
           {name
             .split(" ")
             .map((n) => n[0])
