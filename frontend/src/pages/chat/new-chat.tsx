@@ -7,7 +7,7 @@ import SearchInput from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
-import { PenBoxIcon, PlusIcon } from "lucide-react";
+import { PenBoxIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useNavigate } from "react-router";
 

@@ -1,23 +1,32 @@
-FROM node:20-alpine as base
-FROM base AS development-dependencies-env
-COPY . /app
+FROM node:20-alpine AS base
 WORKDIR /app
-RUN npm ci
+ENV NODE_ENV=production
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+FROM base AS development-dependencies-env
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm i
+COPY . .
 
 FROM base AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
 WORKDIR /app
-RUN npm ci --omit=dev
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm i --prod
 
 FROM base AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
-RUN npm run build
+COPY --from=development-dependencies-env /app  ./
+RUN pnpm run build
 
-FROM base
-COPY ./package.json package-lock.json server.js /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+FROM node:20-alpine AS runtime
 WORKDIR /app
-CMD ["npm", "run", "start"]
+ENV NODE_ENV=production
+
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+COPY package.json pnpm-lock.yaml ./
+COPY --from=production-dependencies-env /app/node_modules ./node_modules
+COPY --from=build-env /app/build ./build
+
+CMD ["pnpm", "run", "start"]

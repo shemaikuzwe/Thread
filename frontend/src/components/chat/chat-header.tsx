@@ -1,5 +1,5 @@
 import type { Chat, User } from "@/lib/types";
-import { useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import JoinButton from "./join-button.tsx";
 import { useOnline } from "@/hooks/use-messages.ts";
 import ThemeToggle from "../theme-toggle.tsx";
@@ -8,10 +8,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
-import { EllipsisVerticalIcon } from "lucide-react";
+import { ArrowLeft, EllipsisVerticalIcon } from "lucide-react";
 import { ChatHeaderSkelton } from "../ui/chat-skeltons.tsx";
 import ChatAvatar from "../ui/user-avatar.tsx";
 import { useChatMeta } from "@/hooks/index.ts";
+import { useIsMobile } from "@/hooks/use-mobile.ts";
+import { Button } from "../ui/button.tsx";
 
 interface Props {
   chat: (Chat & { users: User[] }) | undefined;
@@ -21,6 +23,7 @@ interface Props {
 }
 
 export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
+  const isMobile = useIsMobile();
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
   const { data: online } = useOnline(id);
@@ -28,6 +31,13 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { name } = useChatMeta(chat);
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">
+      {isMobile && (
+        <Button variant={"outline"} size={"icon"} asChild>
+          <Link to={"/chat"}>
+            <ArrowLeft />
+          </Link>
+        </Button>
+      )}
       {loading ? (
         <ChatHeaderSkelton />
       ) : (

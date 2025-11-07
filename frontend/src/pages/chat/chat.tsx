@@ -12,7 +12,7 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Loader2Icon, Paperclip } from "lucide-react";
+import { ArrowUp, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -25,6 +25,8 @@ import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
 import { useUploadThing } from "@/lib/utils";
 import { toast } from "sonner";
+import ChatsList from "./chats-list";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -34,7 +36,8 @@ export default function ChatPage() {
   const session = useSession();
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
-  const { startUpload, isUploading } = useUploadThing("media");
+  const { startUpload } = useUploadThing("media");
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
@@ -184,101 +187,100 @@ export default function ChatPage() {
     setFiles((prev) => [...prev, ...newFiles]);
   };
   return (
-    <div className="gray-50 flex w-full">
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <ChatHeader
-          join={join}
-          setJoin={setJoin}
-          loading={loading}
-          chat={chat}
-        />
-
-        <ScrollArea
-          onScrollCapture={handleScroll}
-          className="flex-1 p-6 space-y-4 min-h-0"
-        >
-          <AutoScroller ref={visibilityRef}>
-            {isLoading ? (
-              <ChatMessagesSkelton />
-            ) : join && chat ? (
-              <JoinChat chat={chat} setJoin={setJoin} />
-            ) : (
-              <Messages
-                ref={messagesRef}
-                messages={messages}
-                chatType={chat?.type}
-                userId={userId}
-              />
-            )}
-          </AutoScroller>
-        </ScrollArea>
-        <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
-          <ScrollAnchor
-            isAtBottom={isAtBottom}
-            scrollToBottom={scrollToBottom}
+    <div className="flex gap-2 w-full h-full">
+      {!isMobile && <ChatsList />}
+      <div className="gray-50 flex w-full">
+        {/* Main Chat Area */}
+        <div className="flex-1 w-full flex flex-col">
+          <ChatHeader
+            join={join}
+            setJoin={setJoin}
+            loading={loading}
+            chat={chat}
           />
-        </div>
-        <div className="w-full z-10">
-          <div className="p-2 flex flex-col w-full h-full">
-            <div className="flex flex-col w-full h-full gap-2 p-4 border border-border rounded-md focus-within:ring-2 focus-within:ring-ring/50">
-              {files.length > 0 && (
-                <div className="flex gap-5 justify-start items-center">
-                  {files.map((file, index) => (
-                    <FileCard
-                      key={index}
-                      file={file}
-                      handleRemove={() => {
-                        setFiles(files.filter((_, idx) => idx !== index));
-                      }}
-                    />
-                  ))}
-                </div>
+
+          <ScrollArea
+            onScrollCapture={handleScroll}
+            className="flex-1 w-full p-6 space-y-4 min-h-0"
+          >
+            <AutoScroller ref={visibilityRef}>
+              {isLoading ? (
+                <ChatMessagesSkelton />
+              ) : join && chat ? (
+                <JoinChat chat={chat} setJoin={setJoin} />
+              ) : (
+                <Messages
+                  ref={messagesRef}
+                  messages={messages}
+                  chatType={chat?.type}
+                  userId={userId}
+                />
               )}
-              <div className="flex items-center w-full h-full">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="p-2 h-auto flex-shrink-0"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleUpload}
-                  className="hidden"
-                  multiple
-                />
-                <textarea
-                  value={newMessage ?? ""}
-                  onChange={(e) => {
-                    setNewMessage(e.target.value);
-                    handleTyping();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage("MESSAGE");
-                    }
-                  }}
-                  placeholder="Send a message..."
-                  rows={1}
-                  className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
-                />
-                <Button
-                  onClick={() => handleSendMessage("MESSAGE")}
-                  disabled={!newMessage.trim() && !files.length}
-                  size={"icon"}
-                >
-                  {isUploading ? (
-                    <Loader2Icon className="animate-spin" />
-                  ) : (
+            </AutoScroller>
+          </ScrollArea>
+          <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
+            <ScrollAnchor
+              isAtBottom={isAtBottom}
+              scrollToBottom={scrollToBottom}
+            />
+          </div>
+          <div className="w-full z-10">
+            <div className="p-2 flex flex-col w-full h-full">
+              <div className="flex flex-col w-full h-full gap-2 p-4 border border-border rounded-md focus-within:ring-2 focus-within:ring-ring/50">
+                {files.length > 0 && (
+                  <div className="flex gap-5 justify-start items-center">
+                    {files.map((file, index) => (
+                      <FileCard
+                        key={index}
+                        file={file}
+                        handleRemove={() => {
+                          setFiles(files.filter((_, idx) => idx !== index));
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center w-full h-full">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="p-2 h-auto flex-shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleUpload}
+                    className="hidden"
+                    multiple
+                  />
+                  <textarea
+                    value={newMessage ?? ""}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      handleTyping();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage("MESSAGE");
+                      }
+                    }}
+                    placeholder="Send a message..."
+                    rows={1}
+                    className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
+                  />
+                  <Button
+                    onClick={() => handleSendMessage("MESSAGE")}
+                    disabled={!newMessage.trim() && !files.length}
+                    size={"icon"}
+                  >
                     <ArrowUp className="w-4 h-4" />
-                  )}
-                </Button>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

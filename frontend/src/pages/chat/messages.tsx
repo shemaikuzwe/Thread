@@ -22,7 +22,7 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
           <div
             key={message.id}
             className={cn(
-              "flex gap-3 p-2",
+              "flex gap-3 p-2 w-full",
               isOwn ? "justify-end" : "justify-start",
             )}
           >
@@ -33,7 +33,7 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
                 showDropDown={!isOwn && chatType === "group"}
               />
             </div>
-            <div className={cn(" lg:max-w-md", isOwn ? "order-first" : "")}>
+            <div className={cn("max-w-full", isOwn ? "order-first" : "")}>
               {message.files.length > 0 && (
                 <div className="mb-2">
                   {message.files.map((file, index) => (

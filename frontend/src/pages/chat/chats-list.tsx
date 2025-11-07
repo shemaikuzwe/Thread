@@ -35,7 +35,7 @@ export default function ChatsList() {
     : chats;
 
   return (
-    <div className="min-w-80  border-r border-border flex flex-col">
+    <div className="min-w-80 max-sm:w-full border-r border-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
