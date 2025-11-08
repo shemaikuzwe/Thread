@@ -1,5 +1,5 @@
 import type { Chat, User } from "@/lib/types";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import JoinButton from "./join-button.tsx";
 import { useOnline } from "@/hooks/use-messages.ts";
 import ThemeToggle from "../theme-toggle.tsx";
@@ -27,7 +27,11 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const { id } = useParams();
   if (!id) throw new Error("Missing chat ID");
   const { data: online } = useOnline(id);
-  const isOnline = chat?.type === "dm" && online && online.users.length === 2;
+  const isOnline =
+    chat?.type === "dm" &&
+    online &&
+    online.users.length === 2 &&
+    online.users[0] !== online.users[1];
   const { name } = useChatMeta(chat);
   return (
     <div className="border-b cursor-pointer  px-6 py-4 flex justify-between">

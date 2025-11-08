@@ -37,8 +37,8 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
               {message.files.length > 0 && (
                 <div className="mb-2">
                   {message.files.map((file, index) => (
-                    <div key={index} className="w-55 h-55 relative">
-                      <FilePreview file={file} />
+                    <div key={index} className="max-w-100 max-h-70 relative">
+                      <FilePreview file={file} message={message} />
                       {!existsMessageText && (
                         <Meta
                           status={message?.status}

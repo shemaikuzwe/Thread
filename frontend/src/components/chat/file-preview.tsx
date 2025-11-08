@@ -1,33 +1,47 @@
-import type { MessageFile } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import type { Message, MessageFile } from "@/lib/types";
+import { cn, formatFileSize } from "@/lib/utils";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
 import { VideoPlayer } from "../ui/video";
 import { Button } from "../ui/button";
-import { DownloadIcon, FullscreenIcon } from "lucide-react";
+import {
+  Download,
+  DownloadIcon,
+  FullscreenIcon,
+  MinimizeIcon,
+  XIcon,
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { set } from "zod";
+import ChatAvatar from "../ui/user-avatar";
+import { formatDate } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface Props {
   file: MessageFile;
   className?: string;
+  message: Message;
 }
 export function FilePreview({
   file,
   className = "h-55 w-55 rounded-md",
+  message,
 }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  function displayPreview(className: string, open: boolean = false) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  function displayPreview(
+    className: string,
+    open: boolean = false,
+    isPreview: boolean = false,
+  ) {
     if (file.type.startsWith("image/")) {
       return <img src={file.url} alt={file.name} className={cn(className)} />;
     }
@@ -36,8 +50,10 @@ export function FilePreview({
         <VideoPlayer
           src={file.url}
           title={file.name}
-          controls={false}
+          isPreview={isPreview}
           className={className}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
         />
       );
     }
@@ -48,13 +64,39 @@ export function FilePreview({
       return open ? (
         <iframe src={file.url} className={cn(className)} />
       ) : (
-        <div className={cn(className)}>
-          <img
-            src={"/mime/pdf.png"}
-            alt="pdf image"
-            className={cn("cursor-pointer w-full h-55")}
-          />
-        </div>
+        <Card className={cn("w-100 h-70")}>
+          <CardHeader className="px-4 flex justify-between items-start w-full">
+            <div className="flex  justify-center items-start">
+              <img
+                src="/icons/pdf.png"
+                alt="pdf"
+                width={100}
+                height={100}
+                className="w-13 h-12 -mt-1 rounded-lg"
+              />
+              <div className="flex flex-col justify-start items-start">
+                <CardTitle className="text-sm font-medium">
+                  {file.name}
+                </CardTitle>
+                <span className="text-xs font-normal">
+                  2 pages {formatFileSize(file.size)}
+                </span>
+              </div>
+            </div>
+            <div>
+              <Button className="w-7 h-7" variant={"outline"} size={"icon"}>
+                <Download onClick={handleDownload} />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <img
+              src={"/mime/pdf.png"}
+              alt="pdf image"
+              className={cn("cursor-pointer w-full h-30")}
+            />
+          </CardContent>
+        </Card>
       );
     }
     return (
@@ -106,57 +148,84 @@ export function FilePreview({
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
     };
   }, []);
-
   return (
-    <Dialog>
-      <DialogTrigger>{displayPreview(className)}</DialogTrigger>
+    <Dialog
+      onOpenChange={(open) => {
+        if (file.type.startsWith("video/")) {
+          if (open) {
+            //To enable auto play on dialog open
+            setIsPlaying(true);
+          } else {
+            setIsPlaying(false);
+          }
+        }
+      }}
+    >
+      <DialogTrigger>{displayPreview(className, false, true)}</DialogTrigger>
       <DialogContent
-        className={cn(
-          "w-550 mb-5",
-          isFullScreen ? "h-full" : "h-165 max-sm:w-full",
-        )}
+        showCloseButton={false}
+        className={cn("max-w-full mb-5 h-full bg-background/50 ")}
       >
-        <DialogHeader>
-          <DialogTitle className="text-md">{file.name}</DialogTitle>
-        </DialogHeader>
-        {
-          <div ref={divRef}>
-            {displayPreview(
-              `w-full rounded-md ${isFullScreen ? "h-full" : "h-130"}`,
-              true,
-            )}
-            {isFullScreen && (
-              <div className={"absolute bottom-8 right-8 flex gap-2"}>
-                <Button onClick={toogleFullScreen} title="Exit Fullscreen">
-                  <FullscreenIcon className="w-full h-full" />
+        <DialogHeader className="flex items-start  flex-row justify-between w-full px-4">
+          <div className="flex gap-2 justify-center items-start">
+            <div className="w-10 h-10">
+              <ChatAvatar type="user" user={message.from} />
+            </div>
+            <div>
+              <DialogTitle className="font-medium text-sm">
+                {message.from.first_name + " " + message.from.last_name}
+              </DialogTitle>
+              <span className="text-sm text-muted-foreground">
+                {formatDate(new Date(message.created_at), "HH:mm")}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Tooltip>
+              <TooltipTrigger>
+                <Button variant={"outline"} onClick={toogleFullScreen}>
+                  <FullscreenIcon />
                 </Button>
-
-                <Button onClick={handleDownload} title="Downl">
+              </TooltipTrigger>
+              <TooltipContent>Full Screen</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button variant={"outline"} onClick={handleDownload}>
                   <DownloadIcon />
                 </Button>
-              </div>
-            )}
+              </TooltipTrigger>
+              <TooltipContent>Download</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogClose asChild>
+                  <Button variant={"outline"}>
+                    <XIcon />
+                  </Button>
+                </DialogClose>
+              </TooltipTrigger>
+              <TooltipContent>Close</TooltipContent>
+            </Tooltip>
           </div>
-        }
+        </DialogHeader>
 
-        <DialogFooter className="flex flex-row justify-end gap-2">
-          <Tooltip>
-            <TooltipTrigger>
-              <Button variant={"outline"} onClick={toogleFullScreen}>
-                <FullscreenIcon />
+        <div ref={divRef} className="flex justify-center items-center">
+          {displayPreview(
+            `rounded-md   ${isFullScreen ? "h-full w-full" : "h-130 w-230"}`,
+            true,
+          )}
+          {isFullScreen && (
+            <div className={"absolute top-10 right-25 flex gap-2"}>
+              <Button onClick={toogleFullScreen} title="Exit Fullscreen">
+                <MinimizeIcon className="w-full h-full" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Full Screen</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger>
-              <Button variant={"outline"} onClick={handleDownload}>
+              <Button onClick={handleDownload} title="Downl">
                 <DownloadIcon />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Download</TooltipContent>
-          </Tooltip>
-        </DialogFooter>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

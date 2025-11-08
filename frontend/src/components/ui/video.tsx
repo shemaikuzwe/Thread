@@ -6,8 +6,8 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  Maximize,
   Minimize,
+  FullscreenIcon,
   SkipBack,
   SkipForward,
 } from "lucide-react";
@@ -16,26 +16,28 @@ import { cn } from "@/lib/utils";
 interface VideoPlayerProps {
   src: string;
   title: string;
-  duration?: number;
-  controls?: boolean;
+  isPreview?: boolean;
   className?: string;
+  isPlaying: boolean;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function VideoPlayer({
   src,
   title,
-  duration = 1000,
-  controls = true,
+  isPreview = true,
   className,
+  isPlaying,
+  setIsPlaying,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(controls);
-  const [quality, setQuality] = useState("1080p");
+  const [showControls, setShowControls] = useState(false);
+  // const [quality, setQuality] = useState("1080p");
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>(null);
 
@@ -48,15 +50,17 @@ export function VideoPlayer({
 
   // Play/Pause toggle
   const togglePlay = () => {
+    setIsPlaying(!isPlaying);
+  };
+  useEffect(() => {
     if (videoRef.current) {
       if (isPlaying) {
-        videoRef.current.pause();
-      } else {
         videoRef.current.play();
+      } else {
+        videoRef.current.pause();
       }
-      setIsPlaying(!isPlaying);
     }
-  };
+  }, [isPlaying]);
 
   // Handle video time update
   const handleTimeUpdate = () => {
@@ -108,7 +112,6 @@ export function VideoPlayer({
     }
   };
 
-  // Skip forward/backward
   const handleSkip = (seconds: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = Math.max(
@@ -120,6 +123,7 @@ export function VideoPlayer({
 
   // Auto-hide controls
   useEffect(() => {
+    if (isPreview) return;
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
@@ -137,10 +141,11 @@ export function VideoPlayer({
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, isPreview]);
 
   // Show controls on mouse move
   const handleMouseMove = () => {
+    if (isPreview) return;
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -152,6 +157,11 @@ export function VideoPlayer({
     }
   };
 
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
   return (
     <div
       ref={containerRef}
@@ -159,7 +169,6 @@ export function VideoPlayer({
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      {/* Video element */}
       <video
         ref={videoRef}
         src={src}
@@ -167,6 +176,7 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}
         onClick={togglePlay}
+        onLoadedMetadata={handleLoadedMetadata}
       />
 
       {/* Big play button overlay */}
@@ -178,116 +188,115 @@ export function VideoPlayer({
           <Play className="w-20 h-20 text-white fill-white" />
         </button>
       )}
+      {showControls && (
+        <div
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4 transition-opacity duration-300 ${
+            showControls ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {/* Progress bar */}
+          <div className="mb-4">
+            <input
+              type="range"
+              min="0"
+              max={duration}
+              value={currentTime}
+              onChange={handleProgressChange}
+              className="w-full h-2 bg-gray-600 rounded cursor-pointer accent-red-500 hover:h-2 transition-all"
+            />
+          </div>
 
-      {/* Controls overlay */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {/* Progress bar */}
-        <div className="mb-4">
-          <input
-            type="range"
-            min="0"
-            max={duration}
-            value={currentTime}
-            onChange={handleProgressChange}
-            className="w-full h-1 bg-gray-600 rounded cursor-pointer accent-red-500 hover:h-2 transition-all"
-          />
-        </div>
-
-        {/* Control buttons */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Play/Pause */}
-            <button
-              onClick={togglePlay}
-              className="text-white hover:text-red-500 transition-colors"
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? (
-                <Pause className="w-5 h-5 fill-current" />
-              ) : (
-                <Play className="w-5 h-5 fill-current" />
-              )}
-            </button>
-
-            {/* Skip backward */}
-            {/*<button
-              onClick={() => handleSkip(-10)}
-              className="text-white hover:text-red-500 transition-colors"
-              aria-label="Skip backward 10s"
-            >
-              <SkipBack className="w-5 h-5 fill-current" />
-            </button>
-*/}
-            {/* Skip forward */}
-            {/*<button
-              onClick={() => handleSkip(10)}
-              className="text-white hover:text-red-500 transition-colors"
-              aria-label="Skip forward 10s"
-            >
-              <SkipForward className="w-5 h-5 fill-current" />
-            </button>
-*/}
-            {/* Volume control */}
-            <div className="flex items-center gap-2">
+          {/* Control buttons */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Play/Pause */}
               <button
-                onClick={toggleMute}
+                onClick={togglePlay}
                 className="text-white hover:text-red-500 transition-colors"
-                aria-label={isMuted ? "Unmute" : "Mute"}
+                aria-label={isPlaying ? "Pause" : "Play"}
               >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5" />
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
                 ) : (
-                  <Volume2 className="w-5 h-5" />
+                  <Play className="w-5 h-5 fill-current" />
                 )}
               </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="w-20 h-1 bg-gray-600 rounded cursor-pointer accent-red-500"
-              />
+
+              {/* Skip backward */}
+              <button
+                onClick={() => handleSkip(-10)}
+                className="text-white hover:text-red-500 transition-colors"
+                aria-label="Skip backward 10s"
+              >
+                <SkipBack className="w-5 h-5 fill-current" />
+              </button>
+              <button
+                onClick={() => handleSkip(10)}
+                className="text-white hover:text-red-500 transition-colors"
+                aria-label="Skip forward 10s"
+              >
+                <SkipForward className="w-5 h-5 fill-current" />
+              </button>
+
+              {/* Volume control */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleMute}
+                  className="text-white hover:text-red-500 transition-colors"
+                  aria-label={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-5 h-5" />
+                  ) : (
+                    <Volume2 className="w-5 h-5" />
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1 bg-gray-600 rounded cursor-pointer accent-red-500"
+                />
+              </div>
+
+              {/* Time display */}
+              <span className="text-white text-sm ml-2">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
             </div>
 
-            {/* Time display */}
-            <span className="text-white text-sm ml-2">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          </div>
+            <div className="flex items-center gap-3">
+              {/*<select
+               value={quality}
+               onChange={(e) => setQuality(e.target.value)}
+               className="bg-gray-800 text-white text-sm px-2 py-1 rounded border border-gray-600 hover:border-red-500 transition-colors cursor-pointer"
+             >
+               <option value="480p">480p</option>
+               <option value="720p">720p</option>
+               <option value="1080p">1080p</option>
+               <option value="4k">4K</option>
+             </select>*/}
 
-          <div className="flex items-center gap-3">
-            {/*<select
-              value={quality}
-              onChange={(e) => setQuality(e.target.value)}
-              className="bg-gray-800 text-white text-sm px-2 py-1 rounded border border-gray-600 hover:border-red-500 transition-colors cursor-pointer"
-            >
-              <option value="480p">480p</option>
-              <option value="720p">720p</option>
-              <option value="1080p">1080p</option>
-              <option value="4k">4K</option>
-            </select>*/}
-
-            <button
-              onClick={toggleFullscreen}
-              className="text-white hover:text-red-500 transition-colors"
-              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            >
-              {isFullscreen ? (
-                <Minimize className="w-5 h-5" />
-              ) : (
-                <Maximize className="w-5 h-5" />
-              )}
-            </button>
+              <button
+                onClick={toggleFullscreen}
+                className="text-white hover:text-red-500 transition-colors"
+                aria-label={
+                  isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
+                }
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-5 h-5" />
+                ) : (
+                  <FullscreenIcon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
+      )}
       {/* Top info bar */}
       <div
         className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black via-black/50 to-transparent p-4 transition-opacity duration-300 ${

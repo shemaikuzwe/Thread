@@ -62,23 +62,23 @@ export function ChatSidebar() {
       <SidebarContent className="mt-10 w-[3rem]">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="flex justify-center items-center w-full h-full flex-col gap-5">
-              {items.map((item) => (
+            <SidebarMenu className="max-w-full flex justify-center items-center w-full h-full flex-col gap-5">
+              {items.map((item, idx) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    size={"lg"}
+                    isActive={idx == 0}
                     tooltip={item.title}
                     className="relative w-full"
                   >
                     {item.notifications && item.notifications > 0 && (
                       <Badge
-                        className="absolute top-0 right-1 h-4 w-5 text-sm px-1.5"
+                        className="absolute  top-0 right-1 h-4 w-5 text-sm px-1"
                         variant="destructive"
                       >
                         {item.notifications}
                       </Badge>
                     )}
-                    <item.icon className="w-full" />
+                    <item.icon />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
