@@ -18,6 +18,9 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
       {messages.map((message) => {
         const isOwn = message.user_id === userId;
         const existsMessageText = message.message.trim() !== "";
+        // const isSameUser =
+        //   messages.length >= 2 &&
+        //   messages[idx - 1]?.user_id === messages[idx]?.user_id;
         return (
           <div
             key={message.id}
@@ -33,6 +36,7 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
                 showDropDown={!isOwn && chatType === "group"}
               />
             </div>
+
             <div className={cn("max-w-full", isOwn ? "order-first" : "")}>
               {message.files.length > 0 && (
                 <div className="mb-2">
@@ -41,8 +45,9 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
                       <FilePreview file={file} message={message} />
                       {!existsMessageText && (
                         <Meta
+                          isOwn={isOwn}
                           status={message?.status}
-                          className="absolute bottom-1 right-1 text-white bg-black/50 rounded-md px-1"
+                          className="absolute bottom-3 right-2 text-white bg-black/50 rounded-md px-1"
                           time={message.created_at}
                         />
                       )}
@@ -58,7 +63,11 @@ export default function Messages({ messages, userId, ref, chatType }: Props) {
                   )}
                 >
                   <p className="text-sm leading-relaxed">{message.message}</p>
-                  <Meta status={message?.status} time={message.created_at} />
+                  <Meta
+                    isOwn={isOwn}
+                    status={message?.status}
+                    time={message.created_at}
+                  />
                 </div>
               )}
             </div>

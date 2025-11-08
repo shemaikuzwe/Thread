@@ -215,12 +215,17 @@ func handlerCreateMessage(message []byte, userID string) {
 		log.Println("invalid user id:", err)
 		return
 	}
-
+	createdAt, err := time.Parse(time.RFC3339, msg.Date)
+	if err != nil {
+		log.Println("Failed to parse date:", err)
+		return
+	}
 	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
 		ID:        id,
 		ChannelID: chanUUID,
 		UserID:    userUUID,
 		Message:   msg.Message,
+		CreatedAt: createdAt,
 	})
 	if len(msg.Files) > 0 {
 		// TODO:Use bulk insert

@@ -7,8 +7,10 @@ interface Props {
   time: Date | string;
   status?: Status;
   className?: string;
+  isOwn?: boolean;
 }
-export function Meta({ time, className, status = "SENT" }: Props) {
+export function Meta({ time, className, status = "SENT", isOwn }: Props) {
+  console.log(time);
   const getMessageStatus = (status: Status) => {
     switch (status) {
       case "PENDING": {
@@ -23,8 +25,8 @@ export function Meta({ time, className, status = "SENT" }: Props) {
   };
   return (
     <div className={cn("flex gap-1 justify-end", className)}>
-      <span className="text-xs">{formatDate(new Date(time), "HH:mm")}</span>
-      <span>{getMessageStatus(status)}</span>
+      <span className="text-xs">{formatDate(time, "HH:mm")}</span>
+      {isOwn && <span>{getMessageStatus(status)}</span>}
     </div>
   );
 }

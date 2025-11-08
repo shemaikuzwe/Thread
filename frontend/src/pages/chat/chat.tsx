@@ -70,7 +70,7 @@ export default function ChatPage() {
       const message: Message = {
         channel_id: id,
         id: crypto.randomUUID(),
-        created_at: new Date().toUTCString(),
+        created_at: new Date().toISOString(),
         files:
           files.map((f) => ({
             name: f.file.name,
@@ -203,6 +203,7 @@ export default function ChatPage() {
             onScrollCapture={handleScroll}
             className="flex-1 w-full p-6 space-y-4 min-h-0"
           >
+            {/*@ts-expect-error visibilityRef from useScroll have invalid type*/}
             <AutoScroller ref={visibilityRef}>
               {isLoading ? (
                 <ChatMessagesSkelton />

@@ -32,8 +32,8 @@ ORDER BY m.created_at ASC;
 -- LIMIT 10;
 
 -- name: CreateMessage :one
-INSERT INTO messages (id,channel_id, user_id, message)
-VALUES ($1, $2, $3 ,$4)
+INSERT INTO messages (id,channel_id, user_id, message,created_at)
+VALUES ($1, $2, $3 ,$4,$5)
 RETURNING id;
 
 -- name: CreateFiles :exec

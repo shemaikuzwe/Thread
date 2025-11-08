@@ -31,7 +31,7 @@ interface Props {
 }
 export function FilePreview({
   file,
-  className = "h-55 w-55 rounded-md",
+  className = "h-60 w-55 rounded-md",
   message,
 }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
@@ -93,7 +93,7 @@ export function FilePreview({
             <img
               src={"/mime/pdf.png"}
               alt="pdf image"
-              className={cn("cursor-pointer w-full h-30")}
+              className={cn("cursor-pointer w-full h-40")}
             />
           </CardContent>
         </Card>
@@ -217,10 +217,18 @@ export function FilePreview({
           )}
           {isFullScreen && (
             <div className={"absolute top-10 right-25 flex gap-2"}>
-              <Button onClick={toogleFullScreen} title="Exit Fullscreen">
+              <Button
+                onClick={toogleFullScreen}
+                variant={"secondary"}
+                title="Exit Fullscreen"
+              >
                 <MinimizeIcon className="w-full h-full" />
               </Button>
-              <Button onClick={handleDownload} title="Downl">
+              <Button
+                variant={"secondary"}
+                onClick={handleDownload}
+                title="Download"
+              >
                 <DownloadIcon />
               </Button>
             </div>
