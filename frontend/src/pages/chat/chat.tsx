@@ -70,7 +70,7 @@ export default function ChatPage() {
       const message: Message = {
         channel_id: id,
         id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
+        created_at: new Date(),
         files:
           files.map((f) => ({
             name: f.file.name,
@@ -150,7 +150,6 @@ export default function ChatPage() {
     visibilityRef,
     handleScroll,
   } = useScroll<HTMLDivElement>();
-
   useEffect(() => {
     if (messages) {
       scrollToBottom();
@@ -177,7 +176,6 @@ export default function ChatPage() {
           // ) {
           //   reader.readAsText(file);
           // }
-          // reader.readAsArrayBuffer(file); // for PDFs/videos
         },
       );
 
@@ -186,6 +184,7 @@ export default function ChatPage() {
 
     setFiles((prev) => [...prev, ...newFiles]);
   };
+
   return (
     <div className="flex gap-2 w-full h-full">
       {!isMobile && <ChatsList />}
@@ -211,6 +210,7 @@ export default function ChatPage() {
                 <JoinChat chat={chat} setJoin={setJoin} />
               ) : (
                 <Messages
+                  chatId={id}
                   ref={messagesRef}
                   messages={messages}
                   chatType={chat?.type}

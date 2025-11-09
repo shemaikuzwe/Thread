@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -12,8 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/shemaIkuzwe/websocket/internal/controllers"
-	"github.com/shemaIkuzwe/websocket/internal/database"
-	"github.com/shemaIkuzwe/websocket/internal/db"
 )
 
 type Message struct {
@@ -31,6 +28,7 @@ const (
 	USER_CONNECTED    Type = "USER_CONNECTED"
 	USER_DISCONNECTED Type = "USER_DISCONNECTED"
 	MESSAGE           Type = "MESSAGE"
+	UPDATE_LAST_READ  Type = "UPDATE_LAST_READ"
 )
 
 const (
@@ -93,8 +91,22 @@ func (c *ClientConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		var msg Message
+		err = json.Unmarshal(message, &msg)
+		if err != nil {
+			log.Println("Error parsing json", err)
+			break
+		}
+		if msg.Type == UPDATE_LAST_READ {
+			err = controllers.UpsertLastRead(message)
+			if err != nil {
+				log.Println("error saving", err)
+			}
+			break
+		}
+
 		c.hub.broadcast <- message
-		go handlerCreateMessage(message, c.userID)
+		go controllers.HandlerCreateMessage(message, c.userID)
 	}
 }
 
@@ -171,79 +183,4 @@ func serveWs(hub *Hub, ctx *gin.Context) {
 
 	go client.writePump()
 	go client.readPump()
-}
-
-type File struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
-	Type string `json:"type"`
-	Size int    `json:"size"`
-}
-
-func handlerCreateMessage(message []byte, userID string) {
-
-	var msg struct {
-		ID        string `json:"id"`
-		Message   string `json:"message"`
-		ChannelID string `json:"channel_id"`
-		Files     []File `json:"files"`
-		UserID    string `json:"user_id"`
-		Type      Type   `json:"type"`
-		Date      string `json:"created_at"`
-	}
-	err := json.Unmarshal(message, &msg)
-	if err != nil {
-		log.Println("json parse error:", err)
-		return
-	}
-	if msg.Type != "MESSAGE" {
-		return
-	}
-	id, err := uuid.Parse(msg.ID)
-	if err != nil {
-		log.Println("Invalid message uuuid", err)
-		return
-	}
-	chanUUID, err := uuid.Parse(msg.ChannelID)
-	if err != nil {
-		log.Println("invalid channel id:", err)
-		return
-	}
-
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		log.Println("invalid user id:", err)
-		return
-	}
-	createdAt, err := time.Parse(time.RFC3339, msg.Date)
-	if err != nil {
-		log.Println("Failed to parse date:", err)
-		return
-	}
-	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
-		ID:        id,
-		ChannelID: chanUUID,
-		UserID:    userUUID,
-		Message:   msg.Message,
-		CreatedAt: createdAt,
-	})
-	if len(msg.Files) > 0 {
-		// TODO:Use bulk insert
-		for _, file := range msg.Files {
-			err = db.Db.CreateFiles(context.Background(), database.CreateFilesParams{
-				Url:       file.Url,
-				Type:      file.Type,
-				Size:      int32(file.Size),
-				Name:      file.Name,
-				MessageID: &msgId,
-			})
-			if err != nil {
-				log.Println("error creating file", err)
-
-			}
-		}
-	}
-	if err != nil {
-		log.Println("db create message error:", err)
-	}
 }

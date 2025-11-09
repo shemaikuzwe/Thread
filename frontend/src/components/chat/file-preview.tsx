@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import ChatAvatar from "../ui/user-avatar";
 import { formatDate } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+// import { Document, Page } from "react-pdf";
 
 interface Props {
   file: MessageFile;
@@ -90,11 +91,9 @@ export function FilePreview({
             </div>
           </CardHeader>
           <CardContent>
-            <img
-              src={"/mime/pdf.png"}
-              alt="pdf image"
-              className={cn("cursor-pointer w-full h-40")}
-            />
+            {/*<Document file={file.url}>
+              <Page pageNumber={1} />
+            </Document>*/}
           </CardContent>
         </Card>
       );

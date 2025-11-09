@@ -80,6 +80,15 @@ type File struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
+type LastRead struct {
+	ID                uuid.UUID `json:"id"`
+	ChannelID         uuid.UUID `json:"channel_id"`
+	LastReadMessageID uuid.UUID `json:"last_read_message_id"`
+	UserID            uuid.UUID `json:"user_id"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
 type Message struct {
 	ID        uuid.UUID `json:"id"`
 	ChannelID uuid.UUID `json:"channel_id"`

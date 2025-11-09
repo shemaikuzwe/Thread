@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -10,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shemaIkuzwe/websocket/internal/database"
 	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/websocket/internal/redis"
 )
 
 type channel struct {
@@ -46,6 +50,25 @@ func GetChatsHandler(c *gin.Context) {
 	}
 	c.JSON(200, channels)
 }
+func GetUnReadChatsHandler(c *gin.Context) {
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "user not found"})
+		return
+	}
+	userID, err := uuid.Parse(user.Id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	chats, err := db.Db.GetUnReadChatsByUserID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, chats)
+}
 
 func CreateChannelHandler(c *gin.Context) {
 	var body channel
@@ -80,6 +103,11 @@ func CreateChannelHandler(c *gin.Context) {
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
+	}
+	key := fmt.Sprintf("chats:%s", uuid.String())
+	ok, _ := redis.Delete(key)
+	if ok {
+		log.Println("Deleted cache")
 	}
 	c.JSON(201, channel)
 }
@@ -130,6 +158,12 @@ func CreateDMChat(c *gin.Context) {
 		UserID:   user1,
 		UserID_2: user2,
 	})
+	key := fmt.Sprintf("chats:%s", user1.String())
+	key2 := fmt.Sprintf("chats:%s", user2.String())
+	ok, _ := redis.Delete(key, key2)
+	if ok {
+		log.Println("Deleted cache")
+	}
 	c.JSON(201, gin.H{"id": chanID.String()})
 }
 
@@ -179,6 +213,12 @@ func JoinChannelHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	key := fmt.Sprintf("chats:%s", userID.String())
+	ok, _ := redis.Delete(key)
+	if ok {
+		log.Println("successfully deleted cache")
+	}
+
 	c.JSON(201, gin.H{"message": "Joined channel"})
 }
 func GetChatMessagesHandler(c *gin.Context) {
@@ -207,4 +247,111 @@ func GetCurrentUser(c *gin.Context) (Payload, error) {
 		return Payload{}, errors.New("user not found")
 	}
 	return user.(Payload), nil
+}
+
+func UpsertLastRead(payload []byte) error {
+	var msg struct {
+		Message   string `json:"message"`
+		ChannelID string `json:"channel_id"`
+		UserID    string `json:"user_id"`
+		Date      string `json:"date"`
+	}
+
+	err := json.Unmarshal(payload, &msg)
+	if err != nil {
+		return err
+	}
+	userId, err := uuid.Parse(msg.UserID)
+	if err != nil {
+		return err
+	}
+	chanId, err := uuid.Parse(msg.ChannelID)
+	if err != nil {
+
+		return err
+	}
+	lastMessageId, err := uuid.Parse(msg.Message)
+	if err != nil {
+		return err
+	}
+	err = db.Db.UpsertLastRead(context.Background(), database.UpsertLastReadParams{
+		ChannelID:         chanId,
+		LastReadMessageID: lastMessageId,
+		UserID:            userId,
+	})
+	if err != nil {
+		return err
+	}
+	log.Println("Updated last read message", lastMessageId.String())
+	return nil
+}
+
+type File struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+	Type string `json:"type"`
+	Size int    `json:"size"`
+}
+
+func HandlerCreateMessage(message []byte, userID string) {
+
+	var msg struct {
+		ID        string `json:"id"`
+		Message   string `json:"message"`
+		ChannelID string `json:"channel_id"`
+		Files     []File `json:"files"`
+		UserID    string `json:"user_id"`
+		Type      string `json:"type"`
+		Date      string `json:"created_at"`
+	}
+	err := json.Unmarshal(message, &msg)
+	if err != nil {
+		log.Println("json parse error:", err)
+		return
+	}
+	if msg.Type != "MESSAGE" {
+		return
+	}
+	id, err := uuid.Parse(msg.ID)
+	if err != nil {
+		log.Println("Invalid message uuuid", err)
+		return
+	}
+	chanUUID, err := uuid.Parse(msg.ChannelID)
+	if err != nil {
+		log.Println("invalid channel id:", err)
+		return
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		log.Println("invalid user id:", err)
+		return
+	}
+
+	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
+		ID:        id,
+		ChannelID: chanUUID,
+		UserID:    userUUID,
+		Message:   msg.Message,
+	})
+	if len(msg.Files) > 0 {
+		// TODO:Use bulk insert
+		for _, file := range msg.Files {
+			err = db.Db.CreateFiles(context.Background(), database.CreateFilesParams{
+				Url:       file.Url,
+				Type:      file.Type,
+				Size:      int32(file.Size),
+				Name:      file.Name,
+				MessageID: &msgId,
+			})
+			if err != nil {
+				log.Println("error creating file", err)
+
+			}
+		}
+	}
+	if err != nil {
+		log.Println("db create message error:", err)
+	}
 }

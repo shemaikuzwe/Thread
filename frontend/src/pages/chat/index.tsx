@@ -14,7 +14,7 @@ export default function Index() {
   return (
     <div className="flex gap-2 justify-center w-full h-full">
       <ChatsList />
-      <Empty>
+      <Empty className="max-sm:hidden">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <MessageCircleIcon />

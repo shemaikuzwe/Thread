@@ -39,8 +39,8 @@ func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error 
 
 const createMessage = `-- name: CreateMessage :one
 
-INSERT INTO messages (id,channel_id, user_id, message,created_at)
-VALUES ($1, $2, $3 ,$4,$5)
+INSERT INTO messages (id,channel_id, user_id, message)
+VALUES ($1, $2, $3 ,$4)
 RETURNING id
 `
 
@@ -49,7 +49,6 @@ type CreateMessageParams struct {
 	ChannelID uuid.UUID `json:"channel_id"`
 	UserID    uuid.UUID `json:"user_id"`
 	Message   string    `json:"message"`
-	CreatedAt time.Time `json:"created_at"`
 }
 
 // LIMIT 10;
@@ -59,7 +58,6 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (u
 		arg.ChannelID,
 		arg.UserID,
 		arg.Message,
-		arg.CreatedAt,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)

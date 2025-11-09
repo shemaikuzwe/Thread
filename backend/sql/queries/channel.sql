@@ -29,7 +29,10 @@ INNER JOIN users ON channel_user.user_id = users.id
 GROUP BY channels.id;
 
 -- name: GetChannelsByUserID :many
-SELECT channels.*,json_agg(json_build_object(
+
+SELECT channels.*,l.last_read_message_id,
+(SELECT COUNT(*) FROM messages WHERE messages.channel_id = channels.id AND messages.user_id !=$1 AND messages.created_at > (SELECT updated_at FROM last_read WHERE last_read_message_id = l.last_read_message_id LIMIT 1)) as unread_count,
+json_agg(json_build_object(
 'id', users.id,
 'first_name', users.first_name,
 'last_name', users.last_name,
@@ -38,10 +41,19 @@ SELECT channels.*,json_agg(json_build_object(
 )) AS users
 FROM channels
 JOIN channel_user cu1 ON channels.id = cu1.channel_id
+LEFT JOIN last_read l ON l.channel_id = channels.id AND l.user_id = $1
 JOIN channel_user cu2 ON channels.id = cu2.channel_id
 JOIN users ON cu2.user_id = users.id
 WHERE cu1.user_id = $1
-GROUP BY channels.id;
+GROUP BY channels.id, l.last_read_message_id;
+
+-- name: GetUnReadChatsByUserID :many
+
+SELECT l.last_read_message_id AS last_read,l.channel_id,
+(SELECT COUNT(id) FROM messages WHERE messages.user_id !=$1
+AND messages.channel_id=l.channel_id AND messages.created_at > l.updated_at) AS unread_count
+FROM last_read l
+WHERE l.user_id=$1;
 
 
 -- name: GetClientChannels :many
@@ -79,7 +91,14 @@ SELECT c.id,c.name,'group' as type FROM channels c WHERE c.name ILIKE $1 AND c.i
 UNION
 SELECT DISTINCT u.id,CONCAT(u.first_name,' ',u.last_name) as name,'user' as type FROM users u
 WHERE u.first_name ILIKE $1 OR u.last_name ILIKE $1;
+
 -- name: JoinChannel :exec
 
 INSERT INTO channel_user (channel_id, user_id)
 VALUES ($1, $2);
+
+-- name: UpsertLastRead :exec
+
+INSERT INTO last_read(channel_id,last_read_message_id,user_id)
+VALUES($1,$2,$3) ON CONFLICT(user_id,channel_id)
+DO UPDATE SET last_read_message_id = EXCLUDED.last_read_message_id,updated_at=now();

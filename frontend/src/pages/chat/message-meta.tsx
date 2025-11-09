@@ -10,7 +10,6 @@ interface Props {
   isOwn?: boolean;
 }
 export function Meta({ time, className, status = "SENT", isOwn }: Props) {
-  console.log(time);
   const getMessageStatus = (status: Status) => {
     switch (status) {
       case "PENDING": {

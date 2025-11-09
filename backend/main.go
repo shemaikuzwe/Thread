@@ -53,6 +53,7 @@ func main() {
 	v1.GET("/users/:id", controllers.GetUserHandler)
 
 	v1.GET("/chats", controllers.GetChatsHandler)
+	v1.GET("/chats/unread", controllers.GetUnReadChatsHandler)
 	v1.POST("/chats", controllers.CreateChannelHandler)
 	v1.POST("/chats/dm", controllers.CreateDMChat)
 	v1.GET("/chats/:id", controllers.GetChatsByIdHandler)

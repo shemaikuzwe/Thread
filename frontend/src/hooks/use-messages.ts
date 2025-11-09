@@ -33,3 +33,17 @@ export const useMessageStatus = (id: string) => {
     enabled: false,
   });
 };
+export type UnReadMessage = {
+  last_read: string | null;
+  unread_count: number;
+};
+export const useUnReadMessages = (id: string, initialData?: UnReadMessage) => {
+  return useQuery<UnReadMessage>({
+    initialData,
+    queryKey: ["un_read_message", id],
+    queryFn: () => {
+      return { last_read: "", unread_count: 0 };
+    },
+    enabled: false,
+  });
+};

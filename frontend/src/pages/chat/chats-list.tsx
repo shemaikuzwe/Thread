@@ -20,6 +20,21 @@ export default function ChatsList() {
       return res.data;
     },
   });
+  type Res = {
+    last_read: string;
+    channel_id: string;
+    unread_count: string;
+  };
+  const { data: unReadChats } = useQuery<Res[]>({
+    queryKey: ["un_read"],
+    queryFn: async () => {
+      const res = await api.get("/chats/unread");
+      if (res.status !== 200) {
+        throw new Error("failed to fetch unread message");
+      }
+      return res.data;
+    },
+  });
   const filteredChats = search
     ? chats &&
       chats.filter(
@@ -52,9 +67,24 @@ export default function ChatsList() {
             {isLoading ? (
               <ChatListSkelton />
             ) : filteredChats && filteredChats?.length > 0 ? (
-              filteredChats.map((chat) => (
-                <ChatListItem key={chat.id} chat={chat} />
-              ))
+              filteredChats.map((chat) => {
+                const unReadChat = unReadChats?.find(
+                  (c) => c.channel_id === chat.id,
+                );
+                return (
+                  <ChatListItem
+                    key={chat.id}
+                    chat={chat}
+                    unReadMesssage={{
+                      last_read: unReadChat?.last_read ?? null,
+                      unread_count:
+                        (unReadChat?.unread_count &&
+                          Number(unReadChat.unread_count)) ||
+                        0,
+                    }}
+                  />
+                );
+              })
             ) : (
               <EmptyChatsList />
             )}

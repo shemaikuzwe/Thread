@@ -39,6 +39,7 @@ function useScroll<T extends HTMLElement>() {
     scrollToBottom,
     isAtBottom,
     handleScroll,
+    isVisible,
   };
 }
 

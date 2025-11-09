@@ -1,8 +1,9 @@
-package cache
+package redis
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/shemaIkuzwe/websocket/internal/db"
@@ -35,4 +36,19 @@ func Get[T any](key string) (T, bool, error) {
 	}
 	err = json.Unmarshal([]byte(res), &t)
 	return t, ok, err
+}
+
+func Delete(keys ...string) (bool, error) {
+	exists, err := db.RedisClient.Exists(context.Background(), keys...).Result()
+	if err != nil {
+		return false, err
+	}
+	if exists == 0 {
+		return false, errors.New("Can not find given key")
+	}
+	_, err = db.RedisClient.Del(context.Background(), keys...).Result()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

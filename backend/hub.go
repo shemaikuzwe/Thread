@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/cache"
 	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/websocket/internal/redis"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -80,7 +80,6 @@ func (h *Hub) run() {
 					break
 				}
 				if !ok {
-					log.Println("this client does not belong to this channel")
 					continue
 				}
 				for _, conn := range userConns {
@@ -199,9 +198,8 @@ func CheckUser(message []byte, client string) (bool, error) {
 
 func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
 	key := fmt.Sprintf("chats:%s", userId)
-	cached, ok, err := cache.Get[[]uuid.UUID](key)
+	cached, ok, err := redis.Get[[]uuid.UUID](key)
 	if ok && err == nil {
-		log.Println("Cache hit!")
 		return cached, nil
 	}
 	usersChannels, err := db.Db.GetClientChannels(context.Background(), userId)
@@ -209,8 +207,7 @@ func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
 		log.Println("failed to parse json", err)
 		return nil, err
 	}
-	log.Println("Cache miss!")
-	err = cache.Set(key, usersChannels, int(time.Hour)*24)
+	err = redis.Set(key, usersChannels, int(time.Hour)*24)
 	if err != nil {
 		log.Println("unable to set cache", err)
 	}
