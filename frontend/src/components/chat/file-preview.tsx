@@ -1,5 +1,5 @@
 import type { Message, MessageFile } from "@/lib/types";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -11,7 +11,6 @@ import {
 import { VideoPlayer } from "../ui/video";
 import { Button } from "../ui/button";
 import {
-  Download,
   DownloadIcon,
   FullscreenIcon,
   MinimizeIcon,
@@ -22,8 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import ChatAvatar from "../ui/user-avatar";
 import { formatDate } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-// import { Document, Page } from "react-pdf";
+import PDF from "../ui/pdf";
 
 interface Props {
   file: MessageFile;
@@ -62,40 +60,13 @@ export function FilePreview({
       return <audio src={file.url} className={cn(className)} />;
     }
     if (file.type.startsWith("application/pdf")) {
-      return open ? (
-        <iframe src={file.url} className={cn(className)} />
-      ) : (
-        <Card className={cn("w-100 h-70")}>
-          <CardHeader className="px-4 flex justify-between items-start w-full">
-            <div className="flex  justify-center items-start">
-              <img
-                src="/icons/pdf.png"
-                alt="pdf"
-                width={100}
-                height={100}
-                className="w-13 h-12 -mt-1 rounded-lg"
-              />
-              <div className="flex flex-col justify-start items-start">
-                <CardTitle className="text-sm font-medium">
-                  {file.name}
-                </CardTitle>
-                <span className="text-xs font-normal">
-                  2 pages {formatFileSize(file.size)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <Button className="w-7 h-7" variant={"outline"} size={"icon"}>
-                <Download onClick={handleDownload} />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/*<Document file={file.url}>
-              <Page pageNumber={1} />
-            </Document>*/}
-          </CardContent>
-        </Card>
+      return (
+        <PDF
+          file={file}
+          onDownloadClick={handleDownload}
+          open={open}
+          className={className}
+        />
       );
     }
     return (
