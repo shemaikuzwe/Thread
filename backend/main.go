@@ -7,10 +7,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // needed by sqlc
-	"github.com/shemaIkuzwe/websocket/internal/controllers"
-	"github.com/shemaIkuzwe/websocket/internal/db"
-	"github.com/shemaIkuzwe/websocket/internal/middleware"
-	"github.com/shemaIkuzwe/websocket/utils"
+	"github.com/shemaIkuzwe/thread/internal/controllers"
+	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/middleware"
+	"github.com/shemaIkuzwe/thread/internal/ws"
+	"github.com/shemaIkuzwe/thread/utils"
 )
 
 func init() {
@@ -32,14 +33,14 @@ func main() {
 	v1 := gin.RouterGroup(*router.RouterGroup.Group("/v1"))
 	v1.Use(middleware.AuthMiddleware)
 
-	hub := newHub()
-	go hub.run()
+	hub := ws.NewHub()
+	go hub.Run()
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to our server")
 	})
 	v1.GET("/ws", func(c *gin.Context) {
-		serveWs(hub, c)
+		ws.ServeWs(hub, c)
 	})
 
 	v1.POST("/auth/signup", controllers.SignUp)

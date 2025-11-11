@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/db"
 )
 
 func GetUserHandler(ctx *gin.Context) {

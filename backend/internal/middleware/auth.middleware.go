@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/shemaIkuzwe/websocket/internal/controllers"
+	"github.com/shemaIkuzwe/thread/internal/controllers"
 )
 
 func AuthMiddleware(c *gin.Context) {

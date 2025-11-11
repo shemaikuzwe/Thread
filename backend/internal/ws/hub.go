@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/db"
-	"github.com/shemaIkuzwe/websocket/internal/redis"
+	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -38,7 +38,7 @@ type activeInfo struct {
 	Users  []string `json:"users"`
 }
 
-func newHub() *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		broadcast:  make(chan []byte, 256),
 		register:   make(chan *ClientConn),
@@ -48,7 +48,7 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+func (h *Hub) Run() {
 	for {
 		select {
 		case conn := <-h.register:

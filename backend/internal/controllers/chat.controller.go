@@ -11,9 +11,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/database"
-	"github.com/shemaIkuzwe/websocket/internal/db"
-	"github.com/shemaIkuzwe/websocket/internal/redis"
+	"github.com/shemaIkuzwe/thread/internal/database"
+	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 type channel struct {

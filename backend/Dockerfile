@@ -6,6 +6,6 @@ COPY . .
 
 RUN go mod download
 
-RUN go build -o websocket
+RUN go build -o thread
 
-CMD ["/app/websocket"]
+CMD ["/app/thread"]

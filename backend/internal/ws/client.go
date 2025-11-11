@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/shemaIkuzwe/websocket/internal/controllers"
+	"github.com/shemaIkuzwe/thread/internal/controllers"
 )
 
 type Message struct {
@@ -151,7 +151,7 @@ func (c *ClientConn) writePump() {
 	}
 }
 
-func serveWs(hub *Hub, ctx *gin.Context) {
+func ServeWs(hub *Hub, ctx *gin.Context) {
 	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {

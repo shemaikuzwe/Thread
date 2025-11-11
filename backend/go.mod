@@ -1,4 +1,4 @@
-module github.com/shemaIkuzwe/websocket
+module github.com/shemaIkuzwe/thread
 
 go 1.24.0
 

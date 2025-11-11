@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/shemaIkuzwe/websocket/internal/database"
-	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/database"
+	"github.com/shemaIkuzwe/thread/internal/db"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/shemaIkuzwe/websocket/internal/database"
+	"github.com/shemaIkuzwe/thread/internal/database"
 )
 
 var Db *database.Queries

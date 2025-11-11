@@ -49,7 +49,6 @@ export function useWebSocket() {
           queryClient.setQueryData(
             ["un_read_message", msg.channel_id],
             (old: UnReadMessage): UnReadMessage => {
-              console.log("prev", old.unread_count);
               return { ...old, unread_count: old.unread_count + 1 };
             },
           );
