@@ -28,7 +28,8 @@ export default function Messages({
 }: Props) {
   const { ref: messageRef, inView } = useInView({
     delay: 100,
-    threshold: 0.6,
+    threshold: 0.8,
+    rootMargin: "0px 0px 0px 0px",
   });
 
   const queryClient = useQueryClient();
@@ -108,6 +109,7 @@ export default function Messages({
               >
                 <div className="w-8 h-8 flex-shrink-0">
                   <ChatAvatar
+                    showOnline={false}
                     type="user"
                     user={message.from}
                     showDropDown={!isOwn && chatType === "group"}

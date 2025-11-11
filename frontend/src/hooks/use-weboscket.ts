@@ -26,7 +26,7 @@ export function useWebSocket() {
       if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
         queryClient.setQueryData(["online", msg.channel_id], () => {
           return {
-            active: Number(msg.message.active),
+            online: Number(msg.message.online),
             users: msg.message.users,
           };
         });

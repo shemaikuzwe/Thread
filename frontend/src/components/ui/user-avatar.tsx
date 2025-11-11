@@ -19,11 +19,19 @@ interface Props {
   type: "user" | "chat";
   showDropDown?: boolean;
   chat?: ChatWithUsers;
-  showActive?: boolean;
+  showOnline?: boolean;
 }
-export default function ChatAvatar({ user, type, showDropDown, chat }: Props) {
+export default function ChatAvatar({
+  user,
+  type,
+  showDropDown,
+  chat,
+  showOnline,
+}: Props) {
   if (type === "user" && user) {
-    return <User user={user} showDropDown={showDropDown} />;
+    return (
+      <User showOnline={showOnline} user={user} showDropDown={showDropDown} />
+    );
   }
   return type === "chat" && chat ? <Chat chat={chat} /> : null;
 }
@@ -31,15 +39,17 @@ export default function ChatAvatar({ user, type, showDropDown, chat }: Props) {
 export function User({
   user,
   showDropDown,
+  showOnline,
 }: {
   user: User;
   showDropDown?: boolean;
+  showOnline?: boolean;
 }) {
   const name = user.first_name + " " + user.last_name;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <div>
+        <div className="relative">
           <Avatar className="rounded-full">
             <AvatarImage
               className="rounded-full"
@@ -49,6 +59,9 @@ export function User({
               {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
             </AvatarFallback>
           </Avatar>
+          {showOnline && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white"></div>
+          )}
         </div>
       </DropdownMenuTrigger>
       {showDropDown && (

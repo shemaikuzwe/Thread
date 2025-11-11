@@ -89,45 +89,6 @@ export default function ChatsList() {
               <EmptyChatsList />
             )}
           </div>
-
-          {/*<h3 className="text-2xl font-bold text-gray-900 mt-8 mb-6">
-            Direct Messages
-          </h3>
-          <div className="space-y-2">
-            {directMessages.map((dm) => (
-              <button
-                key={dm.id}
-                onClick={() => {
-                  setSelectedDM(dm.id);
-                  setSelectedChannel("");
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                  selectedDM === dm.id
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                <div className="relative">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage
-                      src={dm.avatar || "/placeholder.svg"}
-                      alt={dm.name}
-                    />
-                    <AvatarFallback>
-                      {dm.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  {dm.isOnline && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white"></div>
-                  )}
-                </div>
-                <span className="font-medium">{dm.name}</span>
-              </button>
-            ))}
-          </div>*/}
         </div>
       </div>
     </div>

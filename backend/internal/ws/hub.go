@@ -30,11 +30,11 @@ type Hub struct {
 }
 
 type Channels map[string]struct {
-	Active int
+	Online int
 	users  []string
 }
 type activeInfo struct {
-	Active int      `json:"active"`
+	Online int      `json:"online"`
 	Users  []string `json:"users"`
 }
 
@@ -109,10 +109,10 @@ func (h *Hub) incrementChannel(userId string) {
 	for _, channel := range userChannels {
 		channelID := channel.String()
 		info := h.channels[channelID]
-		info.Active++
+		info.Online++
 		info.users = append(info.users, userId)
 		h.channels[channelID] = info
-		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
 			Message:   activeInfo,
 			Type:      "USER_CONNECTED",
@@ -141,7 +141,7 @@ func (h *Hub) decrementChannel(userId string) {
 	for _, channel := range userChannels {
 		channelID := channel.String()
 		info := h.channels[channelID]
-		info.Active--
+		info.Online--
 
 		// Find and remove the user from the slice
 		for i, u := range info.users {
@@ -151,7 +151,7 @@ func (h *Hub) decrementChannel(userId string) {
 			}
 		}
 		h.channels[channelID] = info
-		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
 			Message:   activeInfo,
 			Type:      "USER_DISCONNECTED",
