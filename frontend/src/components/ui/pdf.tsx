@@ -17,7 +17,6 @@ export default function PDF({ open, file, className, onDownloadClick }: Props) {
     null,
   );
   const [numPages, setNumPages] = useState<number | null>(null);
-
   useEffect(() => {
     (async () => {
       const { pdfjs, Document, Page } = await import("react-pdf");
@@ -69,11 +68,6 @@ export default function PDF({ open, file, className, onDownloadClick }: Props) {
               }
               onLoadError={(error: any) =>
                 console.error("PDF load error:", error)
-              }
-              loading={
-                <div className="text-sm text-muted-foreground">
-                  Loading PDF…
-                </div>
               }
             >
               <Page

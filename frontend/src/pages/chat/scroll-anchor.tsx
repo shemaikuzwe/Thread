@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface Props {
   isAtBottom: boolean;
-  scrollToBottom: () => void;
+  scrollToBottom: (bottom?: boolean) => void;
 }
 function ScrollAnchor({ isAtBottom, scrollToBottom }: Props) {
   return (
@@ -33,7 +33,7 @@ function ScrollAnchor({ isAtBottom, scrollToBottom }: Props) {
               "z-10 border  transition-opacity duration-300 bg-background  rounded-full ",
               isAtBottom ? "opacity-0" : "opacity-100",
             )}
-            onClick={scrollToBottom}
+            onClick={() => scrollToBottom(true)}
           >
             <ChevronDown className="h-3.5 w-3.5" />
             <span className="sr-only">Scroll to bottom</span>

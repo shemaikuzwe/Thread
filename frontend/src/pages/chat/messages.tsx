@@ -4,10 +4,12 @@ import EmptyChat from "@/components/chat/empty-messages.tsx";
 import { Meta } from "./message-meta";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";
-import { useInView } from "react-intersection-observer";
 import { useUnReadMessages, type UnReadMessage } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-weboscket";
+import { format, isToday, isYesterday, isThisWeek } from "date-fns";
+import { useInView } from "react-intersection-observer";
+import { useCallback, useEffect } from "react";
 
 interface Props {
   chatId: string;
@@ -26,51 +28,79 @@ export default function Messages({
 }: Props) {
   const { ref: messageRef, inView } = useInView({
     delay: 100,
+    threshold: 0.6,
   });
 
   const queryClient = useQueryClient();
   const { data: unReadMesages } = useUnReadMessages(chatId);
   const { sendMessage } = useWebSocket();
 
-  if (inView && messages && unReadMesages) {
-    const lastMessage = messages[messages.length - 1].id;
-    if (!unReadMesages.last_read || lastMessage !== unReadMesages.last_read) {
-      queryClient.setQueryData(
-        ["un_read_message", chatId],
-        (): UnReadMessage => {
-          return { last_read: lastMessage, unread_count: 0 };
-        },
-      );
-      const msg = {
-        message: lastMessage,
-        channel_id: chatId,
-        user_id: userId,
-        date: new Date().toISOString(),
-        type: "UPDATE_LAST_READ",
-      };
-      sendMessage(msg);
+  const handleRead = useCallback(() => {
+    if (messages && messages.length > 0 && unReadMesages) {
+      const lastMessage = messages[messages.length - 1].id;
+      if (!unReadMesages.last_read || lastMessage !== unReadMesages.last_read) {
+        queryClient.setQueryData(
+          ["un_read_message", chatId],
+          (): UnReadMessage => {
+            return { last_read: lastMessage, unread_count: 0 };
+          },
+        );
+        const msg = {
+          message: lastMessage,
+          channel_id: chatId,
+          user_id: userId,
+          date: new Date().toISOString(),
+          type: "UPDATE_LAST_READ",
+        };
+        sendMessage(msg);
+      }
     }
-  }
+  }, [chatId, queryClient, sendMessage, unReadMesages, userId, messages]);
+  useEffect(() => {
+    if (!inView) {
+      // handleRead();
+      console.log("should have updated");
+    }
+  }, [inView, handleRead]);
+
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={messageRef}>
       <div ref={ref}>
-        {messages.map((message) => {
+        {messages.map((message, idx) => {
+          const currentDate = format(message.created_at, "yyyy-MM-dd");
+          const showDate =
+            idx === 0 ||
+            format(messages[idx - 1].created_at, "yyyy-MM-dd") !== currentDate;
+          let dateText = "";
+          if (isToday(message.created_at)) dateText = "Today";
+          else if (isYesterday(message.created_at)) dateText = "Yesterday";
+          else if (isThisWeek(message.created_at))
+            dateText = format(message.created_at, "EEEE");
+          else dateText = format(message.created_at, "MMMM d, yyyy");
           const isOwn = message.user_id === userId;
           const existsMessageText = message.message.trim() !== "";
-          // const isSameUser =
-          //   messages.length >= 2 &&
-          //   messages[idx - 1]?.user_id === messages[idx]?.user_id;
           return (
             <>
+              {showDate && (
+                <div className="flex justify-center my-4">
+                  <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
+                    {dateText}
+                  </span>
+                </div>
+              )}
               {unReadMesages &&
                 unReadMesages.unread_count > 0 &&
                 unReadMesages.last_read === message.id && (
-                  <div className="mb-4 w-full flex justify-center items-center">
-                    {unReadMesages.unread_count} unread messages
+                  <div className="relative my-4">
+                    <hr className="border-t border-blue-500" />
+                    <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
+                      {unReadMesages.unread_count} unread messages
+                    </span>
                   </div>
                 )}
               <div
                 key={message.id}
+                id={message.id}
                 className={cn(
                   "flex gap-3 p-2 w-full",
                   isOwn ? "justify-end" : "justify-start",

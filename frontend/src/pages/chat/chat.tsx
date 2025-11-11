@@ -16,10 +16,9 @@ import { ArrowUp, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
-import { AutoScroller } from "@/components/chat/auto-scroller";
 import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
-import { useMessages } from "@/hooks/use-messages";
+import { useMessages, useUnReadMessages } from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
@@ -42,6 +41,7 @@ export default function ChatPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
+  const { data: unReadMesages } = useUnReadMessages(id);
   const queryClient = useQueryClient();
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
@@ -70,7 +70,7 @@ export default function ChatPage() {
       const message: Message = {
         channel_id: id,
         id: crypto.randomUUID(),
-        created_at: new Date(),
+        created_at: new Date().toISOString(),
         files:
           files.map((f) => ({
             name: f.file.name,
@@ -143,18 +143,25 @@ export default function ChatPage() {
       handleSendMessage("MESSAGE_STATUS", { status: "DEFAULT" });
     }
   }, [isTyping]);
-  const {
-    isAtBottom,
-    scrollToBottom,
-    messagesRef,
-    visibilityRef,
-    handleScroll,
-  } = useScroll<HTMLDivElement>();
+  const { isAtBottom, scrollToBottom, messagesRef, handleScroll } =
+    useScroll<HTMLDivElement>(id);
+
   useEffect(() => {
-    if (messages) {
-      scrollToBottom();
+    if (messages && unReadMesages) {
+      if (unReadMesages.unread_count > 0 && unReadMesages.last_read) {
+        setTimeout(() => {
+          const element = document.getElementById(unReadMesages.last_read!);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            scrollToBottom();
+          }
+        }, 100);
+      } else {
+        scrollToBottom();
+      }
     }
-  }, [messages, scrollToBottom]);
+  }, [messages, unReadMesages, scrollToBottom]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.currentTarget.files;
@@ -202,22 +209,19 @@ export default function ChatPage() {
             onScrollCapture={handleScroll}
             className="flex-1 w-full p-6 space-y-4 min-h-0"
           >
-            {/*@ts-expect-error visibilityRef from useScroll have invalid type*/}
-            <AutoScroller ref={visibilityRef}>
-              {isLoading ? (
-                <ChatMessagesSkelton />
-              ) : join && chat ? (
-                <JoinChat chat={chat} setJoin={setJoin} />
-              ) : (
-                <Messages
-                  chatId={id}
-                  ref={messagesRef}
-                  messages={messages}
-                  chatType={chat?.type}
-                  userId={userId}
-                />
-              )}
-            </AutoScroller>
+            {isLoading ? (
+              <ChatMessagesSkelton />
+            ) : join && chat ? (
+              <JoinChat chat={chat} setJoin={setJoin} />
+            ) : (
+              <Messages
+                chatId={id}
+                ref={messagesRef}
+                messages={messages}
+                chatType={chat?.type}
+                userId={userId}
+              />
+            )}
           </ScrollArea>
           <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
             <ScrollAnchor
