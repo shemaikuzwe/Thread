@@ -23,6 +23,7 @@ function useScroll<T extends HTMLElement>(id: string) {
       if (messagesRef.current) {
         if (read?.last_read && !bottom) {
           const last_readRed = document.getElementById(read.last_read);
+          console.log(last_readRed);
           last_readRed?.scrollIntoView({
             behavior: "smooth",
             block: "nearest",

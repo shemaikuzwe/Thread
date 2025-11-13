@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface Props {
   chatId: string;
@@ -28,24 +28,23 @@ export default function Messages({
 }: Props) {
   const { ref: messageRef, inView } = useInView({
     delay: 100,
-    threshold: 0.8,
+    threshold: 0.9,
     rootMargin: "0px 0px 0px 0px",
   });
-
   const queryClient = useQueryClient();
   const { data: unReadMesages } = useUnReadMessages(chatId);
   const { sendMessage } = useWebSocket();
-
+  const unReadRef = useRef<UnReadMessage | null>(null);
+  console.log("red", unReadRef.current);
+  console.log(unReadMesages);
   const handleRead = useCallback(() => {
     if (messages && messages.length > 0 && unReadMesages) {
       const lastMessage = messages[messages.length - 1].id;
       if (!unReadMesages.last_read || lastMessage !== unReadMesages.last_read) {
-        queryClient.setQueryData(
-          ["un_read_message", chatId],
-          (): UnReadMessage => {
-            return { last_read: lastMessage, unread_count: 0 };
-          },
-        );
+        // if (unReadRef.current) {
+        //   unReadRef.current.last_read = lastMessage;
+        //   unReadRef.current.unread_count = 0;
+        // }
         const msg = {
           message: lastMessage,
           channel_id: chatId,
@@ -56,13 +55,30 @@ export default function Messages({
         sendMessage(msg);
       }
     }
-  }, [chatId, queryClient, sendMessage, unReadMesages, userId, messages]);
+  }, [chatId, sendMessage, unReadMesages, userId, messages]);
   useEffect(() => {
     if (!inView) {
-      // handleRead();
-      console.log("should have updated");
+      handleRead();
+      // console.log("should have updated");
     }
   }, [inView, handleRead]);
+  useEffect(() => {
+    return () => {
+      if (!messages || messages.length < 0) return;
+      console.log("running on unMount");
+      const lastMessage = messages[messages.length - 1].id;
+      if (unReadRef.current) {
+        unReadRef.current.last_read = unReadMesages?.last_read ?? null;
+        unReadRef.current.unread_count = unReadMesages?.unread_count ?? 0;
+      }
+      queryClient.setQueryData(
+        ["un_read_message", chatId],
+        (): UnReadMessage => {
+          return { last_read: lastMessage, unread_count: 0 };
+        },
+      );
+    };
+  }, [chatId, queryClient, messages]);
 
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={messageRef}>
@@ -89,13 +105,13 @@ export default function Messages({
                   </span>
                 </div>
               )}
-              {unReadMesages &&
-                unReadMesages.unread_count > 0 &&
-                unReadMesages.last_read === message.id && (
+              {unReadRef.current &&
+                unReadRef.current.unread_count > 0 &&
+                unReadRef.current.last_read === message.id && (
                   <div className="relative my-4">
                     <hr className="border-t border-blue-500" />
                     <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
-                      {unReadMesages.unread_count} unread messages
+                      {unReadRef.current.unread_count} unread messages
                     </span>
                   </div>
                 )}
