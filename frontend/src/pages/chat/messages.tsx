@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-weboscket";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
   chatId: string;
@@ -28,25 +28,39 @@ export default function Messages({
 }: Props) {
   const { ref: messageRef, inView } = useInView({
     delay: 100,
-    threshold: 0.9,
+    threshold: 0.7,
     rootMargin: "0px 0px 0px 0px",
   });
   const queryClient = useQueryClient();
-  const { data: unReadMesages } = useUnReadMessages(chatId);
+  const { data: unReadMessages } = useUnReadMessages(chatId);
   const { sendMessage } = useWebSocket();
-  const unReadRef = useRef<UnReadMessage | null>(null);
-  console.log("red", unReadRef.current);
-  console.log(unReadMesages);
+
+  const [optimisticUnread, setOptimisticUnread] =
+    useState<UnReadMessage | null>(null);
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    if (unReadMessages) {
+      setOptimisticUnread(unReadMessages);
+    }
+  }, [unReadMessages]);
+
   const handleRead = useCallback(() => {
-    if (messages && messages.length > 0 && unReadMesages) {
-      const lastMessage = messages[messages.length - 1].id;
-      if (!unReadMesages.last_read || lastMessage !== unReadMesages.last_read) {
-        // if (unReadRef.current) {
-        //   unReadRef.current.last_read = lastMessage;
-        //   unReadRef.current.unread_count = 0;
-        // }
+    const currentMessages = messagesRef.current;
+    if (
+      currentMessages &&
+      currentMessages.length > 0 &&
+      unReadMessages &&
+      unReadMessages.unread_count > 0
+    ) {
+      const lastMessageId = currentMessages[currentMessages.length - 1].id;
+      if (lastMessageId !== unReadMessages.last_read) {
         const msg = {
-          message: lastMessage,
+          message: lastMessageId,
           channel_id: chatId,
           user_id: userId,
           date: new Date().toISOString(),
@@ -55,30 +69,31 @@ export default function Messages({
         sendMessage(msg);
       }
     }
-  }, [chatId, sendMessage, unReadMesages, userId, messages]);
+  }, [chatId, sendMessage, unReadMessages, userId]);
+
   useEffect(() => {
-    if (!inView) {
+    if (inView) {
       handleRead();
-      // console.log("should have updated");
     }
   }, [inView, handleRead]);
+
   useEffect(() => {
     return () => {
-      if (!messages || messages.length < 0) return;
-      console.log("running on unMount");
-      const lastMessage = messages[messages.length - 1].id;
-      if (unReadRef.current) {
-        unReadRef.current.last_read = unReadMesages?.last_read ?? null;
-        unReadRef.current.unread_count = unReadMesages?.unread_count ?? 0;
+      const currentMessages = messagesRef.current;
+      if (currentMessages && currentMessages.length > 0) {
+        const lastMessage = currentMessages[currentMessages.length - 1];
+        queryClient.setQueryData(
+          ["un_read_message", chatId],
+          (oldData: UnReadMessage | undefined) => {
+            if (oldData && oldData.unread_count > 0) {
+              return { last_read: lastMessage.id, unread_count: 0 };
+            }
+            return oldData;
+          },
+        );
       }
-      queryClient.setQueryData(
-        ["un_read_message", chatId],
-        (): UnReadMessage => {
-          return { last_read: lastMessage, unread_count: 0 };
-        },
-      );
     };
-  }, [chatId, queryClient, messages]);
+  }, [chatId, queryClient]);
 
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={messageRef}>
@@ -97,7 +112,7 @@ export default function Messages({
           const isOwn = message.user_id === userId;
           const existsMessageText = message.message.trim() !== "";
           return (
-            <>
+            <div key={message.id}>
               {showDate && (
                 <div className="flex justify-center my-4">
                   <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
@@ -105,18 +120,17 @@ export default function Messages({
                   </span>
                 </div>
               )}
-              {unReadRef.current &&
-                unReadRef.current.unread_count > 0 &&
-                unReadRef.current.last_read === message.id && (
+              {optimisticUnread &&
+                optimisticUnread.unread_count > 0 &&
+                optimisticUnread.last_read === message.id && (
                   <div className="relative my-4">
                     <hr className="border-t border-blue-500" />
                     <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
-                      {unReadRef.current.unread_count} unread messages
+                      {optimisticUnread.unread_count} unread messages
                     </span>
                   </div>
                 )}
               <div
-                key={message.id}
                 id={message.id}
                 className={cn(
                   "flex gap-3 p-2 w-full",
@@ -172,7 +186,7 @@ export default function Messages({
                   )}
                 </div>
               </div>
-            </>
+            </div>
           );
         })}
       </div>
