@@ -154,11 +154,11 @@ export default function ChatPage() {
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "start" });
           } else {
-            scrollToBottom();
+            scrollToBottom(true);
           }
         }, 100);
       } else {
-        scrollToBottom();
+        scrollToBottom(true);
       }
     }
   }, [messages, unReadMesages, scrollToBottom]);

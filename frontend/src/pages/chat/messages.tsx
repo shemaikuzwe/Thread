@@ -120,16 +120,7 @@ export default function Messages({
                   </span>
                 </div>
               )}
-              {optimisticUnread &&
-                optimisticUnread.unread_count > 0 &&
-                optimisticUnread.last_read === message.id && (
-                  <div className="relative my-4">
-                    <hr className="border-t border-blue-500" />
-                    <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
-                      {optimisticUnread.unread_count} unread messages
-                    </span>
-                  </div>
-                )}
+
               <div
                 id={message.id}
                 className={cn(
@@ -186,6 +177,16 @@ export default function Messages({
                   )}
                 </div>
               </div>
+              {optimisticUnread &&
+                optimisticUnread.unread_count > 0 &&
+                optimisticUnread.last_read === message.id && (
+                  <div className="relative my-4">
+                    <hr className="border-t border-blue-500" />
+                    <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
+                      {optimisticUnread.unread_count} unread messages
+                    </span>
+                  </div>
+                )}
             </div>
           );
         })}
