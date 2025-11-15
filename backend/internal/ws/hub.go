@@ -100,7 +100,7 @@ func (h *Hub) incrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	userChannels, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
@@ -133,7 +133,7 @@ func (h *Hub) decrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	userChannels, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
@@ -202,7 +202,7 @@ func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
 	if ok && err == nil {
 		return cached, nil
 	}
-	usersChannels, err := db.Db.GetClientChannels(context.Background(), userId)
+	usersChannels, err := db.Db.GetClientThreads(context.Background(), userId)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return nil, err

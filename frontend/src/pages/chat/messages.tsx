@@ -45,7 +45,7 @@ export default function Messages({
 
   const { ref: messageRef, inView } = useInView({
     delay: 100,
-    threshold: 0.7,
+    threshold: 0.5,
     rootMargin: "0px 0px 0px 0px",
   });
 

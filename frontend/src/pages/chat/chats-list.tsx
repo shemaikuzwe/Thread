@@ -59,7 +59,6 @@ export default function ChatsList() {
         </div>
       </div>
 
-      {/* Channels Section */}
       <div className="flex-1 overflow-y-auto py-3">
         <Search onSearch={setSearch} />
         <div className="p-4">

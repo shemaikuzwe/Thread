@@ -26,12 +26,12 @@ func GetChatsHandler(c *gin.Context) {
 	search := strings.TrimSpace(c.Query("search"))
 	if search != "" {
 		pattern := "%" + search + "%"
-		channels, err := db.Db.GetChannelAndUser(c.Request.Context(), &pattern)
+		threads, err := db.Db.GetThreadAndUser(c.Request.Context(), &pattern)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, channels)
+		c.JSON(200, threads)
 		return
 	}
 	if err != nil {
@@ -43,12 +43,12 @@ func GetChatsHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channels, err := db.Db.GetChannelsByUserID(c.Request.Context(), uuid)
+	threads, err := db.Db.GetThreadsByUserID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, channels)
+	c.JSON(200, threads)
 }
 func GetUnReadChatsHandler(c *gin.Context) {
 	user, err := GetCurrentUser(c)
@@ -76,10 +76,10 @@ func CreateChannelHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channel, err := db.Db.CreateChannel(c.Request.Context(), database.CreateChannelParams{
+	thread, err := db.Db.CreateThread(c.Request.Context(), database.CreateThreadParams{
 		Name:        &body.Name,
 		Description: &body.Description,
-		Type:        database.ChannelTypeGroup,
+		Type:        database.ThreadTypeGroup,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -96,9 +96,9 @@ func CreateChannelHandler(c *gin.Context) {
 		return
 	}
 	//create Relation channel_user
-	err = db.Db.CreateChannelUser(c.Request.Context(), database.CreateChannelUserParams{
-		UserID:    uuid,
-		ChannelID: channel,
+	err = db.Db.CreateThreadUser(c.Request.Context(), database.CreateThreadUserParams{
+		UserID:   uuid,
+		ThreadID: thread,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -109,7 +109,7 @@ func CreateChannelHandler(c *gin.Context) {
 	if ok {
 		log.Println("Deleted cache")
 	}
-	c.JSON(201, channel)
+	c.JSON(201, thread)
 }
 
 func CreateDMChat(c *gin.Context) {
@@ -137,7 +137,7 @@ func CreateDMChat(c *gin.Context) {
 		return
 	}
 	//Check if channel already exists
-	channel, err := db.Db.GetDMChannel(c.Request.Context(), database.GetDMChannelParams{
+	channel, err := db.Db.GetDMThread(c.Request.Context(), database.GetDMThreadParams{
 		UserID:   user1,
 		UserID_2: user2,
 	})
@@ -149,12 +149,13 @@ func CreateDMChat(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"id": channel.ID.String()})
 		return
 	}
-	chanID, err := db.Db.CreateDMChannel(c.Request.Context(), database.ChannelTypeDm)
+	chanID, err := db.Db.CreateDMThread(c.Request.Context(), database.ThreadTypeDm)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	err = db.Db.CreateDMChannelUsers(c.Request.Context(), database.CreateDMChannelUsersParams{ChannelID: chanID,
+	err = db.Db.CreateDMThreadUsers(c.Request.Context(), database.CreateDMThreadUsersParams{
+		ThreadID: chanID,
 		UserID:   user1,
 		UserID_2: user2,
 	})
@@ -178,7 +179,7 @@ func GetChatsByIdHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channel, err := db.Db.GetChannelByID(c.Request.Context(), uuid)
+	channel, err := db.Db.GetThreadByID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -205,9 +206,9 @@ func JoinChannelHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	err = db.Db.JoinChannel(c.Request.Context(), database.JoinChannelParams{
-		ChannelID: chanID,
-		UserID:    userID,
+	err = db.Db.JoinThread(c.Request.Context(), database.JoinThreadParams{
+		ThreadID: chanID,
+		UserID:   userID,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -265,7 +266,7 @@ func UpsertLastRead(payload []byte) error {
 	if err != nil {
 		return err
 	}
-	chanId, err := uuid.Parse(msg.ChannelID)
+	threadId, err := uuid.Parse(msg.ChannelID)
 	if err != nil {
 
 		return err
@@ -275,9 +276,8 @@ func UpsertLastRead(payload []byte) error {
 		return err
 	}
 	err = db.Db.UpsertLastRead(context.Background(), database.UpsertLastReadParams{
-		ChannelID:         chanId,
-		LastReadMessageID: lastMessageId,
-		UserID:            userId,
+		ThreadID: threadId,
+		UserID:   userId,
 	})
 	if err != nil {
 		return err
@@ -317,7 +317,7 @@ func HandlerCreateMessage(message []byte, userID string) {
 		log.Println("Invalid message uuuid", err)
 		return
 	}
-	chanUUID, err := uuid.Parse(msg.ChannelID)
+	threadUUID, err := uuid.Parse(msg.ChannelID)
 	if err != nil {
 		log.Println("invalid channel id:", err)
 		return
@@ -330,10 +330,10 @@ func HandlerCreateMessage(message []byte, userID string) {
 	}
 
 	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
-		ID:        id,
-		ChannelID: chanUUID,
-		UserID:    userUUID,
-		Message:   msg.Message,
+		ID:       id,
+		ThreadID: threadUUID,
+		UserID:   userUUID,
+		Message:  msg.Message,
 	})
 	if len(msg.Files) > 0 {
 		// TODO:Use bulk insert

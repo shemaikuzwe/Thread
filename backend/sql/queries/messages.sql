@@ -26,13 +26,13 @@ SELECT
 FROM messages m
 INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
-WHERE m.channel_id = $1
+WHERE m.thread_id = $1
 GROUP BY m.id, u.id
 ORDER BY m.created_at ASC;
 -- LIMIT 10;
 
 -- name: CreateMessage :one
-INSERT INTO messages (id,channel_id, user_id, message)
+INSERT INTO messages (id,thread_id, user_id, message)
 VALUES ($1, $2, $3 ,$4)
 RETURNING id;
 
