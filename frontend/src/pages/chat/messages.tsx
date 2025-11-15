@@ -26,11 +26,29 @@ export default function Messages({
   ref,
   chatType,
 }: Props) {
+  function getLastMessage(messages: Message[], userId: string | undefined) {
+    if (!userId) return;
+    let lastMessageId: string | undefined;
+    if (messages.length === 0) {
+      return;
+    }
+    for (let i = messages.length - 1; i > 0; i--) {
+      if (messages[i].user_id !== userId) {
+        lastMessageId = messages[i].id;
+        console.log("msg", messages[i].message);
+        break;
+      }
+    }
+    console.log("id", lastMessageId);
+    return lastMessageId;
+  }
+
   const { ref: messageRef, inView } = useInView({
     delay: 100,
     threshold: 0.7,
     rootMargin: "0px 0px 0px 0px",
   });
+
   const queryClient = useQueryClient();
   const { data: unReadMessages } = useUnReadMessages(chatId);
   const { sendMessage } = useWebSocket();
@@ -57,7 +75,8 @@ export default function Messages({
       unReadMessages &&
       unReadMessages.unread_count > 0
     ) {
-      const lastMessageId = currentMessages[currentMessages.length - 1].id;
+      const lastMessageId = getLastMessage(currentMessages, userId);
+      if (!lastMessageId) return;
       if (lastMessageId !== unReadMessages.last_read) {
         const msg = {
           message: lastMessageId,
@@ -81,7 +100,8 @@ export default function Messages({
     return () => {
       const currentMessages = messagesRef.current;
       if (currentMessages && currentMessages.length > 0) {
-        const lastMessage = currentMessages[currentMessages.length - 1];
+        const lastMessage = getLastMessage(currentMessages, userId);
+        if (!lastMessage) return;
         queryClient.setQueryData(
           ["un_read_message", chatId],
           (oldData: UnReadMessage | undefined) => {
@@ -93,7 +113,7 @@ export default function Messages({
         );
       }
     };
-  }, [chatId, queryClient]);
+  }, [chatId, queryClient, userId]);
 
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={messageRef}>
@@ -111,6 +131,14 @@ export default function Messages({
           else dateText = format(message.created_at, "MMMM d, yyyy");
           const isOwn = message.user_id === userId;
           const existsMessageText = message.message.trim() !== "";
+
+          if (
+            optimisticUnread?.last_read === message.id ||
+            unReadMessages?.last_read === message.id
+          ) {
+            console.log(message.message);
+          }
+          const left = messages.length - idx + 1;
           return (
             <div key={message.id}>
               {showDate && (
@@ -120,7 +148,17 @@ export default function Messages({
                   </span>
                 </div>
               )}
-
+              {optimisticUnread &&
+                optimisticUnread.unread_count > 0 &&
+                left === optimisticUnread.unread_count &&
+                message.user_id !== userId && (
+                  <div className="relative my-4">
+                    <hr className="border-t border-blue-500" />
+                    <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
+                      {optimisticUnread.unread_count} unread messages
+                    </span>
+                  </div>
+                )}
               <div
                 id={message.id}
                 className={cn(
@@ -177,16 +215,6 @@ export default function Messages({
                   )}
                 </div>
               </div>
-              {optimisticUnread &&
-                optimisticUnread.unread_count > 0 &&
-                optimisticUnread.last_read === message.id && (
-                  <div className="relative my-4">
-                    <hr className="border-t border-blue-500" />
-                    <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
-                      {optimisticUnread.unread_count} unread messages
-                    </span>
-                  </div>
-                )}
             </div>
           );
         })}
