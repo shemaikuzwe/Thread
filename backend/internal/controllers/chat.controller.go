@@ -276,8 +276,9 @@ func UpsertLastRead(payload []byte) error {
 		return err
 	}
 	err = db.Db.UpsertLastRead(context.Background(), database.UpsertLastReadParams{
-		ThreadID: threadId,
-		UserID:   userId,
+		ThreadID:          threadId,
+		UserID:            userId,
+		LastReadMessageID: lastMessageId,
 	})
 	if err != nil {
 		return err

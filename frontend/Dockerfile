@@ -3,30 +3,28 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
-FROM base AS development-dependencies-env
-WORKDIR /app
+FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm i
+RUN pnpm install --frozen-lockfile
+
+FROM base AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-FROM base AS production-dependencies-env
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm i --prod
-
-FROM base AS build-env
-WORKDIR /app
-COPY --from=development-dependencies-env /app  ./
 RUN pnpm run build
+
+FROM base AS prod_deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 COPY package.json pnpm-lock.yaml ./
-COPY --from=production-dependencies-env /app/node_modules ./node_modules
-COPY --from=build-env /app/build ./build
+COPY --from=prod_deps /app/node_modules ./node_modules
+COPY --from=build /app/build ./build
+
 
 CMD ["pnpm", "run", "start"]

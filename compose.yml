@@ -3,6 +3,8 @@ services:
     image: postgres:14-alpine
     ports:
       - "5555:5432"
+    env_file:
+      - ./backend/.env
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=${DB_USER}
@@ -19,6 +21,8 @@ services:
 
   migrate:
     image: gomicro/goose:latest
+    env_file:
+      - ./backend/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,6 +33,7 @@ services:
     volumes:
       - ./sql/schema:/schema
     command: goose up
+
   redis:
     image: redis:7-alpine
     ports:
@@ -46,7 +51,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./backend/backend.Dockerfile
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -56,9 +61,22 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - ./.env
+      - ./backend/.env
     environment:
       - GIN_MODE=release
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/frontend.Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    env_file:
+      - ./frontend/.env
 
 volumes:
   postgres_data:

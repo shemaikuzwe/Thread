@@ -18,7 +18,11 @@ import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
 import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
-import { useMessages, useUnReadMessages } from "@/hooks/use-messages";
+import {
+  useMessages,
+  useUnReadMessages,
+  type UnReadMessage,
+} from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
@@ -41,7 +45,8 @@ export default function ChatPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
-  const { data: unReadMesages } = useUnReadMessages(id);
+  const { data: unReadMessages } = useUnReadMessages(id);
+
   const queryClient = useQueryClient();
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
@@ -51,6 +56,10 @@ export default function ChatPage() {
       return res.data;
     },
   });
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (chat && userId) {
@@ -59,6 +68,48 @@ export default function ChatPage() {
       }
     }
   }, [chat, userId]);
+
+  const handleMarkAsRead = useCallback(
+    (opts?: { query?: true }) => {
+      const currentMessages = messagesRef.current;
+      const unRead = queryClient.getQueryData<UnReadMessage>([
+        "un_read_message",
+        id,
+      ]);
+      if (
+        currentMessages &&
+        currentMessages.length > 0 &&
+        unRead &&
+        unRead.unread_count > 0
+      ) {
+        console.log("mark as read called");
+        const lastMessageId = getLastMessage();
+        if (!lastMessageId) return;
+        if (lastMessageId !== unRead.last_read) {
+          if (opts?.query) {
+            queryClient.setQueryData(
+              ["un_read_message", id],
+              (oldData: UnReadMessage | undefined) => {
+                if (oldData && oldData.unread_count > 0) {
+                  return { last_read: lastMessageId, unread_count: 0 };
+                }
+                return oldData;
+              },
+            );
+          }
+          const msg = {
+            message: lastMessageId,
+            channel_id: id,
+            user_id: userId,
+            date: new Date().toISOString(),
+            type: "UPDATE_LAST_READ",
+          };
+          sendMessage(msg);
+        }
+      }
+    },
+    [id, sendMessage, userId, queryClient],
+  );
 
   const handleSendMessage = useCallback(
     async (
@@ -104,6 +155,7 @@ export default function ChatPage() {
       if (type === "MESSAGE") {
         setNewMessage("");
         setFiles([]);
+        handleMarkAsRead({ query: true });
       }
       if (files.length && type === "MESSAGE") {
         const uploaded = await startUpload(files.map((f) => f.file));
@@ -125,6 +177,7 @@ export default function ChatPage() {
       }
     },
     [
+      handleMarkAsRead,
       sendMessage,
       id,
       session,
@@ -143,14 +196,18 @@ export default function ChatPage() {
       handleSendMessage("MESSAGE_STATUS", { status: "DEFAULT" });
     }
   }, [isTyping]);
-  const { isAtBottom, scrollToBottom, messagesRef, handleScroll } =
-    useScroll<HTMLDivElement>(id);
+  const {
+    isAtBottom,
+    scrollToBottom,
+    messagesRef: ref,
+    handleScroll,
+  } = useScroll<HTMLDivElement>(id);
 
   useEffect(() => {
-    if (messages && unReadMesages) {
-      if (unReadMesages.unread_count > 0 && unReadMesages.last_read) {
+    if (messages && unReadMessages) {
+      if (unReadMessages.unread_count > 0 && unReadMessages.last_read) {
         setTimeout(() => {
-          const element = document.getElementById(unReadMesages.last_read!);
+          const element = document.getElementById(unReadMessages.last_read!);
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "start" });
           } else {
@@ -161,7 +218,7 @@ export default function ChatPage() {
         scrollToBottom(true);
       }
     }
-  }, [messages, unReadMesages, scrollToBottom]);
+  }, [messages, unReadMessages, scrollToBottom]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.currentTarget.files;
@@ -192,6 +249,15 @@ export default function ChatPage() {
     setFiles((prev) => [...prev, ...newFiles]);
   };
 
+  function getLastMessage() {
+    if (!userId) return;
+    const messages = messagesRef.current;
+    if (!messages || messages.length === 0) {
+      return;
+    }
+    return messages[messages.length - 1].id;
+  }
+
   return (
     <div className="flex gap-2 w-full h-full">
       {!isMobile && <ChatsList />}
@@ -215,8 +281,10 @@ export default function ChatPage() {
               <JoinChat chat={chat} setJoin={setJoin} />
             ) : (
               <Messages
+                messagesRef={messagesRef}
+                handleOnMarkAsRead={handleMarkAsRead}
                 chatId={id}
-                ref={messagesRef}
+                ref={ref}
                 messages={messages}
                 chatType={chat?.type}
                 userId={userId}

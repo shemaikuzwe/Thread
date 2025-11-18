@@ -48,17 +48,24 @@ WHERE cu1.user_id = $1
 GROUP BY  thread.id, l.last_read_message_id;
 
 -- name: GetUnReadChatsByUserID :many
+SELECT
+  l.last_read_message_id AS last_read,
+  l.thread_id,
+  (
+    SELECT COUNT(m.id)
+    FROM messages m
+    WHERE
+      m.thread_id = l.thread_id
+      AND m.user_id != $1
+     AND m.created_at > l.updated_at
 
-SELECT l.last_read_message_id AS last_read,l.thread_id,
-(SELECT COUNT(id) FROM messages WHERE messages.user_id !=$1
-AND messages.thread_id=l.thread_id AND messages.created_at > l.updated_at) AS unread_count
+  ) AS unread_count
 FROM last_read l
-WHERE l.user_id=$1;
-
+WHERE l.user_id = $1;
 
 -- name: GetClientThreads :many
 SELECT  thread.id FROM thread INNER JOIN thread_user
-ON  thread.id = thread_user.channel_id
+ON  thread.id = thread_user.thread_id
 WHERE thread_user.user_id = $1;
 
 -- name: GetThreadByID :one

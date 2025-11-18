@@ -6,14 +6,15 @@ import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";
 import { useUnReadMessages, type UnReadMessage } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
-import { useWebSocket } from "@/hooks/use-weboscket";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Props {
   chatId: string;
+  handleOnMarkAsRead: () => void;
   ref: React.RefObject<HTMLDivElement | null>;
+  messagesRef: React.RefObject<Message[] | undefined>;
   messages: Message[] | undefined;
   userId: string | undefined;
   chatType?: "dm" | "group";
@@ -21,27 +22,29 @@ interface Props {
 
 export default function Messages({
   chatId,
+  handleOnMarkAsRead,
   messages,
   userId,
   ref,
   chatType,
+  messagesRef,
 }: Props) {
-  function getLastMessage(messages: Message[], userId: string | undefined) {
+  const getLastMessage = useCallback(() => {
     if (!userId) return;
+    const messages = messagesRef.current;
     let lastMessageId: string | undefined;
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
       return;
     }
     for (let i = messages.length - 1; i > 0; i--) {
       if (messages[i].user_id !== userId) {
         lastMessageId = messages[i].id;
-        console.log("msg", messages[i].message);
+        console.log("last", messages[i].message);
         break;
       }
     }
-    console.log("id", lastMessageId);
     return lastMessageId;
-  }
+  }, [userId, messagesRef]);
 
   const { ref: messageRef, inView } = useInView({
     delay: 100,
@@ -51,56 +54,27 @@ export default function Messages({
 
   const queryClient = useQueryClient();
   const { data: unReadMessages } = useUnReadMessages(chatId);
-  const { sendMessage } = useWebSocket();
 
   const [optimisticUnread, setOptimisticUnread] =
     useState<UnReadMessage | null>(null);
-  const messagesRef = useRef(messages);
-
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
   useEffect(() => {
     if (unReadMessages) {
       setOptimisticUnread(unReadMessages);
     }
   }, [unReadMessages]);
 
-  const handleRead = useCallback(() => {
-    const currentMessages = messagesRef.current;
-    if (
-      currentMessages &&
-      currentMessages.length > 0 &&
-      unReadMessages &&
-      unReadMessages.unread_count > 0
-    ) {
-      const lastMessageId = getLastMessage(currentMessages, userId);
-      if (!lastMessageId) return;
-      if (lastMessageId !== unReadMessages.last_read) {
-        const msg = {
-          message: lastMessageId,
-          channel_id: chatId,
-          user_id: userId,
-          date: new Date().toISOString(),
-          type: "UPDATE_LAST_READ",
-        };
-        sendMessage(msg);
-      }
-    }
-  }, [chatId, sendMessage, unReadMessages, userId]);
-
   useEffect(() => {
     if (inView) {
-      handleRead();
+      console.log("inview");
+      handleOnMarkAsRead();
     }
-  }, [inView, handleRead]);
+  }, [inView, handleOnMarkAsRead]);
 
   useEffect(() => {
     return () => {
       const currentMessages = messagesRef.current;
       if (currentMessages && currentMessages.length > 0) {
-        const lastMessage = getLastMessage(currentMessages, userId);
+        const lastMessage = getLastMessage();
         if (!lastMessage) return;
         queryClient.setQueryData(
           ["un_read_message", chatId],
@@ -113,7 +87,7 @@ export default function Messages({
         );
       }
     };
-  }, [chatId, queryClient, userId]);
+  }, [chatId, queryClient, getLastMessage, messagesRef]);
 
   return messages && messages.length > 0 ? (
     <div className="pb-2" ref={messageRef}>
@@ -138,7 +112,8 @@ export default function Messages({
           ) {
             console.log(message.message);
           }
-          const left = messages.length - idx + 1;
+          const left = messages.length - idx;
+          console.log(left, optimisticUnread?.unread_count);
           return (
             <div key={message.id}>
               {showDate && (
