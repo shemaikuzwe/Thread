@@ -283,7 +283,7 @@ func UpsertLastRead(payload []byte) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Updated last read message", lastMessageId.String())
+	log.Println("Updated last read message", threadId.String())
 	return nil
 }
 
@@ -297,13 +297,13 @@ type File struct {
 func HandlerCreateMessage(message []byte, userID string) {
 
 	var msg struct {
-		ID        string `json:"id"`
-		Message   string `json:"message"`
-		ChannelID string `json:"channel_id"`
-		Files     []File `json:"files"`
-		UserID    string `json:"user_id"`
-		Type      string `json:"type"`
-		Date      string `json:"created_at"`
+		ID       string `json:"id"`
+		Message  string `json:"message"`
+		ThreadID string `json:"thread_id"`
+		Files    []File `json:"files"`
+		UserID   string `json:"user_id"`
+		Type     string `json:"type"`
+		Date     string `json:"created_at"`
 	}
 	err := json.Unmarshal(message, &msg)
 	if err != nil {
@@ -318,7 +318,7 @@ func HandlerCreateMessage(message []byte, userID string) {
 		log.Println("Invalid message uuuid", err)
 		return
 	}
-	threadUUID, err := uuid.Parse(msg.ChannelID)
+	threadUUID, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
 		log.Println("invalid channel id:", err)
 		return

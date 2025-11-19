@@ -2,14 +2,12 @@ import { useEffect } from "react";
 import type { Message } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
-// import type { UnReadMessage } from "./use-messages";
 import { useWebSocket } from "./ws/websocket";
 import type { UnReadMessage } from "./use-messages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export function useWebsocket() {
-  // const wsRef = useRef<WebSocket | null>(null);
   const queryClient = useQueryClient();
   const session = useSession();
   const userId = session?.user?.id;
@@ -21,12 +19,6 @@ export function useWebsocket() {
   } = useWebSocket<Message>(`${apiUrl}/ws`);
   if (!userId) throw new Error("user id is required");
 
-  // const connect = useCallback(() => {
-  //   if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-  //   const socket = new WebSocket(`${apiUrl.replace(/^http/, "ws")}/ws`);
-  //   wsRef.current = socket;
-
   useEffect(() => {
     if (!message) return;
 
@@ -34,7 +26,7 @@ export function useWebsocket() {
       message?.type === "USER_CONNECTED" ||
       message?.type === "USER_DISCONNECTED"
     ) {
-      queryClient.setQueryData(["online", message.channel_id], {
+      queryClient.setQueryData(["online", message.thread_id], {
         online: Number(message.message.online),
         users: message.message.users,
       });
@@ -42,7 +34,7 @@ export function useWebsocket() {
 
     if (message?.type === "MESSAGE") {
       queryClient.setQueryData(
-        ["chat", message.channel_id],
+        ["chat", message.thread_id],
         (oldMsg: Message[] = []) => {
           const exists = oldMsg.some((m) => m.id === message.id);
           if (exists) {
@@ -54,37 +46,22 @@ export function useWebsocket() {
         },
       );
 
-      if (message.user_id !== userId) {
-        queryClient.setQueryData(
-          ["un_read_message", message.channel_id],
-          (old: UnReadMessage): UnReadMessage => ({
-            ...old,
-            unread_count: (old?.unread_count || 0) + 1,
-          }),
-        );
-      }
+      const isOwn = message.user_id === userId;
+      queryClient.setQueryData(
+        ["un_read_message", message.thread_id],
+        (prev: UnReadMessage): UnReadMessage => ({
+          ...prev,
+          unread_count: isOwn ? 0 : (prev?.unread_count || 0) + 1,
+        }),
+      );
     }
 
     if (message.type === "MESSAGE_STATUS") {
       if (message.user_id === userId) return;
-      queryClient.setQueryData(["msg-status", message.channel_id], {
+      queryClient.setQueryData(["msg-status", message.thread_id], {
         status: message.message,
       });
     }
   }, [message, queryClient, userId]);
-
-  // const disconnect = useCallback(() => {
-  //   wsRef.current?.close();
-  //   wsRef.current = null;
-  // }, []);
-
-  // const sendMessage = useCallback(<T>(msg: T) => {
-  //   if (wsRef.current?.readyState === WebSocket.OPEN) {
-  //     wsRef.current.send(JSON.stringify(msg));
-  //   } else {
-  //     console.warn("WebSocket not open");
-  //   }
-  // }, []);
-
   return { sendMessage: sendJsonMessage, readyState };
 }

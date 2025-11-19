@@ -7,7 +7,7 @@ export type MessageFile = {
 export interface Message {
   id: string;
   user_id: string;
-  channel_id: string;
+  thread_id: string;
   message: any;
   status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];

@@ -69,34 +69,45 @@ export default function ChatPage() {
     }
   }, [chat, userId]);
 
-  const handleMarkAsRead = useCallback(() => {
-    const currentMessages = messagesRef.current;
-    const unRead = queryClient.getQueryData<UnReadMessage>([
-      "un_read_message",
-      id,
-    ]);
-    if (
-      currentMessages &&
-      currentMessages.length > 0 &&
-      unRead &&
-      unRead.unread_count > 0
-    ) {
-      // console.log("mark as read called");
-      const lastMessageId = getLastMessage();
-      if (!lastMessageId) return;
-      if (lastMessageId !== unRead.last_read) {
-        // console.log("running query");
-        const msg = {
-          message: lastMessageId,
-          thread_id: id,
-          user_id: userId,
-          date: new Date().toISOString(),
-          type: "UPDATE_LAST_READ",
-        };
-        sendMessage(msg);
+  const handleMarkAsRead = useCallback(
+    (opts?: { query: boolean }) => {
+      const currentMessages = messagesRef.current;
+      const unRead = queryClient.getQueryData<UnReadMessage>([
+        "un_read_message",
+        id,
+      ]);
+      if (
+        currentMessages &&
+        currentMessages.length > 0 &&
+        unRead &&
+        unRead.unread_count > 0
+      ) {
+        const lastMessageId = getLastMessage();
+        if (!lastMessageId) return;
+        if (lastMessageId !== unRead.last_read) {
+          console.log("marked all as read");
+          if (opts?.query) {
+            queryClient.setQueryData(
+              ["un_read_message", id],
+              (): UnReadMessage => ({
+                last_read: lastMessageId ?? null,
+                unread_count: 0,
+              }),
+            );
+          }
+          const msg = {
+            message: lastMessageId,
+            thread_id: id,
+            user_id: userId,
+            date: new Date().toISOString(),
+            type: "UPDATE_LAST_READ",
+          };
+          sendMessage(msg);
+        }
       }
-    }
-  }, [id, queryClient, getLastMessage, userId, sendMessage]);
+    },
+    [id, queryClient, getLastMessage, userId, sendMessage],
+  );
 
   const handleSendMessage = useCallback(
     async (
@@ -106,7 +117,7 @@ export default function ChatPage() {
       if (!userId) throw new Error("message is required");
       if (type === "MESSAGE" && !newMessage.trim() && !files.length) return;
       const message: Message = {
-        channel_id: id,
+        thread_id: id,
         id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
         files:
@@ -130,7 +141,7 @@ export default function ChatPage() {
       //Optimistic ui
       if (type === "MESSAGE") {
         queryClient.setQueryData(
-          ["chat", message.channel_id],
+          ["chat", message.thread_id],
           (oldMsg: Message[]): Message[] => {
             if (oldMsg && oldMsg.length) {
               return [...oldMsg, { ...message, status: "PENDING" }];
@@ -139,10 +150,7 @@ export default function ChatPage() {
           },
         );
       }
-      if (type === "MESSAGE") {
-        setNewMessage("");
-        setFiles([]);
-      }
+
       if (files.length && type === "MESSAGE") {
         const uploaded = await startUpload(files.map((f) => f.file));
         if (!uploaded?.length) {
@@ -160,6 +168,10 @@ export default function ChatPage() {
         });
       } else {
         sendMessage(message);
+      }
+      if (type === "MESSAGE") {
+        setNewMessage("");
+        setFiles([]);
       }
     },
     [

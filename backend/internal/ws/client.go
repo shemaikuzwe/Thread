@@ -14,12 +14,12 @@ import (
 )
 
 type Message struct {
-	ID        string `json:"id"`
-	Message   any    `json:"message"`
-	ChannelID string `json:"channel_id"`
-	UserID    string `json:"user_id"`
-	Type      Type   `json:"type"`
-	Date      string `json:"created_at"`
+	ID       string `json:"id"`
+	Message  any    `json:"message"`
+	ThreadID string `json:"thread_id"`
+	UserID   string `json:"user_id"`
+	Type     Type   `json:"type"`
+	Date     string `json:"created_at"`
 }
 
 type Type string

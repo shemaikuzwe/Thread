@@ -100,24 +100,24 @@ func (h *Hub) incrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientThreads(context.Background(), id)
+	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
 
-	for _, channel := range userChannels {
-		channelID := channel.String()
-		info := h.channels[channelID]
+	for _, thread := range userThreads {
+		ThreadID := thread.String()
+		info := h.channels[ThreadID]
 		info.Online++
 		info.users = append(info.users, userId)
-		h.channels[channelID] = info
+		h.channels[ThreadID] = info
 		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
-			Message:   activeInfo,
-			Type:      "USER_CONNECTED",
-			ChannelID: channelID,
-			Date:      time.Now().UTC().String(),
+			Message:  activeInfo,
+			Type:     "USER_CONNECTED",
+			ThreadID: ThreadID,
+			Date:     time.Now().UTC().String(),
 		}
 		message, err := json.Marshal(msg)
 		if err != nil {
@@ -133,14 +133,14 @@ func (h *Hub) decrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientThreads(context.Background(), id)
+	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
-	for _, channel := range userChannels {
-		channelID := channel.String()
-		info := h.channels[channelID]
+	for _, thread := range userThreads {
+		threadID := thread.String()
+		info := h.channels[threadID]
 		info.Online--
 
 		// Find and remove the user from the slice
@@ -150,13 +150,13 @@ func (h *Hub) decrementChannel(userId string) {
 				break
 			}
 		}
-		h.channels[channelID] = info
+		h.channels[threadID] = info
 		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
-			Message:   activeInfo,
-			Type:      "USER_DISCONNECTED",
-			ChannelID: channelID,
-			Date:      time.Now().UTC().String(),
+			Message:  activeInfo,
+			Type:     "USER_DISCONNECTED",
+			ThreadID: threadID,
+			Date:     time.Now().UTC().String(),
 		}
 		message, err := json.Marshal(msg)
 		if err != nil {
@@ -180,7 +180,7 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	msgId, err := uuid.Parse(msg.ChannelID)
+	msgId, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err

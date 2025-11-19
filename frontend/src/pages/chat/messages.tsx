@@ -65,7 +65,7 @@ export default function Messages({
 
   useEffect(() => {
     if (inView) {
-      // console.log("inview");
+      console.log("inview");
       handleOnMarkAsRead();
     }
   }, [inView, handleOnMarkAsRead]);
