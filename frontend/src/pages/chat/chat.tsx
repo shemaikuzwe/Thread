@@ -81,11 +81,11 @@ export default function ChatPage() {
       unRead &&
       unRead.unread_count > 0
     ) {
-      console.log("mark as read called");
+      // console.log("mark as read called");
       const lastMessageId = getLastMessage();
       if (!lastMessageId) return;
       if (lastMessageId !== unRead.last_read) {
-        console.log("running query");
+        // console.log("running query");
         const msg = {
           message: lastMessageId,
           thread_id: id,

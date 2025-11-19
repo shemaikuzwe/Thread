@@ -39,7 +39,7 @@ export default function Messages({
     for (let i = messages.length - 1; i > 0; i--) {
       if (messages[i].user_id !== userId) {
         lastMessageId = messages[i].id;
-        console.log("last", messages[i].message);
+        // console.log("last", messages[i].message);
         break;
       }
     }
@@ -65,7 +65,7 @@ export default function Messages({
 
   useEffect(() => {
     if (inView) {
-      console.log("inview");
+      // console.log("inview");
       handleOnMarkAsRead();
     }
   }, [inView, handleOnMarkAsRead]);

@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
 // import type { UnReadMessage } from "./use-messages";
 import { useWebSocket } from "./ws/websocket";
+import type { UnReadMessage } from "./use-messages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -53,15 +54,15 @@ export function useWebsocket() {
         },
       );
 
-      // if (message.user_id !== userId) {
-      //   queryClient.setQueryData(
-      //     ["un_read_message", message.channel_id],
-      //     (old: UnReadMessage): UnReadMessage => ({
-      //       ...old,
-      //       unread_count: old.unread_count + 1,
-      //     }),
-      //   );
-      // }
+      if (message.user_id !== userId) {
+        queryClient.setQueryData(
+          ["un_read_message", message.channel_id],
+          (old: UnReadMessage): UnReadMessage => ({
+            ...old,
+            unread_count: (old?.unread_count || 0) + 1,
+          }),
+        );
+      }
     }
 
     if (message.type === "MESSAGE_STATUS") {
