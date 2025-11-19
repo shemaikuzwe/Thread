@@ -40,7 +40,7 @@ export default function User() {
               className="rounded-full"
             />
             <AvatarFallback>
-              {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
+              {name?.split(" ").map((n) => n[0]?.toUpperCase()) ?? "U"}
             </AvatarFallback>
           </Avatar>
         </div>

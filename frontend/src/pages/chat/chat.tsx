@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useWebSocket } from "@/hooks/use-weboscket";
+import { useWebsocket } from "@/hooks/use-weboscket";
 import type {
   ChatWithUsers,
   Message,
@@ -35,7 +35,7 @@ export default function ChatPage() {
   const { id } = useParams();
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const { sendMessage } = useWebSocket();
+  const { sendMessage } = useWebsocket();
   const session = useSession();
   const userId = session?.user?.id;
   if (!id || !userId) throw new Error("id is required");
@@ -69,47 +69,34 @@ export default function ChatPage() {
     }
   }, [chat, userId]);
 
-  const handleMarkAsRead = useCallback(
-    (opts?: { query?: true }) => {
-      const currentMessages = messagesRef.current;
-      const unRead = queryClient.getQueryData<UnReadMessage>([
-        "un_read_message",
-        id,
-      ]);
-      if (
-        currentMessages &&
-        currentMessages.length > 0 &&
-        unRead &&
-        unRead.unread_count > 0
-      ) {
-        console.log("mark as read called");
-        const lastMessageId = getLastMessage();
-        if (!lastMessageId) return;
-        if (lastMessageId !== unRead.last_read) {
-          if (opts?.query) {
-            queryClient.setQueryData(
-              ["un_read_message", id],
-              (oldData: UnReadMessage | undefined) => {
-                if (oldData && oldData.unread_count > 0) {
-                  return { last_read: lastMessageId, unread_count: 0 };
-                }
-                return oldData;
-              },
-            );
-          }
-          const msg = {
-            message: lastMessageId,
-            channel_id: id,
-            user_id: userId,
-            date: new Date().toISOString(),
-            type: "UPDATE_LAST_READ",
-          };
-          sendMessage(msg);
-        }
+  const handleMarkAsRead = useCallback(() => {
+    const currentMessages = messagesRef.current;
+    const unRead = queryClient.getQueryData<UnReadMessage>([
+      "un_read_message",
+      id,
+    ]);
+    if (
+      currentMessages &&
+      currentMessages.length > 0 &&
+      unRead &&
+      unRead.unread_count > 0
+    ) {
+      console.log("mark as read called");
+      const lastMessageId = getLastMessage();
+      if (!lastMessageId) return;
+      if (lastMessageId !== unRead.last_read) {
+        console.log("running query");
+        const msg = {
+          message: lastMessageId,
+          thread_id: id,
+          user_id: userId,
+          date: new Date().toISOString(),
+          type: "UPDATE_LAST_READ",
+        };
+        sendMessage(msg);
       }
-    },
-    [id, sendMessage, userId, queryClient],
-  );
+    }
+  }, [id, queryClient, getLastMessage, userId, sendMessage]);
 
   const handleSendMessage = useCallback(
     async (
@@ -155,7 +142,6 @@ export default function ChatPage() {
       if (type === "MESSAGE") {
         setNewMessage("");
         setFiles([]);
-        handleMarkAsRead({ query: true });
       }
       if (files.length && type === "MESSAGE") {
         const uploaded = await startUpload(files.map((f) => f.file));
@@ -177,7 +163,6 @@ export default function ChatPage() {
       }
     },
     [
-      handleMarkAsRead,
       sendMessage,
       id,
       session,

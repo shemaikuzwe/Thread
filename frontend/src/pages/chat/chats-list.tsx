@@ -22,7 +22,7 @@ export default function ChatsList() {
   });
   type Res = {
     last_read: string;
-    channel_id: string;
+    thread_id: string;
     unread_count: string;
   };
   const { data: unReadChats } = useQuery<Res[]>({
@@ -68,7 +68,7 @@ export default function ChatsList() {
             ) : filteredChats && filteredChats?.length > 0 ? (
               filteredChats.map((chat) => {
                 const unReadChat = unReadChats?.find(
-                  (c) => c.channel_id === chat.id,
+                  (c) => c.thread_id === chat.id,
                 );
                 return (
                   <ChatListItem

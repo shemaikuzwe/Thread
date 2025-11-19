@@ -10,7 +10,7 @@ CREATE TABLE last_read(
  FOREIGN KEY(thread_id) REFERENCES thread(id) ON DELETE CASCADE ON UPDATE CASCADE,
  FOREIGN KEY(last_read_message_id) REFERENCES messages(id) ON DELETE CASCADE ON UPDATE CASCADE,
  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
- CONSTRAINT unique_user_channel UNIQUE(user_id,thread_id)
+ CONSTRAINT unique_user_thread UNIQUE(user_id,thread_id)
 );
 
 -- +goose Down

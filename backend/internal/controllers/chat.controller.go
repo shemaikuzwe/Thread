@@ -252,10 +252,10 @@ func GetCurrentUser(c *gin.Context) (Payload, error) {
 
 func UpsertLastRead(payload []byte) error {
 	var msg struct {
-		Message   string `json:"message"`
-		ChannelID string `json:"channel_id"`
-		UserID    string `json:"user_id"`
-		Date      string `json:"date"`
+		Message  string `json:"message"`
+		ThreadID string `json:"thread_id"`
+		UserID   string `json:"user_id"`
+		Date     string `json:"date"`
 	}
 
 	err := json.Unmarshal(payload, &msg)
@@ -266,7 +266,7 @@ func UpsertLastRead(payload []byte) error {
 	if err != nil {
 		return err
 	}
-	threadId, err := uuid.Parse(msg.ChannelID)
+	threadId, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
 
 		return err

@@ -80,7 +80,7 @@ export default function Messages({
           ["un_read_message", chatId],
           (oldData: UnReadMessage | undefined) => {
             if (oldData && oldData.unread_count > 0) {
-              return { last_read: lastMessage.id, unread_count: 0 };
+              return { last_read: lastMessage, unread_count: 0 };
             }
             return oldData;
           },
@@ -113,7 +113,6 @@ export default function Messages({
             console.log(message.message);
           }
           const left = messages.length - idx;
-          console.log(left, optimisticUnread?.unread_count);
           return (
             <div key={message.id}>
               {showDate && (

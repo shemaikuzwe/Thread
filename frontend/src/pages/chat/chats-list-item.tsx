@@ -5,7 +5,7 @@ import { useChatMeta } from "@/hooks";
 import {
   useMessages,
   useMessageStatus,
-  useUnReadMessages,
+  // useUnReadMessages,
   type UnReadMessage,
 } from "@/hooks/use-messages";
 import type { ChatWithUsers } from "@/lib/types";
@@ -22,11 +22,11 @@ export default function ChatListItem({
   const { data: messages } = useMessages(chat.id);
   const { data: msgStatus } = useMessageStatus(chat.id);
   const { name } = useChatMeta(chat);
-  const { data: un_read } = useUnReadMessages(chat.id, {
-    last_read: unReadMesssage?.last_read ?? null,
-    unread_count:
-      (unReadMesssage?.unread_count && unReadMesssage.unread_count) ?? 0,
-  });
+  // const { data: un_read } = useUnReadMessages(chat.id, {
+  //   last_read: unReadMesssage?.last_read ?? null,
+  //   unread_count:
+  //     (unReadMesssage?.unread_count && unReadMesssage.unread_count) ?? 0,
+  // });
   // console.log("unread", unReadMesssage);
   return (
     <div>
@@ -42,9 +42,9 @@ export default function ChatListItem({
         <div className="flex flex-col gap-1 justify-center items-start w-full">
           <div className="flex justify-between w-full">
             <span className="font-medium">{name}</span>
-            {un_read && un_read.unread_count > 0 && (
+            {/*{un_read && un_read.unread_count > 0 && (
               <Badge variant="destructive">{un_read.unread_count}</Badge>
-            )}
+            )}*/}
           </div>
           {msgStatus?.status === "TYPING" ? (
             <span className="text-sm text-primary font-semibold">

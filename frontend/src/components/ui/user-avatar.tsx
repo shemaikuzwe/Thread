@@ -56,7 +56,7 @@ export function User({
               src={user?.profile_picture ?? defaultAvatar}
             />
             <AvatarFallback>
-              {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
+              {name?.split(" ").map((n) => n[0]?.toUpperCase()) ?? "U"}
             </AvatarFallback>
           </Avatar>
           {showOnline && (

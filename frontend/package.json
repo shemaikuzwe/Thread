@@ -44,6 +44,7 @@
     "react-pdf": "^10.2.0",
     "react-player": "^3.3.3",
     "react-router": "^7.9.4",
+    "react-use-websocket": "^4.13.0",
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
