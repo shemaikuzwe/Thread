@@ -95,14 +95,16 @@ func (c *ClientConn) readPump() {
 		err = json.Unmarshal(message, &msg)
 		if err != nil {
 			log.Println("Error parsing json", err)
-			break
+			continue
 		}
 		if msg.Type == UPDATE_LAST_READ {
-			err = controllers.UpsertLastRead(message)
-			if err != nil {
-				log.Println("error saving", err)
-			}
-			break
+			go func() {
+				err = controllers.UpsertLastRead(message)
+				if err != nil {
+					log.Println("error saving", err)
+				}
+			}()
+			continue
 		}
 
 		c.hub.broadcast <- message

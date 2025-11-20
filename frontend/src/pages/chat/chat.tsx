@@ -35,6 +35,7 @@ export default function ChatPage() {
   const { id } = useParams();
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [clearUnRead, setClearUnRead] = useState(false);
   const { sendMessage } = useWebsocket();
   const session = useSession();
   const userId = session?.user?.id;
@@ -108,7 +109,11 @@ export default function ChatPage() {
     },
     [id, queryClient, getLastMessage, userId, sendMessage],
   );
-
+  useEffect(() => {
+    if (clearUnRead) {
+      handleMarkAsRead({ query: true });
+    }
+  }, [clearUnRead, handleMarkAsRead]);
   const handleSendMessage = useCallback(
     async (
       type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
@@ -172,6 +177,7 @@ export default function ChatPage() {
       if (type === "MESSAGE") {
         setNewMessage("");
         setFiles([]);
+        setClearUnRead(true);
       }
     },
     [
@@ -192,7 +198,8 @@ export default function ChatPage() {
     } else {
       handleSendMessage("MESSAGE_STATUS", { status: "DEFAULT" });
     }
-  }, [isTyping]);
+  }, [isTyping, handleSendMessage]);
+
   const {
     isAtBottom,
     scrollToBottom,

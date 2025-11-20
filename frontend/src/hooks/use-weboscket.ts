@@ -12,19 +12,19 @@ export function useWebsocket() {
   const session = useSession();
   const userId = session?.user?.id;
 
+  if (!userId) throw new Error("user id is required");
   const {
     sendJsonMessage,
     lastJsonMessage: message,
     readyState,
   } = useWebSocket<Message>(`${apiUrl}/ws`);
-  if (!userId) throw new Error("user id is required");
 
   useEffect(() => {
+    console.log("message", message);
     if (!message) return;
-
     if (
-      message?.type === "USER_CONNECTED" ||
-      message?.type === "USER_DISCONNECTED"
+      message.type === "USER_CONNECTED" ||
+      message.type === "USER_DISCONNECTED"
     ) {
       queryClient.setQueryData(["online", message.thread_id], {
         online: Number(message.message.online),
@@ -32,32 +32,50 @@ export function useWebsocket() {
       });
     }
 
-    if (message?.type === "MESSAGE") {
+    if (message.type === "MESSAGE") {
+      console.log("message handler");
       queryClient.setQueryData(
         ["chat", message.thread_id],
-        (oldMsg: Message[] = []) => {
-          const exists = oldMsg.some((m) => m.id === message.id);
+        (oldMsg: Message[] | undefined) => {
+          console.log("inside message handler");
+          const exists =
+            oldMsg && oldMsg.length && oldMsg.some((m) => m.id === message.id);
           if (exists) {
             return oldMsg.map((m) =>
               m.id === message.id ? { ...m, status: "SENT" } : m,
             );
           }
-          return [...oldMsg, message];
+          return [...(oldMsg ?? []), message];
         },
       );
+      console.log("un read message handler");
 
-      const isOwn = message.user_id === userId;
-      queryClient.setQueryData(
-        ["un_read_message", message.thread_id],
-        (prev: UnReadMessage): UnReadMessage => ({
-          ...prev,
-          unread_count: isOwn ? 0 : (prev?.unread_count || 0) + 1,
-        }),
-      );
+      if (message.user_id !== userId) {
+        queryClient.setQueryData(
+          ["un_read_message", message.thread_id],
+          (prev: UnReadMessage | undefined): UnReadMessage | undefined => {
+            console.log("inside un_read message handler");
+            if (!prev) return prev;
+            return {
+              ...prev,
+              unread_count: (prev?.unread_count || 0) + 1,
+            };
+          },
+        );
+      }
+      // else {
+      //   queryClient.setQueryData(
+      //     ["un_read_message", message.thread_id],
+      //     (prev: UnReadMessage): UnReadMessage => ({
+      //       ...prev,
+      //       unread_count: 0,
+      //     }),
+      //   );
+      // }
     }
 
-    if (message.type === "MESSAGE_STATUS") {
-      if (message.user_id === userId) return;
+    if (message.type === "MESSAGE_STATUS" && message.user_id !== userId) {
+      console.log("message", message.message);
       queryClient.setQueryData(["msg-status", message.thread_id], {
         status: message.message,
       });
