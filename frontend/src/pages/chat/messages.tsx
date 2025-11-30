@@ -4,11 +4,11 @@ import EmptyChat from "@/components/chat/empty-messages.tsx";
 import { Meta } from "./message-meta";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";
-import { useUnReadMessages, type UnReadMessage } from "@/hooks/use-messages";
+import { useOptimisticUnRead, type UnReadMessage } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 
 interface Props {
   chatId: string;
@@ -46,22 +46,14 @@ export default function Messages({
     return lastMessageId;
   }, [userId, messagesRef]);
 
-  const { ref: messageRef, inView } = useInView({
-    delay: 100,
-    threshold: 0.5,
+  const { ref: bottomRef, inView } = useInView({
+    threshold: 0,
     rootMargin: "0px 0px 0px 0px",
   });
 
   const queryClient = useQueryClient();
-  const { data: unReadMessages } = useUnReadMessages(chatId);
-
-  const [optimisticUnread, setOptimisticUnread] =
-    useState<UnReadMessage | null>(null);
-  useEffect(() => {
-    if (unReadMessages) {
-      setOptimisticUnread(unReadMessages);
-    }
-  }, [unReadMessages]);
+  // const { data: unReadMessages } = useUnReadMessages(chatId);
+  const { optimisticUnread, setOptimisticUnread } = useOptimisticUnRead(chatId);
 
   useEffect(() => {
     if (inView) {
@@ -72,6 +64,7 @@ export default function Messages({
 
   useEffect(() => {
     return () => {
+      setOptimisticUnread(null);
       const currentMessages = messagesRef.current;
       if (currentMessages && currentMessages.length > 0) {
         const lastMessage = getLastMessage();
@@ -87,10 +80,10 @@ export default function Messages({
         );
       }
     };
-  }, [chatId, queryClient, getLastMessage, messagesRef]);
+  }, [chatId, queryClient, getLastMessage, messagesRef, setOptimisticUnread]);
 
   return messages && messages.length > 0 ? (
-    <div className="pb-2" ref={messageRef}>
+    <div className="pb-4">
       <div ref={ref}>
         {messages.map((message, idx) => {
           const currentDate = format(message.created_at, "yyyy-MM-dd");
@@ -106,12 +99,6 @@ export default function Messages({
           const isOwn = message.user_id === userId;
           const existsMessageText = message.message.trim() !== "";
 
-          if (
-            optimisticUnread?.last_read === message.id ||
-            unReadMessages?.last_read === message.id
-          ) {
-            console.log(message.message);
-          }
           const left = messages.length - idx;
           return (
             <div key={message.id}>
@@ -136,7 +123,7 @@ export default function Messages({
               <div
                 id={message.id}
                 className={cn(
-                  "flex gap-3 p-2 w-full",
+                  "flex gap-2 p-1.5 w-full",
                   isOwn ? "justify-end" : "justify-start",
                 )}
               >
@@ -173,7 +160,7 @@ export default function Messages({
                   {message.message.trim() && (
                     <div
                       className={cn(
-                        "rounded-md pl-2 pr-1 py-2 min-w-30 rounded-br-md",
+                        "rounded-md pl-2 pr-1 py-1 min-w-30 rounded-br-md",
                         isOwn ? "bg-primary text-white" : "bg-secondary",
                       )}
                     >
@@ -192,6 +179,7 @@ export default function Messages({
             </div>
           );
         })}
+        <div ref={bottomRef} className="h-[1px]"></div>
       </div>
     </div>
   ) : (

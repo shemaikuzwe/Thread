@@ -6,6 +6,7 @@ package database
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -81,6 +82,15 @@ type Message struct {
 	Message   string    `json:"message"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Subscription struct {
+	ID        uuid.UUID       `json:"id"`
+	UserID    uuid.UUID       `json:"user_id"`
+	Sub       json.RawMessage `json:"sub"`
+	Endpoint  string          `json:"endpoint"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 type Thread struct {

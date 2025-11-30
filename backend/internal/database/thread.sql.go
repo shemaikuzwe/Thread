@@ -170,7 +170,6 @@ WHERE t.type = 'dm'
   AND tu1.user_id = $1
   AND tu2.user_id = $2
 GROUP BY t.id
-HAVING COUNT(DISTINCT tu1.user_id) = 1 AND COUNT(DISTINCT tu2.user_id) = 1
 `
 
 type GetDMThreadParams struct {
@@ -268,37 +267,80 @@ func (q *Queries) GetThreadByID(ctx context.Context, id uuid.UUID) (GetThreadByI
 	return i, err
 }
 
-const getThreadsByUserID = `-- name: GetThreadsByUserID :many
+const getThreadUsers = `-- name: GetThreadUsers :many
 
-SELECT  thread.id, thread.name, thread.description, thread.is_private, thread.type, thread.created_at, thread.updated_at,l.last_read_message_id,
-(SELECT COUNT(*) FROM messages WHERE messages.thread_id =  thread.id AND messages.user_id !=$1 AND messages.created_at > (SELECT updated_at FROM last_read WHERE last_read_message_id = l.last_read_message_id LIMIT 1)) as unread_count,
-json_agg(json_build_object(
-'id', users.id,
-'first_name', users.first_name,
-'last_name', users.last_name,
-'email', users.email,
-'profile_picture',users.profile_picture
-)) AS users
-FROM  thread
+SELECT u.id FROM users u
+JOIN thread_user tu ON tu.user_id =u.id
+JOIN thread t ON t.id=tu.thread_id
+WHERE t.id=$1
+`
+
+func (q *Queries) GetThreadUsers(ctx context.Context, id uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getThreadUsers, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsByUserID = `-- name: GetThreadsByUserID :many
+SELECT
+    thread.id, thread.name, thread.description, thread.is_private, thread.type, thread.created_at, thread.updated_at,
+    json_agg(json_build_object(
+        'id', users.id,
+        'first_name', users.first_name,
+        'last_name', users.last_name,
+        'email', users.email,
+        'profile_picture', users.profile_picture
+    )) AS users,
+    COALESCE(
+        (
+            SELECT json_build_object(
+                'id', m.id,
+                'message', m.message,
+                'user_id', m.user_id,
+                'created_at', m.created_at
+            )
+            FROM messages m
+            WHERE m.thread_id = thread.id
+            ORDER BY m.created_at DESC
+            LIMIT 1
+        ),
+        'null'
+    )::json AS last_message
+FROM thread
 JOIN thread_user cu1 ON thread.id = cu1.thread_id
-LEFT JOIN last_read l ON l.thread_id =  thread.id AND l.user_id = $1
-JOIN thread_user cu2 ON  thread.id = cu2.thread_id
+JOIN thread_user cu2 ON thread.id = cu2.thread_id
 JOIN users ON cu2.user_id = users.id
 WHERE cu1.user_id = $1
-GROUP BY  thread.id, l.last_read_message_id
+GROUP BY thread.id
 `
 
 type GetThreadsByUserIDRow struct {
-	ID                uuid.UUID       `json:"id"`
-	Name              *string         `json:"name"`
-	Description       *string         `json:"description"`
-	IsPrivate         bool            `json:"is_private"`
-	Type              ThreadType      `json:"type"`
-	CreatedAt         time.Time       `json:"created_at"`
-	UpdatedAt         time.Time       `json:"updated_at"`
-	LastReadMessageID *uuid.UUID      `json:"last_read_message_id"`
-	UnreadCount       int64           `json:"unread_count"`
-	Users             json.RawMessage `json:"users"`
+	ID          uuid.UUID       `json:"id"`
+	Name        *string         `json:"name"`
+	Description *string         `json:"description"`
+	IsPrivate   bool            `json:"is_private"`
+	Type        ThreadType      `json:"type"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	Users       json.RawMessage `json:"users"`
+	LastMessage json.RawMessage `json:"last_message"`
 }
 
 func (q *Queries) GetThreadsByUserID(ctx context.Context, userID uuid.UUID) ([]GetThreadsByUserIDRow, error) {
@@ -318,9 +360,8 @@ func (q *Queries) GetThreadsByUserID(ctx context.Context, userID uuid.UUID) ([]G
 			&i.Type,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.LastReadMessageID,
-			&i.UnreadCount,
 			&i.Users,
+			&i.LastMessage,
 		); err != nil {
 			return nil, err
 		}

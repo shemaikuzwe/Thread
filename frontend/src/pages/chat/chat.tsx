@@ -20,6 +20,7 @@ import Messages from "./messages";
 import ScrollAnchor from "./scroll-anchor";
 import {
   useMessages,
+  useOptimisticUnRead,
   useUnReadMessages,
   type UnReadMessage,
 } from "@/hooks/use-messages";
@@ -30,12 +31,12 @@ import { useUploadThing } from "@/lib/utils";
 import { toast } from "sonner";
 import ChatsList from "./chats-list";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AudioInput from "@/components/chat/audio";
 
 export default function ChatPage() {
   const { id } = useParams();
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [clearUnRead, setClearUnRead] = useState(false);
   const { sendMessage } = useWebsocket();
   const session = useSession();
   const userId = session?.user?.id;
@@ -47,7 +48,7 @@ export default function ChatPage() {
   const { isTyping, handleTyping } = useIsTyping();
   const { data: messages, isLoading } = useMessages(id);
   const { data: unReadMessages } = useUnReadMessages(id);
-
+  const { setOptimisticUnread } = useOptimisticUnRead(id);
   const queryClient = useQueryClient();
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
@@ -70,50 +71,33 @@ export default function ChatPage() {
     }
   }, [chat, userId]);
 
-  const handleMarkAsRead = useCallback(
-    (opts?: { query: boolean }) => {
-      const currentMessages = messagesRef.current;
-      const unRead = queryClient.getQueryData<UnReadMessage>([
-        "un_read_message",
-        id,
-      ]);
-      if (
-        currentMessages &&
-        currentMessages.length > 0 &&
-        unRead &&
-        unRead.unread_count > 0
-      ) {
-        const lastMessageId = getLastMessage();
-        if (!lastMessageId) return;
-        if (lastMessageId !== unRead.last_read) {
-          console.log("marked all as read");
-          if (opts?.query) {
-            queryClient.setQueryData(
-              ["un_read_message", id],
-              (): UnReadMessage => ({
-                last_read: lastMessageId ?? null,
-                unread_count: 0,
-              }),
-            );
-          }
-          const msg = {
-            message: lastMessageId,
-            thread_id: id,
-            user_id: userId,
-            date: new Date().toISOString(),
-            type: "UPDATE_LAST_READ",
-          };
-          sendMessage(msg);
-        }
+  const handleMarkAsRead = useCallback(() => {
+    const currentMessages = messagesRef.current;
+    const unRead = queryClient.getQueryData<UnReadMessage>([
+      "un_read_message",
+      id,
+    ]);
+    if (
+      currentMessages &&
+      currentMessages.length > 0 &&
+      unRead &&
+      unRead.unread_count > 0
+    ) {
+      console.log("handled mark as read");
+      const lastMessageId = getLastMessage();
+      if (!lastMessageId) return;
+      if (lastMessageId !== unRead.last_read) {
+        const msg = {
+          message: lastMessageId,
+          thread_id: id,
+          user_id: userId,
+          date: new Date().toISOString(),
+          type: "UPDATE_LAST_READ",
+        };
+        sendMessage(msg);
       }
-    },
-    [id, queryClient, getLastMessage, userId, sendMessage],
-  );
-  useEffect(() => {
-    if (clearUnRead) {
-      handleMarkAsRead({ query: true });
     }
-  }, [clearUnRead, handleMarkAsRead]);
+  }, [id, queryClient, getLastMessage, userId, sendMessage]);
   const handleSendMessage = useCallback(
     async (
       type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
@@ -177,10 +161,11 @@ export default function ChatPage() {
       if (type === "MESSAGE") {
         setNewMessage("");
         setFiles([]);
-        setClearUnRead(true);
+        setOptimisticUnread(null);
       }
     },
     [
+      setOptimisticUnread,
       sendMessage,
       id,
       session,
@@ -350,13 +335,17 @@ export default function ChatPage() {
                     rows={1}
                     className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
                   />
-                  <Button
-                    onClick={() => handleSendMessage("MESSAGE")}
-                    disabled={!newMessage.trim() && !files.length}
-                    size={"icon"}
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </Button>
+                  {!newMessage.trim() && !files.length ? (
+                    <AudioInput />
+                  ) : (
+                    <Button
+                      onClick={() => handleSendMessage("MESSAGE")}
+                      disabled={!newMessage.trim() && !files.length}
+                      size={"icon"}
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

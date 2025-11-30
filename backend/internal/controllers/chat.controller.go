@@ -137,16 +137,13 @@ func CreateDMChat(c *gin.Context) {
 		return
 	}
 	//Check if channel already exists
-	channel, err := db.Db.GetDMThread(c.Request.Context(), database.GetDMThreadParams{
+	thread, err := db.Db.GetDMThread(c.Request.Context(), database.GetDMThreadParams{
 		UserID:   user1,
 		UserID_2: user2,
 	})
-	if err != nil {
-		log.Println("error", err)
-	}
-	log.Println("existing", channel)
-	if channel.ID.String() != "" {
-		c.JSON(http.StatusOK, gin.H{"id": channel.ID.String()})
+
+	if err == nil && thread.ID.String() != "" {
+		c.JSON(http.StatusOK, gin.H{"id": thread.ID.String()})
 		return
 	}
 	chanID, err := db.Db.CreateDMThread(c.Request.Context(), database.ThreadTypeDm)
@@ -154,11 +151,16 @@ func CreateDMChat(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
 	err = db.Db.CreateDMThreadUsers(c.Request.Context(), database.CreateDMThreadUsersParams{
 		ThreadID: chanID,
 		UserID:   user1,
 		UserID_2: user2,
 	})
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 	key := fmt.Sprintf("chats:%s", user1.String())
 	key2 := fmt.Sprintf("chats:%s", user2.String())
 	ok, _ := redis.Delete(key, key2)
@@ -293,41 +295,35 @@ type File struct {
 	Type string `json:"type"`
 	Size int    `json:"size"`
 }
+type Message struct {
+	ID       string `json:"id"`
+	Message  string `json:"message"`
+	ThreadID string `json:"thread_id"`
+	Files    []File `json:"files"`
+	UserID   string `json:"user_id"`
+	Type     string `json:"type"`
+	Date     string `json:"created_at"`
+}
 
-func HandlerCreateMessage(message []byte, userID string) {
+func HandlerCreateMessage(message []byte, userID string) error {
 
-	var msg struct {
-		ID       string `json:"id"`
-		Message  string `json:"message"`
-		ThreadID string `json:"thread_id"`
-		Files    []File `json:"files"`
-		UserID   string `json:"user_id"`
-		Type     string `json:"type"`
-		Date     string `json:"created_at"`
-	}
+	var msg Message
 	err := json.Unmarshal(message, &msg)
 	if err != nil {
-		log.Println("json parse error:", err)
-		return
-	}
-	if msg.Type != "MESSAGE" {
-		return
+		return err
 	}
 	id, err := uuid.Parse(msg.ID)
 	if err != nil {
-		log.Println("Invalid message uuuid", err)
-		return
+		return err
 	}
 	threadUUID, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
-		log.Println("invalid channel id:", err)
-		return
+		return err
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Println("invalid user id:", err)
-		return
+		return err
 	}
 
 	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
@@ -347,12 +343,13 @@ func HandlerCreateMessage(message []byte, userID string) {
 				MessageID: &msgId,
 			})
 			if err != nil {
-				log.Println("error creating file", err)
+				return err
 
 			}
 		}
 	}
 	if err != nil {
-		log.Println("db create message error:", err)
+		return err
 	}
+	return nil
 }

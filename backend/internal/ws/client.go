@@ -91,24 +91,8 @@ func (c *ClientConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		var msg Message
-		err = json.Unmarshal(message, &msg)
-		if err != nil {
-			log.Println("Error parsing json", err)
-			continue
-		}
-		if msg.Type == UPDATE_LAST_READ {
-			go func() {
-				err = controllers.UpsertLastRead(message)
-				if err != nil {
-					log.Println("error saving", err)
-				}
-			}()
-			continue
-		}
-
 		c.hub.broadcast <- message
-		go controllers.HandlerCreateMessage(message, c.userID)
+		go messageCallback(message, c.userID)
 	}
 }
 
@@ -185,4 +169,29 @@ func ServeWs(hub *Hub, ctx *gin.Context) {
 
 	go client.writePump()
 	go client.readPump()
+}
+
+func messageCallback(message []byte, userID string) {
+	var msg Message
+	err := json.Unmarshal(message, &msg)
+	if err != nil {
+		log.Println("Parsing error: ", err)
+		return
+	}
+	switch msg.Type {
+	case MESSAGE:
+		err = controllers.HandlerCreateMessage(message, userID)
+		if err != nil {
+			log.Println("Create messsage Error")
+		}
+		err = controllers.SendThreadNotification(message)
+		if err != nil {
+			log.Println("error: ", err)
+		}
+	case UPDATE_LAST_READ:
+		err = controllers.UpsertLastRead(message)
+		if err != nil {
+			log.Println("Create messsage Error")
+		}
+	}
 }

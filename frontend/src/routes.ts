@@ -4,6 +4,7 @@ import {
   route,
   layout,
 } from "@react-router/dev/routes";
+
 export default [
   layout("pages/home-layout.tsx", [
     index("pages/index.tsx"),
@@ -13,6 +14,7 @@ export default [
   layout("pages/chat/chat-layout.tsx", [
     route("/chat", "pages/chat/index.tsx"),
     route("/chat/:id", "pages/chat/chat.tsx"),
+    route("/chat/settings", "pages/chat/settings.tsx"),
   ]),
   route("/api/uploadthing", "pages/api.uploadthing.ts"),
   route("*", "pages/not-found.tsx"),

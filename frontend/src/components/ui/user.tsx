@@ -50,10 +50,10 @@ export default function User() {
         <DropdownMenuSeparator />
         <ThemeToggle />
         <DropdownMenuItem asChild>
-          <Link to={`/settings?tab=profile`}>Profile</Link>
+          <Link to={`/chat/settings?tab=profile`}>Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to={`/settings?tab=settings`}>Settings</Link>
+          <Link to={`/chat/settings?tab=settings`}>Settings</Link>
         </DropdownMenuItem>
         {/* <DropdownMenuItem><ThemeToggle /></DropdownMenuItem> */}
         <DropdownMenuSeparator />

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/empty.tsx";
 import { Button } from "../ui/button.tsx";
 import { MessageCircleIcon } from "lucide-react";
-import { CreateChat } from "./create-chat.tsx";
+import NewChat from "@/pages/chat/new-chat.tsx";
 
 export default function EmptyChatsList() {
   return (
@@ -21,11 +21,11 @@ export default function EmptyChatsList() {
         <EmptyDescription>Create a new chat to get started.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <CreateChat>
+        <NewChat>
           <Button variant="outline" size="sm">
             Create New Chat
           </Button>
-        </CreateChat>
+        </NewChat>
       </EmptyContent>
     </Empty>
   );

@@ -1,25 +1,27 @@
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { createChatSchema, type CreateChatData } from "@/lib/schema.ts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form.tsx";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "../ui/form.tsx";
 import { api } from "@/lib/axios.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "../ui/textarea.tsx";
-interface Props {
-  children: React.ReactNode;
-}
-export function CreateChat({ children }: Props) {
+import { cn } from "@/lib/utils.ts";
+
+export function CreateThread({
+  className,
+  onClose,
+}: {
+  onClose: () => void;
+  className?: string;
+}) {
   const form = useForm<CreateChatData>({
     resolver: zodResolver(createChatSchema),
   });
@@ -32,65 +34,58 @@ export function CreateChat({ children }: Props) {
         throw new Error(res.data.message || "Failed to create chat");
       }
       queryClient.invalidateQueries({ queryKey: ["chats"] });
+      onClose();
       // TODO: Redirect to chat page
     } catch (err) {
       console.error(err);
+      onClose();
       // TODO: add toast
     }
   };
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Chat</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            className="grid gap-4"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter channel name" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Enter channel description"
-                        rows={2}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button type="submit">Create</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <div className={cn(className)}>
+      <Form {...form}>
+        <form className="grid gap-4" onSubmit={form.handleSubmit(handleSubmit)}>
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter thread name" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter channel description"
+                      rows={2}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Create</Button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { api } from "@/lib/axios";
 import type { Online, Message, MessageStatus } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export const useMessages = (id: string) => {
   return useQuery<Message[]>({
@@ -46,4 +47,15 @@ export const useUnReadMessages = (id: string, initialData?: UnReadMessage) => {
     },
     enabled: false,
   });
+};
+export const useOptimisticUnRead = (id: string) => {
+  const [optimisticUnread, setOptimisticUnread] =
+    useState<UnReadMessage | null>(null);
+  const { data: unReadMessages } = useUnReadMessages(id);
+  useEffect(() => {
+    if (unReadMessages && optimisticUnread === null) {
+      setOptimisticUnread(unReadMessages);
+    }
+  }, [unReadMessages, optimisticUnread]);
+  return { optimisticUnread, setOptimisticUnread };
 };

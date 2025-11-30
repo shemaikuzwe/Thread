@@ -13,13 +13,13 @@ export function Meta({ time, className, status = "SENT", isOwn }: Props) {
   const getMessageStatus = (status: Status) => {
     switch (status) {
       case "PENDING": {
-        return <ClockIcon className="h-4 w-4" />;
+        return <ClockIcon className="h-4 w-4 text-xs" />;
       }
       case "FAILED": {
-        return <InfoIcon className="h-4 w-4 text-destructive" />;
+        return <InfoIcon className="h-4 w-4 text-destructive text-xs" />;
       }
       default:
-        return <CheckCheckIcon className="h-4 w-4" />;
+        return <CheckCheckIcon className="h-4 w-4 text-xs" />;
     }
   };
   return (

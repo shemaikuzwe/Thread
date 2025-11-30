@@ -6,9 +6,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateChat } from "@/components/chat/create-chat.tsx";
 import { MessageCircleIcon } from "lucide-react";
 import ChatsList from "./chats-list";
+import NewChat from "./new-chat";
 
 export default function Index() {
   return (
@@ -24,11 +24,11 @@ export default function Index() {
             Open chats to start a conversation.
           </EmptyDescription>
         </EmptyHeader>
-        <CreateChat>
+        <NewChat>
           <Button variant="outline" size="sm">
             Create New Chat
           </Button>
-        </CreateChat>
+        </NewChat>
       </Empty>
     </div>
   );
