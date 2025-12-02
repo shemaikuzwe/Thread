@@ -28,8 +28,12 @@ INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
 WHERE m.thread_id = $1
 GROUP BY m.id, u.id
-ORDER BY m.created_at ASC;
--- LIMIT 10;
+ORDER BY m.created_at DESC
+LIMIT $2;
+
+-- name: GetThreadTotalMessages :one
+
+SELECT COUNT(*) FROM messages m WHERE m.thread_id=$1;
 
 -- name: CreateMessage :one
 INSERT INTO messages (id,thread_id, user_id, message)

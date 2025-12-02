@@ -3,11 +3,15 @@ import type { Online, Message, MessageStatus } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-export const useMessages = (id: string) => {
-  return useQuery<Message[]>({
+export type MessagesRes = {
+  messages: Message[];
+  total: number;
+};
+export const useMessages = (id: string, limit: number) => {
+  return useQuery<MessagesRes>({
     queryKey: ["chat", id],
     queryFn: async () => {
-      const res = await api.get(`/chats/${id}/messages`);
+      const res = await api.get(`/chats/${id}/messages?limit=${limit}`);
       if (res.status !== 200) throw new Error("Failed to fetch messages");
       return res.data;
     },

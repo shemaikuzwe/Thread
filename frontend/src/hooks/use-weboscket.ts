@@ -3,7 +3,7 @@ import type { ChatWithUsers, Message } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
 import { useWebSocket } from "./ws/websocket";
-import type { UnReadMessage } from "./use-messages";
+import type { MessagesRes, UnReadMessage } from "./use-messages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -34,15 +34,20 @@ export function useWebsocket() {
     if (message.type === "MESSAGE") {
       queryClient.setQueryData(
         ["chat", message.thread_id],
-        (oldMsg: Message[] | undefined) => {
+        (oldMsg: MessagesRes | undefined): MessagesRes => {
           const exists =
-            oldMsg && oldMsg.length && oldMsg.some((m) => m.id === message.id);
+            oldMsg &&
+            oldMsg.messages.length &&
+            oldMsg.messages.some((m) => m.id === message.id);
           if (exists) {
-            return oldMsg.map((m) =>
-              m.id === message.id ? { ...m, status: "SENT" } : m,
-            );
+            return {
+              total: oldMsg.total,
+              messages: oldMsg.messages.map((m) =>
+                m.id === message.id ? { ...m, status: "SENT" } : m,
+              ),
+            };
           }
-          return [...(oldMsg ?? []), message];
+          return { total: 1, messages: [...(oldMsg?.messages ?? []), message] };
         },
       );
       //Update last message in thread

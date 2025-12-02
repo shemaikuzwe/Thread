@@ -53,6 +53,7 @@ func main() {
 	v1.GET("/users", controllers.GetUsersHandler)
 	v1.GET("/users/:id", controllers.GetUserHandler)
 	v1.POST("/users/subscription", controllers.SubscripeUserHandler)
+	v1.POST("/users/subscription/test", controllers.TestNotificationHandler)
 	v1.DELETE("/users/subscription/:endpoint", controllers.UnSubscripeUserHandler)
 
 	v1.GET("/chats", controllers.GetChatsHandler)

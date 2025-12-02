@@ -1,5 +1,9 @@
 import { useSubscriptions } from "@/hooks/use-sub";
 import { Switch } from "./ui/switch";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { useState } from "react";
+import { api } from "@/lib/axios";
 
 export function PushNotificationManager() {
   const {
@@ -9,13 +13,16 @@ export function PushNotificationManager() {
     unsubscribeFromPush,
     loading,
   } = useSubscriptions();
-  // const [message, setMessage] = useState("");
-  // async function sendTestNotification() {
-  //   if (subscription) {
-  //     await sendNotification(message, "Test Notification", subscription)
-  //     setMessage('')
-  //   }
-  // }
+  const [message, setMessage] = useState("");
+  async function sendTestNotification() {
+    if (subscription) {
+      const res = await api.post("/users/subscription/test");
+      if (res.status !== 200) {
+        console.log("failed to send test notification");
+      }
+      setMessage("");
+    }
+  }
   if (loading) {
     return null;
   }
@@ -32,18 +39,17 @@ export function PushNotificationManager() {
     }
   };
 
-  const isSubscribed = Boolean(subscription);
+  const isSubscribed = !!subscription;
 
   return (
-    // <div className="flex flex-col gap-3">
-    <Switch
-      id="pushNotifications"
-      checked={isSubscribed}
-      onCheckedChange={handleToggle}
-    />
-  );
-  {
-    /*{isSubscribed && (
+    <div className="flex flex-col gap-3">
+      <Switch
+        id="pushNotifications"
+        checked={isSubscribed}
+        onCheckedChange={handleToggle}
+      />
+
+      {isSubscribed && (
         <div className="flex flex-col gap-2">
           <Input
             type="text"
@@ -53,16 +59,10 @@ export function PushNotificationManager() {
             className="border p-2 rounded-md text-sm"
           />
           <div>
-            <Button
-             onClick={sendTestNotification}
-            >
-              Send Test
-            </Button>
+            <Button onClick={sendTestNotification}>Send Test</Button>
           </div>
         </div>
-      )}*/
-  }
-  {
-    /*</div>*/
-  }
+      )}
+    </div>
+  );
 }

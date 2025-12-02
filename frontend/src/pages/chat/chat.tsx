@@ -12,7 +12,7 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Paperclip } from "lucide-react";
+import { ArrowUp, Loader2Icon, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -22,6 +22,7 @@ import {
   useMessages,
   useOptimisticUnRead,
   useUnReadMessages,
+  type MessagesRes,
   type UnReadMessage,
 } from "@/hooks/use-messages";
 import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
@@ -31,7 +32,7 @@ import { useUploadThing } from "@/lib/utils";
 import { toast } from "sonner";
 import ChatsList from "./chats-list";
 import { useIsMobile } from "@/hooks/use-mobile";
-import AudioInput from "@/components/chat/audio";
+import AudioInput from "@/components/chat/audio-input";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -45,11 +46,18 @@ export default function ChatPage() {
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
+  const [limit, setLimit] = useState(15);
   const { isTyping, handleTyping } = useIsTyping();
-  const { data: messages, isLoading } = useMessages(id);
+  const { data, isLoading } = useMessages(id, limit);
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const { data: unReadMessages } = useUnReadMessages(id);
   const { setOptimisticUnread } = useOptimisticUnRead(id);
+  const [scroll, setScroll] = useState(false);
   const queryClient = useQueryClient();
+  const messages = data?.messages;
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
@@ -70,6 +78,15 @@ export default function ChatPage() {
       }
     }
   }, [chat, userId]);
+
+  const getLastMessage = useCallback(() => {
+    if (!userId) return;
+    const messages = messagesRef.current;
+    if (!messages || messages.length === 0) {
+      return;
+    }
+    return messages[messages.length - 1].id;
+  }, [userId]);
 
   const handleMarkAsRead = useCallback(() => {
     const currentMessages = messagesRef.current;
@@ -98,6 +115,30 @@ export default function ChatPage() {
       }
     }
   }, [id, queryClient, getLastMessage, userId, sendMessage]);
+
+  const loadMore = async () => {
+    try {
+      if (data?.total && data.total <= limit) return;
+      setLimit(limit + 5);
+      setLoadMoreLoading(true);
+      const res = await api.get(`/chats/${id}/messages?limit=${limit}`);
+      if (res.status === 200) {
+        queryClient.setQueryData(["chat", id], () => res.data);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoadMoreLoading(false);
+    }
+  };
+
+  const {
+    isAtBottom,
+    scrollToBottom,
+    messagesRef: ref,
+    handleScroll,
+  } = useScroll<HTMLDivElement>(id, loadMore);
+
   const handleSendMessage = useCallback(
     async (
       type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
@@ -131,11 +172,17 @@ export default function ChatPage() {
       if (type === "MESSAGE") {
         queryClient.setQueryData(
           ["chat", message.thread_id],
-          (oldMsg: Message[]): Message[] => {
-            if (oldMsg && oldMsg.length) {
-              return [...oldMsg, { ...message, status: "PENDING" }];
+          (oldMsg: MessagesRes): MessagesRes => {
+            if (oldMsg && oldMsg.messages.length) {
+              return {
+                total: oldMsg.total + 1,
+                messages: [
+                  ...oldMsg.messages,
+                  { ...message, status: "PENDING" },
+                ],
+              };
             }
-            return [{ ...message, status: "PENDING" }];
+            return { total: 1, messages: [{ ...message, status: "PENDING" }] };
           },
         );
       }
@@ -159,6 +206,7 @@ export default function ChatPage() {
         sendMessage(message);
       }
       if (type === "MESSAGE") {
+        setScroll(true);
         setNewMessage("");
         setFiles([]);
         setOptimisticUnread(null);
@@ -176,7 +224,6 @@ export default function ChatPage() {
       startUpload,
     ],
   );
-
   useEffect(() => {
     if (isTyping) {
       handleSendMessage("MESSAGE_STATUS", { status: "TYPING" });
@@ -185,29 +232,14 @@ export default function ChatPage() {
     }
   }, [isTyping, handleSendMessage]);
 
-  const {
-    isAtBottom,
-    scrollToBottom,
-    messagesRef: ref,
-    handleScroll,
-  } = useScroll<HTMLDivElement>(id);
-
   useEffect(() => {
-    if (messages && unReadMessages) {
-      if (unReadMessages.unread_count > 0 && unReadMessages.last_read) {
-        setTimeout(() => {
-          const element = document.getElementById(unReadMessages.last_read!);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
-          } else {
-            scrollToBottom(true);
-          }
-        }, 100);
-      } else {
-        scrollToBottom(true);
-      }
+    if (scroll) {
+      scrollToBottom(true);
     }
-  }, [messages, unReadMessages, scrollToBottom]);
+    return () => {
+      setScroll(false);
+    };
+  }, [messages, scrollToBottom, scroll]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.currentTarget.files;
@@ -222,30 +254,14 @@ export default function ChatPage() {
         (resolve, reject) => {
           reader.onload = (event) => resolve(event.target?.result ?? null);
           reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(file); // for images/base64
-          // else if (
-          //   file.type.startsWith("text/") ||
-          //   file.type.startsWith("application/json")
-          // ) {
-          //   reader.readAsText(file);
-          // }
+          reader.readAsDataURL(file);
         },
       );
 
       if (fileUrl) newFiles.push({ dataUrl: fileUrl as string, file });
     }
-
     setFiles((prev) => [...prev, ...newFiles]);
   };
-
-  function getLastMessage() {
-    if (!userId) return;
-    const messages = messagesRef.current;
-    if (!messages || messages.length === 0) {
-      return;
-    }
-    return messages[messages.length - 1].id;
-  }
 
   return (
     <div className="flex gap-2 w-full h-full">
@@ -269,15 +285,22 @@ export default function ChatPage() {
             ) : join && chat ? (
               <JoinChat chat={chat} setJoin={setJoin} />
             ) : (
-              <Messages
-                messagesRef={messagesRef}
-                handleOnMarkAsRead={handleMarkAsRead}
-                chatId={id}
-                ref={ref}
-                messages={messages}
-                chatType={chat?.type}
-                userId={userId}
-              />
+              <>
+                {loadMoreLoading && (
+                  <div className="flex justify-center items-center">
+                    <Loader2Icon className="animate-spin text-primary" />
+                  </div>
+                )}
+                <Messages
+                  messagesRef={messagesRef}
+                  handleOnMarkAsRead={handleMarkAsRead}
+                  chatId={id}
+                  ref={ref}
+                  messages={messages}
+                  chatType={chat?.type}
+                  userId={userId}
+                />
+              </>
             )}
           </ScrollArea>
           <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
@@ -336,7 +359,10 @@ export default function ChatPage() {
                     className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
                   />
                   {!newMessage.trim() && !files.length ? (
-                    <AudioInput />
+                    <AudioInput
+                      setAudioBlob={setAudioBlob}
+                      setIsRecording={setIsRecording}
+                    />
                   ) : (
                     <Button
                       onClick={() => handleSendMessage("MESSAGE")}

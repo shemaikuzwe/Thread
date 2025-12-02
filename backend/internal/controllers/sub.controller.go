@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -84,6 +85,26 @@ func UnSubscripeUserHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, "Subscription created successfully")
 }
 
+func TestNotificationHandler(ctx *gin.Context) {
+	user, err := GetCurrentUser(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "Failed to get current user")
+		return
+	}
+	userID, err := uuid.Parse(user.Id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "Failed to get current user")
+		return
+	}
+	err = sendNotification([]byte("Hello"), "Test", userID)
+	if err != nil {
+		log.Println("error", err)
+		ctx.JSON(http.StatusBadRequest, "Failed to send notification")
+		return
+	}
+	ctx.JSON(http.StatusOK, "Notification sent")
+}
+
 func sendNotification(
 	message []byte,
 	title string,
@@ -112,6 +133,13 @@ func sendNotification(
 		if err != nil {
 			return err
 		}
+		log.Println("status", res.Status)
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("Failed to read body")
+		}
+		log.Println("body", string(body))
+
 		defer res.Body.Close()
 	}
 	return nil

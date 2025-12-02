@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -230,18 +232,40 @@ func GetChatMessagesHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "id is required"})
 		return
 	}
-	chanID, err := uuid.Parse(id)
+	limitStr := c.Query("limit")
+	if limitStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Limit is required"})
+	}
+	threadID, err := uuid.Parse(id)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	messages, err := db.Db.GetChannelMessages(c.Request.Context(), chanID)
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		log.Println("error converting string")
+	}
+	messages, err := db.Db.GetChannelMessages(c.Request.Context(), database.GetChannelMessagesParams{
+		ThreadID: threadID,
+		Limit:    int32(limit),
+	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, messages)
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].CreatedAt.Before(messages[j].CreatedAt)
+	})
+	total, err := db.Db.GetThreadTotalMessages(c.Request.Context(), threadID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{
+		"messages": messages,
+		"total":    total,
+	})
 }
 func GetCurrentUser(c *gin.Context) (Payload, error) {
 	user, ok := c.Get("user")

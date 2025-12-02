@@ -47,7 +47,7 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
       }
       return res.data;
     },
-    enabled: !!search && isOpen,
+    enabled: !!search,
   });
 
   return (

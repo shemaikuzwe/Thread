@@ -21,6 +21,7 @@ export function useSubscriptions() {
       scope: "/",
       updateViaCache: "none",
     });
+
     const sub = await registration.pushManager.getSubscription();
     console.log("sub", sub);
     setSubscription(sub);

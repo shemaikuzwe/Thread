@@ -38,7 +38,6 @@ func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error 
 }
 
 const createMessage = `-- name: CreateMessage :one
-
 INSERT INTO messages (id,thread_id, user_id, message)
 VALUES ($1, $2, $3 ,$4)
 RETURNING id
@@ -51,7 +50,6 @@ type CreateMessageParams struct {
 	Message  string    `json:"message"`
 }
 
-// LIMIT 10;
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (uuid.UUID, error) {
 	row := q.db.QueryRowContext(ctx, createMessage,
 		arg.ID,
@@ -94,8 +92,14 @@ INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
 WHERE m.thread_id = $1
 GROUP BY m.id, u.id
-ORDER BY m.created_at ASC
+ORDER BY m.created_at DESC
+LIMIT $2
 `
+
+type GetChannelMessagesParams struct {
+	ThreadID uuid.UUID `json:"thread_id"`
+	Limit    int32     `json:"limit"`
+}
 
 type GetChannelMessagesRow struct {
 	ID        uuid.UUID       `json:"id"`
@@ -108,8 +112,8 @@ type GetChannelMessagesRow struct {
 	Files     json.RawMessage `json:"files"`
 }
 
-func (q *Queries) GetChannelMessages(ctx context.Context, threadID uuid.UUID) ([]GetChannelMessagesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getChannelMessages, threadID)
+func (q *Queries) GetChannelMessages(ctx context.Context, arg GetChannelMessagesParams) ([]GetChannelMessagesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getChannelMessages, arg.ThreadID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -138,4 +142,16 @@ func (q *Queries) GetChannelMessages(ctx context.Context, threadID uuid.UUID) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const getThreadTotalMessages = `-- name: GetThreadTotalMessages :one
+
+SELECT COUNT(*) FROM messages m WHERE m.thread_id=$1
+`
+
+func (q *Queries) GetThreadTotalMessages(ctx context.Context, threadID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getThreadTotalMessages, threadID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }

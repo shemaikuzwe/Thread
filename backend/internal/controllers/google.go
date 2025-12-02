@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -105,5 +106,6 @@ func HandleGoogleCallback(ctx *gin.Context) {
 	}
 	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie("auth_token", tokenString, 3600*24, "/", "", false, true)
-	ctx.Redirect(http.StatusMovedPermanently, "http://localhost:5173/chat")
+	clientURl := os.Getenv("CLIENT_APP_URL")
+	ctx.Redirect(http.StatusMovedPermanently, fmt.Sprint(clientURl, "/chat"))
 }
