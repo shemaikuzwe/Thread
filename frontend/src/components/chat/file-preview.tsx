@@ -57,7 +57,7 @@ export function FilePreview({
       );
     }
     if (file.type.startsWith("audio/")) {
-      return <audio src={file.url} className={cn(className)} />;
+      return <audio src={file.url} />;
     }
     if (file.type.startsWith("application/pdf")) {
       return (

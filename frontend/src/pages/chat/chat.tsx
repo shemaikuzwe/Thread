@@ -12,7 +12,7 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Loader2Icon, Paperclip } from "lucide-react";
+import { ArrowUp, Loader2Icon, Mic, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -50,14 +50,14 @@ export default function ChatPage() {
   const { isTyping, handleTyping } = useIsTyping();
   const { data, isLoading } = useMessages(id, limit);
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
-  const { data: unReadMessages } = useUnReadMessages(id);
+  const audioButtonRef = useRef<HTMLButtonElement>(null);
   const { setOptimisticUnread } = useOptimisticUnRead(id);
   const [scroll, setScroll] = useState(false);
   const queryClient = useQueryClient();
   const messages = data?.messages;
-
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
@@ -326,43 +326,58 @@ export default function ChatPage() {
                   </div>
                 )}
                 <div className="flex items-center w-full h-full">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="p-2 h-auto flex-shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Paperclip className="w-4 h-4" />
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={handleUpload}
-                    className="hidden"
-                    multiple
+                  <AudioInput
+                    ref={audioButtonRef}
+                    isRecording={isRecording}
+                    setIsRecording={setIsRecording}
+                    setFiles={setFiles}
+                    onRecordDone={() => handleSendMessage("MESSAGE")}
                   />
-                  <textarea
-                    value={newMessage ?? ""}
-                    onChange={(e) => {
-                      setNewMessage(e.target.value);
-                      handleTyping();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage("MESSAGE");
-                      }
-                    }}
-                    placeholder="Send a message..."
-                    rows={1}
-                    className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
-                  />
+                  {!isRecording && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="p-2 h-auto flex-shrink-0"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        onChange={handleUpload}
+                        className="hidden"
+                        multiple
+                      />
+                      <textarea
+                        value={newMessage ?? ""}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value);
+                          handleTyping();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage("MESSAGE");
+                          }
+                        }}
+                        placeholder="Send a message..."
+                        rows={1}
+                        className="border-none px-2 outline-none focus:outline-none focus:ring-0 w-full resize-none"
+                      />
+                    </>
+                  )}
                   {!newMessage.trim() && !files.length ? (
-                    <AudioInput
-                      setAudioBlob={setAudioBlob}
-                      setIsRecording={setIsRecording}
-                    />
+                    <Button
+                      variant={"secondary"}
+                      onClick={() => {
+                        audioButtonRef.current?.click();
+                      }}
+                    >
+                      <Mic className="h-10 w-10" />
+                    </Button>
                   ) : (
                     <Button
                       onClick={() => handleSendMessage("MESSAGE")}

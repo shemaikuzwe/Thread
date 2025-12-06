@@ -49,9 +49,7 @@ services:
       start_period: 10s
 
   server:
-    build:
-      context: .
-      dockerfile: ./backend/backend.Dockerfile
+    image: backend-server:latest
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -66,9 +64,7 @@ services:
       - GIN_MODE=release
 
   frontend:
-    build:
-      context: .
-      dockerfile: ./frontend/frontend.Dockerfile
+    image: thread-frontend:latest
     ports:
       - "3000:3000"
     restart: unless-stopped
