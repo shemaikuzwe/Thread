@@ -3,13 +3,14 @@ import { Separator } from "@/components/ui/separator";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { useChatMeta } from "@/hooks";
 import {
-  useMessages,
   useMessageStatus,
   useUnReadMessages,
   type UnReadMessage,
 } from "@/hooks/use-messages";
 import type { ChatWithUsers } from "@/lib/types";
-import { useNavigate } from "react-router";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useLocation, useNavigate } from "react-router";
 
 export default function ChatListItem({
   chat,
@@ -18,8 +19,8 @@ export default function ChatListItem({
   chat: ChatWithUsers;
   unReadMesssage: UnReadMessage | undefined;
 }) {
+  const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { data: messages } = useMessages(chat.id);
   const { data: msgStatus } = useMessageStatus(chat.id);
   const { name } = useChatMeta(chat);
   const { data: un_read } = useUnReadMessages(chat.id, {
@@ -27,21 +28,24 @@ export default function ChatListItem({
     unread_count:
       (unReadMesssage?.unread_count && unReadMesssage.unread_count) ?? 0,
   });
-  // console.log("unread", unReadMesssage);
+  const isActive = !!pathname.includes(chat.id);
   return (
     <div>
       <div
         onClick={() => {
           navigate(`/chat/${chat.id}`);
         }}
-        className="w-full flex items-center gap-3  rounded-md px-1.5 h-16 hover:bg-muted"
+        className={cn(
+          "w-full flex items-center gap-3  rounded-md px-1.5 h-16 hover:bg-muted",
+          isActive && "bg-muted",
+        )}
       >
         <div className="w-9">
           <ChatAvatar type="chat" chat={chat} />
         </div>
         <div className="flex flex-col gap-1 justify-center items-start w-full">
           <div className="flex justify-between w-full">
-            <span className="font-medium">{name}</span>
+            <span className="font-medium capitalize">{name}</span>
             {un_read && un_read.unread_count > 0 && (
               <Badge variant="destructive">{un_read.unread_count}</Badge>
             )}
@@ -50,11 +54,14 @@ export default function ChatListItem({
             <span className="text-sm text-primary font-semibold">
               typing...
             </span>
-          ) : messages && messages.length > 0 ? (
-            <span className="text-muted-foreground/90 text-sm">
-              {messages[messages.length - 1].message}
-            </span>
-          ) : null}
+          ) : (
+            chat.last_message && (
+              <div className="flex justify-between w-full text-muted-foreground/90 text-sm">
+                <span>{chat.last_message.message}</span>
+                <span>{format(chat.last_message.created_at, "HH:mm")}</span>
+              </div>
+            )
+          )}
         </div>
       </div>
       <Separator />

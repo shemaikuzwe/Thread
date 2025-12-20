@@ -7,11 +7,16 @@ export type MessageFile = {
 export interface Message {
   id: string;
   user_id: string;
-  channel_id: string;
+  thread_id: string;
   message: any;
   status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];
-  type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS";
+  type:
+    | "USER_CONNECTED"
+    | "MESSAGE"
+    | "USER_DISCONNECTED"
+    | "MESSAGE_STATUS"
+    | "UPDATE_LAST_READ";
   created_at: string;
   from: {
     id: string;
@@ -42,6 +47,12 @@ export type Chat = {
 };
 export interface ChatWithUsers extends Chat {
   users: User[];
+  last_message: {
+    id: string;
+    message: string;
+    user_id: string;
+    created_at: string;
+  } | null;
 }
 
 export interface Session {

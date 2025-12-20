@@ -40,7 +40,7 @@ export default function User() {
               className="rounded-full"
             />
             <AvatarFallback>
-              {name?.split(" ").map((n) => n[0].toUpperCase()) ?? "U"}
+              {name?.split(" ").map((n) => n[0]?.toUpperCase()) ?? "U"}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -50,10 +50,10 @@ export default function User() {
         <DropdownMenuSeparator />
         <ThemeToggle />
         <DropdownMenuItem asChild>
-          <Link to={`/settings?tab=profile`}>Profile</Link>
+          <Link to={`/chat/settings?tab=profile`}>Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to={`/settings?tab=settings`}>Settings</Link>
+          <Link to={`/chat/settings?tab=settings`}>Settings</Link>
         </DropdownMenuItem>
         {/* <DropdownMenuItem><ThemeToggle /></DropdownMenuItem> */}
         <DropdownMenuSeparator />

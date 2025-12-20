@@ -7,13 +7,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/database"
-	"github.com/shemaIkuzwe/websocket/internal/db"
-	"github.com/shemaIkuzwe/websocket/internal/redis"
+	"github.com/shemaIkuzwe/thread/internal/database"
+	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 type channel struct {
@@ -26,12 +28,12 @@ func GetChatsHandler(c *gin.Context) {
 	search := strings.TrimSpace(c.Query("search"))
 	if search != "" {
 		pattern := "%" + search + "%"
-		channels, err := db.Db.GetChannelAndUser(c.Request.Context(), &pattern)
+		threads, err := db.Db.GetThreadAndUser(c.Request.Context(), &pattern)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, channels)
+		c.JSON(200, threads)
 		return
 	}
 	if err != nil {
@@ -43,12 +45,12 @@ func GetChatsHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channels, err := db.Db.GetChannelsByUserID(c.Request.Context(), uuid)
+	threads, err := db.Db.GetThreadsByUserID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, channels)
+	c.JSON(200, threads)
 }
 func GetUnReadChatsHandler(c *gin.Context) {
 	user, err := GetCurrentUser(c)
@@ -76,10 +78,10 @@ func CreateChannelHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channel, err := db.Db.CreateChannel(c.Request.Context(), database.CreateChannelParams{
+	thread, err := db.Db.CreateThread(c.Request.Context(), database.CreateThreadParams{
 		Name:        &body.Name,
 		Description: &body.Description,
-		Type:        database.ChannelTypeGroup,
+		Type:        database.ThreadTypeGroup,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -96,9 +98,9 @@ func CreateChannelHandler(c *gin.Context) {
 		return
 	}
 	//create Relation channel_user
-	err = db.Db.CreateChannelUser(c.Request.Context(), database.CreateChannelUserParams{
-		UserID:    uuid,
-		ChannelID: channel,
+	err = db.Db.CreateThreadUser(c.Request.Context(), database.CreateThreadUserParams{
+		UserID:   uuid,
+		ThreadID: thread,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -109,7 +111,7 @@ func CreateChannelHandler(c *gin.Context) {
 	if ok {
 		log.Println("Deleted cache")
 	}
-	c.JSON(201, channel)
+	c.JSON(201, thread)
 }
 
 func CreateDMChat(c *gin.Context) {
@@ -137,27 +139,30 @@ func CreateDMChat(c *gin.Context) {
 		return
 	}
 	//Check if channel already exists
-	channel, err := db.Db.GetDMChannel(c.Request.Context(), database.GetDMChannelParams{
+	thread, err := db.Db.GetDMThread(c.Request.Context(), database.GetDMThreadParams{
 		UserID:   user1,
 		UserID_2: user2,
 	})
-	if err != nil {
-		log.Println("error", err)
-	}
-	log.Println("existing", channel)
-	if channel.ID.String() != "" {
-		c.JSON(http.StatusOK, gin.H{"id": channel.ID.String()})
+
+	if err == nil && thread.ID.String() != "" {
+		c.JSON(http.StatusOK, gin.H{"id": thread.ID.String()})
 		return
 	}
-	chanID, err := db.Db.CreateDMChannel(c.Request.Context(), database.ChannelTypeDm)
+	chanID, err := db.Db.CreateDMThread(c.Request.Context(), database.ThreadTypeDm)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	err = db.Db.CreateDMChannelUsers(c.Request.Context(), database.CreateDMChannelUsersParams{ChannelID: chanID,
+
+	err = db.Db.CreateDMThreadUsers(c.Request.Context(), database.CreateDMThreadUsersParams{
+		ThreadID: chanID,
 		UserID:   user1,
 		UserID_2: user2,
 	})
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 	key := fmt.Sprintf("chats:%s", user1.String())
 	key2 := fmt.Sprintf("chats:%s", user2.String())
 	ok, _ := redis.Delete(key, key2)
@@ -178,7 +183,7 @@ func GetChatsByIdHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	channel, err := db.Db.GetChannelByID(c.Request.Context(), uuid)
+	channel, err := db.Db.GetThreadByID(c.Request.Context(), uuid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -205,9 +210,9 @@ func JoinChannelHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	err = db.Db.JoinChannel(c.Request.Context(), database.JoinChannelParams{
-		ChannelID: chanID,
-		UserID:    userID,
+	err = db.Db.JoinThread(c.Request.Context(), database.JoinThreadParams{
+		ThreadID: chanID,
+		UserID:   userID,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -227,18 +232,40 @@ func GetChatMessagesHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "id is required"})
 		return
 	}
-	chanID, err := uuid.Parse(id)
+	limitStr := c.Query("limit")
+	if limitStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Limit is required"})
+	}
+	threadID, err := uuid.Parse(id)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	messages, err := db.Db.GetChannelMessages(c.Request.Context(), chanID)
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		log.Println("error converting string")
+	}
+	messages, err := db.Db.GetChannelMessages(c.Request.Context(), database.GetChannelMessagesParams{
+		ThreadID: threadID,
+		Limit:    int32(limit),
+	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, messages)
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].CreatedAt.Before(messages[j].CreatedAt)
+	})
+	total, err := db.Db.GetThreadTotalMessages(c.Request.Context(), threadID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{
+		"messages": messages,
+		"total":    total,
+	})
 }
 func GetCurrentUser(c *gin.Context) (Payload, error) {
 	user, ok := c.Get("user")
@@ -251,10 +278,10 @@ func GetCurrentUser(c *gin.Context) (Payload, error) {
 
 func UpsertLastRead(payload []byte) error {
 	var msg struct {
-		Message   string `json:"message"`
-		ChannelID string `json:"channel_id"`
-		UserID    string `json:"user_id"`
-		Date      string `json:"date"`
+		Message  string `json:"message"`
+		ThreadID string `json:"thread_id"`
+		UserID   string `json:"user_id"`
+		Date     string `json:"date"`
 	}
 
 	err := json.Unmarshal(payload, &msg)
@@ -265,7 +292,7 @@ func UpsertLastRead(payload []byte) error {
 	if err != nil {
 		return err
 	}
-	chanId, err := uuid.Parse(msg.ChannelID)
+	threadId, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
 
 		return err
@@ -275,14 +302,14 @@ func UpsertLastRead(payload []byte) error {
 		return err
 	}
 	err = db.Db.UpsertLastRead(context.Background(), database.UpsertLastReadParams{
-		ChannelID:         chanId,
-		LastReadMessageID: lastMessageId,
+		ThreadID:          threadId,
 		UserID:            userId,
+		LastReadMessageID: lastMessageId,
 	})
 	if err != nil {
 		return err
 	}
-	log.Println("Updated last read message", lastMessageId.String())
+	log.Println("Updated last read message", threadId.String())
 	return nil
 }
 
@@ -292,48 +319,42 @@ type File struct {
 	Type string `json:"type"`
 	Size int    `json:"size"`
 }
+type Message struct {
+	ID       string `json:"id"`
+	Message  string `json:"message"`
+	ThreadID string `json:"thread_id"`
+	Files    []File `json:"files"`
+	UserID   string `json:"user_id"`
+	Type     string `json:"type"`
+	Date     string `json:"created_at"`
+}
 
-func HandlerCreateMessage(message []byte, userID string) {
+func HandlerCreateMessage(message []byte, userID string) error {
 
-	var msg struct {
-		ID        string `json:"id"`
-		Message   string `json:"message"`
-		ChannelID string `json:"channel_id"`
-		Files     []File `json:"files"`
-		UserID    string `json:"user_id"`
-		Type      string `json:"type"`
-		Date      string `json:"created_at"`
-	}
+	var msg Message
 	err := json.Unmarshal(message, &msg)
 	if err != nil {
-		log.Println("json parse error:", err)
-		return
-	}
-	if msg.Type != "MESSAGE" {
-		return
+		return err
 	}
 	id, err := uuid.Parse(msg.ID)
 	if err != nil {
-		log.Println("Invalid message uuuid", err)
-		return
+		return err
 	}
-	chanUUID, err := uuid.Parse(msg.ChannelID)
+	threadUUID, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
-		log.Println("invalid channel id:", err)
-		return
+		return err
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Println("invalid user id:", err)
-		return
+		return err
 	}
 
 	msgId, err := db.Db.CreateMessage(context.Background(), database.CreateMessageParams{
-		ID:        id,
-		ChannelID: chanUUID,
-		UserID:    userUUID,
-		Message:   msg.Message,
+		ID:       id,
+		ThreadID: threadUUID,
+		UserID:   userUUID,
+		Message:  msg.Message,
 	})
 	if len(msg.Files) > 0 {
 		// TODO:Use bulk insert
@@ -346,12 +367,13 @@ func HandlerCreateMessage(message []byte, userID string) {
 				MessageID: &msgId,
 			})
 			if err != nil {
-				log.Println("error creating file", err)
+				return err
 
 			}
 		}
 	}
 	if err != nil {
-		log.Println("db create message error:", err)
+		return err
 	}
+	return nil
 }

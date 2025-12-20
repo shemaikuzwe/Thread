@@ -1,12 +1,16 @@
 import { XIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import type { UploadFile } from "@/lib/types";
+import { VideoPlayer } from "../ui/video";
+import { useState } from "react";
+import { AudioPlayer } from "../ui/audio";
 
 interface Props {
   file: UploadFile;
   handleRemove: () => void;
 }
 export function FileCard({ file, handleRemove }: Props) {
+  const [isPlaying, setIsPlaying] = useState(false);
   function displayPreview() {
     if (file.file.type.startsWith("image/")) {
       return (
@@ -19,13 +23,17 @@ export function FileCard({ file, handleRemove }: Props) {
     }
     if (file.file.type.startsWith("video/")) {
       return (
-        <video src={file.dataUrl} controls className="h-35 rounded-md w-40" />
+        <VideoPlayer
+          src={file.dataUrl}
+          title={file.file.name}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          className="h-35 rounded-md w-40"
+        />
       );
     }
     if (file.file.type.startsWith("audio/")) {
-      return (
-        <audio src={file.dataUrl} controls className="h-35 rounded-md w-40" />
-      );
+      return <AudioPlayer audioUrl={file.dataUrl} />;
     }
     if (file.file.type.startsWith("application/pdf")) {
       return <img src={"/mime/pdf.png"} className="h-35 rounded-md w-40" />;

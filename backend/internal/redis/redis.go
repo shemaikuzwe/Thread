@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/db"
 )
 
 // Expire 0 means no expiration time

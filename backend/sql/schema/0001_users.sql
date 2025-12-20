@@ -7,8 +7,8 @@ CREATE TABLE users(
     email TEXT NOT NULL UNIQUE,
     profile_picture TEXT NOT NULL DEFAULT '/default.png',
     password TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 -- +goose Down
 

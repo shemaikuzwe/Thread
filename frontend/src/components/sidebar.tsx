@@ -3,8 +3,9 @@ import {
   MessageCircle,
   MoreHorizontal,
   Bell,
-  PhoneIcon,
   type LucideProps,
+  Presentation,
+  Video,
 } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import User from "./ui/user";
 import { Badge } from "./ui/badge";
+import { Link } from "react-router";
 interface Item {
   title: string;
   icon: React.ForwardRefExoticComponent<
@@ -39,13 +41,13 @@ const items: Item[] = [
   },
   {
     title: "Calls",
-    icon: PhoneIcon,
+    icon: Video,
     notifications: 5,
   },
   {
     title: "Notifications",
     icon: Bell,
-    notifications: 8,
+    notifications: 15,
   },
   {
     title: "More",
@@ -55,11 +57,11 @@ const items: Item[] = [
 
 export function ChatSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="none">
       <SidebarHeader>
         <img src={"/logo.png"} alt="Logo" className="h-12 w-30" />
       </SidebarHeader>
-      <SidebarContent className="mt-10 w-[3rem]">
+      <SidebarContent className="mt-10 w-full">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="max-w-full flex justify-center items-center w-full h-full flex-col gap-5">
@@ -69,16 +71,19 @@ export function ChatSidebar() {
                     isActive={idx == 0}
                     tooltip={item.title}
                     className="relative w-full"
+                    asChild
                   >
-                    {item.notifications && item.notifications > 0 && (
-                      <Badge
-                        className="absolute  top-0 right-1 h-4 w-5 text-sm px-1"
-                        variant="destructive"
-                      >
-                        {item.notifications}
-                      </Badge>
-                    )}
-                    <item.icon />
+                    <Link to={"/chat"}>
+                      {item.notifications && item.notifications > 0 && (
+                        <Badge
+                          className="absolute  top-0 right-1 h-4 text-xs px-1"
+                          variant="destructive"
+                        >
+                          {item.notifications}
+                        </Badge>
+                      )}
+                      <item.icon className="h-full w-full" />
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

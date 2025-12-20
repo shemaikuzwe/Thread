@@ -6,67 +6,53 @@ package database
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type ChannelType string
+type ThreadType string
 
 const (
-	ChannelTypeGroup ChannelType = "group"
-	ChannelTypeDm    ChannelType = "dm"
+	ThreadTypeGroup ThreadType = "group"
+	ThreadTypeDm    ThreadType = "dm"
 )
 
-func (e *ChannelType) Scan(src interface{}) error {
+func (e *ThreadType) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = ChannelType(s)
+		*e = ThreadType(s)
 	case string:
-		*e = ChannelType(s)
+		*e = ThreadType(s)
 	default:
-		return fmt.Errorf("unsupported scan type for ChannelType: %T", src)
+		return fmt.Errorf("unsupported scan type for ThreadType: %T", src)
 	}
 	return nil
 }
 
-type NullChannelType struct {
-	ChannelType ChannelType `json:"channel_type"`
-	Valid       bool        `json:"valid"` // Valid is true if ChannelType is not NULL
+type NullThreadType struct {
+	ThreadType ThreadType `json:"thread_type"`
+	Valid      bool       `json:"valid"` // Valid is true if ThreadType is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullChannelType) Scan(value interface{}) error {
+func (ns *NullThreadType) Scan(value interface{}) error {
 	if value == nil {
-		ns.ChannelType, ns.Valid = "", false
+		ns.ThreadType, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.ChannelType.Scan(value)
+	return ns.ThreadType.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullChannelType) Value() (driver.Value, error) {
+func (ns NullThreadType) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.ChannelType), nil
-}
-
-type Channel struct {
-	ID          uuid.UUID   `json:"id"`
-	Name        *string     `json:"name"`
-	Description *string     `json:"description"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
-	IsPrivate   bool        `json:"is_private"`
-	Type        ChannelType `json:"type"`
-}
-
-type ChannelUser struct {
-	ChannelID uuid.UUID `json:"channel_id"`
-	UserID    uuid.UUID `json:"user_id"`
+	return string(ns.ThreadType), nil
 }
 
 type File struct {
@@ -82,7 +68,7 @@ type File struct {
 
 type LastRead struct {
 	ID                uuid.UUID `json:"id"`
-	ChannelID         uuid.UUID `json:"channel_id"`
+	ThreadID          uuid.UUID `json:"thread_id"`
 	LastReadMessageID uuid.UUID `json:"last_read_message_id"`
 	UserID            uuid.UUID `json:"user_id"`
 	CreatedAt         time.Time `json:"created_at"`
@@ -91,11 +77,35 @@ type LastRead struct {
 
 type Message struct {
 	ID        uuid.UUID `json:"id"`
-	ChannelID uuid.UUID `json:"channel_id"`
+	ThreadID  uuid.UUID `json:"thread_id"`
 	UserID    uuid.UUID `json:"user_id"`
 	Message   string    `json:"message"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Subscription struct {
+	ID        uuid.UUID       `json:"id"`
+	UserID    uuid.UUID       `json:"user_id"`
+	Sub       json.RawMessage `json:"sub"`
+	Endpoint  string          `json:"endpoint"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
+}
+
+type Thread struct {
+	ID          uuid.UUID  `json:"id"`
+	Name        *string    `json:"name"`
+	Description *string    `json:"description"`
+	IsPrivate   bool       `json:"is_private"`
+	Type        ThreadType `json:"type"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
+type ThreadUser struct {
+	ThreadID uuid.UUID `json:"thread_id"`
+	UserID   uuid.UUID `json:"user_id"`
 }
 
 type User struct {

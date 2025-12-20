@@ -1,3 +1,4 @@
+import { CreateThread } from "@/components/chat/create-chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChatListSkelton } from "@/components/ui/chat-skeltons";
@@ -7,8 +8,8 @@ import SearchInput from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
-import { PenBoxIcon } from "lucide-react";
-import { useState, useTransition } from "react";
+import { ChevronRight, PenBoxIcon, UserPlus, Users } from "lucide-react";
+import { startTransition, useState } from "react";
 import { useNavigate } from "react-router";
 
 type Result = {
@@ -16,10 +17,23 @@ type Result = {
   name: string;
   type: "group" | "dm";
 };
-
-export default function NewChat() {
+const chatTypes = [
+  {
+    text: "New Thread",
+    type: "group",
+    icon: Users,
+  },
+  {
+    text: "Add friend",
+    type: "dm",
+    icon: UserPlus,
+  },
+];
+export default function NewChat({ children }: { children?: React.ReactNode }) {
   const [search, setSearch] = useState<string>();
   const [open, setOpen] = useState(false);
+  // This is the modal for creating new friend and thread
+  const [isOpen, setIsOpen] = useState(false);
   const { data, isLoading } = useQuery<Result[]>({
     queryKey: ["new-chat", search],
     queryFn: async () => {
@@ -39,35 +53,70 @@ export default function NewChat() {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger>
-        <Button size={"sm"}>
-          <span className="sr-only">New</span>
-          <PenBoxIcon />
-        </Button>
+        {children ? (
+          children
+        ) : (
+          <Button variant={"ghost"}>
+            <span className="sr-only">New </span>
+            <PenBoxIcon className="h-10 w-10" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="w-150 min-h-80 flex flex-col gap-2">
         <SearchInput
-          placeholder="Search new  user,channel"
+          disabled={isOpen}
+          placeholder="Search new  user,thread"
           onSearch={(search) => setSearch(search)}
         />
         <ScrollArea className="flex flex-col h-full w-full justify-start items-start">
+          {isOpen && (
+            <CreateThread
+              onClose={() => {
+                setIsOpen(false);
+                setOpen(false);
+              }}
+              className="mx-4"
+            />
+          )}
           {isLoading && <ChatListSkelton />}
-          {data &&
-            data.length > 0 &&
-            data.map((d) => (
-              <SearchItem
-                key={d.id}
-                item={d}
-                setSearch={setSearch}
-                setOpen={setOpen}
-              />
-            ))}
+          {data && data.length > 0
+            ? data.map((d) => (
+                <SearchItem
+                  key={d.id}
+                  item={d}
+                  setSearch={setSearch}
+                  setOpen={setOpen}
+                />
+              ))
+            : !isOpen && (
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex flex-col gap-2 w-full">
+                    {chatTypes.map((c) => (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full  justify-start gap-3 p-3 h-auto rounded-none hover:bg-muted"
+                        onClick={() => setIsOpen(!isOpen)}
+                      >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center">
+                          <c.icon className="w-5 h-5" />
+                        </div>
+                        <span className="flex-1 text-left text-foreground font-medium">
+                          {c.text}
+                        </span>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
         </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function SearchItem({
+function SearchItem({
   item,
   setSearch,
   setOpen,
@@ -77,7 +126,6 @@ export function SearchItem({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const navigate = useNavigate();
-  const [isPending, startTransition] = useTransition();
   const handleClick = () => {
     if (item.type === "group") {
       navigate(`/chat/${item.id}`);

@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"bytes"
@@ -10,16 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/shemaIkuzwe/websocket/internal/controllers"
+	"github.com/shemaIkuzwe/thread/internal/controllers"
 )
 
 type Message struct {
-	ID        string `json:"id"`
-	Message   any    `json:"message"`
-	ChannelID string `json:"channel_id"`
-	UserID    string `json:"user_id"`
-	Type      Type   `json:"type"`
-	Date      string `json:"created_at"`
+	ID       string `json:"id"`
+	Message  any    `json:"message"`
+	ThreadID string `json:"thread_id"`
+	UserID   string `json:"user_id"`
+	Type     Type   `json:"type"`
+	Date     string `json:"created_at"`
 }
 
 type Type string
@@ -91,22 +91,8 @@ func (c *ClientConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		var msg Message
-		err = json.Unmarshal(message, &msg)
-		if err != nil {
-			log.Println("Error parsing json", err)
-			break
-		}
-		if msg.Type == UPDATE_LAST_READ {
-			err = controllers.UpsertLastRead(message)
-			if err != nil {
-				log.Println("error saving", err)
-			}
-			break
-		}
-
 		c.hub.broadcast <- message
-		go controllers.HandlerCreateMessage(message, c.userID)
+		go messageCallback(message, c.userID)
 	}
 }
 
@@ -151,7 +137,7 @@ func (c *ClientConn) writePump() {
 	}
 }
 
-func serveWs(hub *Hub, ctx *gin.Context) {
+func ServeWs(hub *Hub, ctx *gin.Context) {
 	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -183,4 +169,29 @@ func serveWs(hub *Hub, ctx *gin.Context) {
 
 	go client.writePump()
 	go client.readPump()
+}
+
+func messageCallback(message []byte, userID string) {
+	var msg Message
+	err := json.Unmarshal(message, &msg)
+	if err != nil {
+		log.Println("Parsing error: ", err)
+		return
+	}
+	switch msg.Type {
+	case MESSAGE:
+		err = controllers.HandlerCreateMessage(message, userID)
+		if err != nil {
+			log.Println("Create messsage Error")
+		}
+		err = controllers.SendThreadNotification(message)
+		if err != nil {
+			log.Println("error: ", err)
+		}
+	case UPDATE_LAST_READ:
+		err = controllers.UpsertLastRead(message)
+		if err != nil {
+			log.Println("Create messsage Error")
+		}
+	}
 }

@@ -1,84 +1,101 @@
-import { useEffect, useRef } from "react";
-import type { Message } from "@/lib/types";
+import { useEffect } from "react";
+import type { ChatWithUsers, Message } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
-import type { UnReadMessage } from "./use-messages";
+import { useWebSocket } from "./ws/websocket";
+import type { MessagesRes, UnReadMessage } from "./use-messages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export function useWebSocket() {
-  const wsRef = useRef<WebSocket | null>(null);
+export function useWebsocket() {
   const queryClient = useQueryClient();
   const session = useSession();
   const userId = session?.user?.id;
+
   if (!userId) throw new Error("user id is required");
+  const {
+    sendJsonMessage,
+    lastJsonMessage: message,
+    readyState,
+  } = useWebSocket<Message>(`${apiUrl}/ws`);
+
   useEffect(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    const socket = new WebSocket(`${apiUrl.replace(/^http/, "ws")}/ws`);
-    wsRef.current = socket;
-
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    socket.onmessage = (e) => {
-      const msg = JSON.parse(e.data) as Message;
-      if (msg.type === "USER_CONNECTED" || msg.type === "USER_DISCONNECTED") {
-        queryClient.setQueryData(["online", msg.channel_id], () => {
-          return {
-            active: Number(msg.message.active),
-            users: msg.message.users,
-          };
-        });
-      }
-      if (msg.type === "MESSAGE") {
-        queryClient.setQueryData(
-          ["chat", msg.channel_id],
-          (oldMsg: Message[] = []) => {
-            const exists = oldMsg.some((m) => m.id === msg.id);
-            if (exists) {
-              return oldMsg.map((m) =>
-                m.id === msg.id ? { ...m, status: "SENT" } : m,
-              );
-            }
-            return [...oldMsg, msg];
-          },
-        );
-        if (msg.user_id !== userId) {
-          // console.log("new un read message", msg.message);
-          queryClient.setQueryData(
-            ["un_read_message", msg.channel_id],
-            (old: UnReadMessage): UnReadMessage => {
-              console.log("prev", old.unread_count);
-              return { ...old, unread_count: old.unread_count + 1 };
-            },
-          );
-        }
-      }
-      if (msg.type === "MESSAGE_STATUS") {
-        if (msg.user_id === userId) return;
-        queryClient.setQueryData(["msg-status", msg.channel_id], () => {
-          return { status: msg.message };
-        });
-      }
-    };
-
-    socket.onerror = (e) => {
-      console.error("WebSocket error:", e);
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, [queryClient, userId]);
-
-  const sendMessage = async <T>(msg: T) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(msg));
-    } else {
-      console.warn("WebSocket not open. Cannot send message.");
+    if (!message) return;
+    if (
+      message.type === "USER_CONNECTED" ||
+      message.type === "USER_DISCONNECTED"
+    ) {
+      queryClient.setQueryData(["online", message.thread_id], {
+        online: Number(message.message.online),
+        users: message.message.users,
+      });
     }
-  };
 
-  return { sendMessage };
+    if (message.type === "MESSAGE") {
+      queryClient.setQueryData(
+        ["chat", message.thread_id],
+        (oldMsg: MessagesRes | undefined): MessagesRes => {
+          const exists =
+            oldMsg &&
+            oldMsg.messages.length &&
+            oldMsg.messages.some((m) => m.id === message.id);
+          if (exists) {
+            return {
+              total: oldMsg.total,
+              messages: oldMsg.messages.map((m) =>
+                m.id === message.id ? { ...m, status: "SENT" } : m,
+              ),
+            };
+          }
+          return { total: 1, messages: [...(oldMsg?.messages ?? []), message] };
+        },
+      );
+      //Update last message in thread
+      queryClient.setQueryData(
+        ["chats"],
+        (prev: ChatWithUsers[] | undefined): ChatWithUsers[] | undefined => {
+          if (!prev) return prev;
+          return prev.map((thread) =>
+            thread.id === message.thread_id
+              ? {
+                  ...thread,
+                  last_message: {
+                    created_at: message.created_at,
+                    id: message.id,
+                    message: message.message,
+                    user_id: userId,
+                  },
+                }
+              : thread,
+          );
+        },
+      );
+      const isOwn = message.user_id === userId;
+      queryClient.setQueryData(
+        ["un_read_message", message.thread_id],
+        (prev: UnReadMessage | undefined): UnReadMessage | undefined => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            unread_count: isOwn ? 0 : (prev?.unread_count || 0) + 1,
+          };
+        },
+      );
+    }
+    if (message.type === "MESSAGE_STATUS" && message.user_id !== userId) {
+      queryClient.setQueryData(["msg-status", message.thread_id], {
+        status: message.message,
+      });
+    }
+    if (message.type === "UPDATE_LAST_READ" && message.user_id === userId) {
+      queryClient.setQueryData(
+        ["un_read_message", message.thread_id],
+        (prev: UnReadMessage | undefined): UnReadMessage | undefined => {
+          if (!prev) return undefined;
+          return { last_read: message.message, unread_count: 0 };
+        },
+      );
+    }
+  }, [message, queryClient, userId]);
+  return { sendMessage: sendJsonMessage, readyState };
 }

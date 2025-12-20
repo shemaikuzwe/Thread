@@ -10,12 +10,15 @@ export default function Header() {
           <Logo />
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <a href="#" className="font-medium">
+          <Link to="/" className="font-medium">
             Home
-          </a>
-          <a href="#" className="font-medium">
+          </Link>
+          <Link to="#features" className="font-medium">
             Features
-          </a>
+          </Link>
+          <Link to="#pricing" className="font-medium">
+            Pricing
+          </Link>
           <Button asChild variant={"ghost"}>
             <Link to="/auth/login">Login</Link>
           </Button>

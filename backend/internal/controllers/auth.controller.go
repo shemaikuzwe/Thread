@@ -11,8 +11,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
-	"github.com/shemaIkuzwe/websocket/internal/database"
-	"github.com/shemaIkuzwe/websocket/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/database"
+	"github.com/shemaIkuzwe/thread/internal/db"
 	"golang.org/x/crypto/bcrypt"
 )
 

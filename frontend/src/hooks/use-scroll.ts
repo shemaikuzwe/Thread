@@ -1,10 +1,15 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useInView } from "react-intersection-observer";
+import { useUnReadMessages } from "./use-messages";
 
-function useScroll<T extends HTMLElement>() {
+function useScroll<T extends HTMLElement>(
+  id: string,
+  loadMore?: () => Promise<void>,
+) {
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(false);
   const messagesRef = useRef<T>(null);
-
+  const { data: read } = useUnReadMessages(id);
   const { ref: visibilityRef, inView: isVisible } = useInView({
     triggerOnce: false,
     delay: 100,
@@ -16,23 +21,39 @@ function useScroll<T extends HTMLElement>() {
     const isAtBottom =
       target.scrollTop + target.clientHeight >= target.scrollHeight - offset;
     setIsAtBottom(isAtBottom);
-  };
-  const scrollToBottom = useCallback(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, []);
-  useEffect(() => {
-    if (messagesRef.current) {
-      if (isAtBottom && !isVisible) {
-        messagesRef.current.scrollIntoView({
-          block: "end",
-          behavior: "smooth",
+    const isAtTop = target.scrollTop <= 5;
+    if (isAtTop) {
+      console.log("is at top");
+      const oldScrollheight = target.scrollHeight;
+
+      if (loadMore) {
+        loadMore().then(() => {
+          const newScrollheight = target.scrollHeight;
+          target.scrollTop = newScrollheight - oldScrollheight;
         });
       }
     }
-  }, [isAtBottom, isVisible]);
-
+    setIsAtTop(isAtTop);
+  };
+  const scrollToBottom = useCallback(
+    (bottom?: boolean) => {
+      if (messagesRef.current) {
+        if (read?.last_read && !bottom) {
+          const last_readRed = document.getElementById(read.last_read);
+          last_readRed?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+          return;
+        }
+        messagesRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }
+    },
+    [read?.last_read],
+  );
   return {
     messagesRef,
     visibilityRef,
@@ -40,6 +61,7 @@ function useScroll<T extends HTMLElement>() {
     isAtBottom,
     handleScroll,
     isVisible,
+    isAtTop,
   };
 }
 

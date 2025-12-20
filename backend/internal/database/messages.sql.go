@@ -38,24 +38,22 @@ func (q *Queries) CreateFiles(ctx context.Context, arg CreateFilesParams) error 
 }
 
 const createMessage = `-- name: CreateMessage :one
-
-INSERT INTO messages (id,channel_id, user_id, message)
+INSERT INTO messages (id,thread_id, user_id, message)
 VALUES ($1, $2, $3 ,$4)
 RETURNING id
 `
 
 type CreateMessageParams struct {
-	ID        uuid.UUID `json:"id"`
-	ChannelID uuid.UUID `json:"channel_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Message   string    `json:"message"`
+	ID       uuid.UUID `json:"id"`
+	ThreadID uuid.UUID `json:"thread_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	Message  string    `json:"message"`
 }
 
-// LIMIT 10;
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (uuid.UUID, error) {
 	row := q.db.QueryRowContext(ctx, createMessage,
 		arg.ID,
-		arg.ChannelID,
+		arg.ThreadID,
 		arg.UserID,
 		arg.Message,
 	)
@@ -66,7 +64,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (u
 
 const getChannelMessages = `-- name: GetChannelMessages :many
 SELECT
-  m.id, m.channel_id, m.user_id, m.message, m.created_at, m.updated_at,
+  m.id, m.thread_id, m.user_id, m.message, m.created_at, m.updated_at,
   json_build_object(
     'id', u.id,
     'first_name', u.first_name,
@@ -92,14 +90,20 @@ SELECT
 FROM messages m
 INNER JOIN users u ON m.user_id = u.id
 LEFT JOIN files f ON f.message_id = m.id
-WHERE m.channel_id = $1
+WHERE m.thread_id = $1
 GROUP BY m.id, u.id
-ORDER BY m.created_at ASC
+ORDER BY m.created_at DESC
+LIMIT $2
 `
+
+type GetChannelMessagesParams struct {
+	ThreadID uuid.UUID `json:"thread_id"`
+	Limit    int32     `json:"limit"`
+}
 
 type GetChannelMessagesRow struct {
 	ID        uuid.UUID       `json:"id"`
-	ChannelID uuid.UUID       `json:"channel_id"`
+	ThreadID  uuid.UUID       `json:"thread_id"`
 	UserID    uuid.UUID       `json:"user_id"`
 	Message   string          `json:"message"`
 	CreatedAt time.Time       `json:"created_at"`
@@ -108,8 +112,8 @@ type GetChannelMessagesRow struct {
 	Files     json.RawMessage `json:"files"`
 }
 
-func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) ([]GetChannelMessagesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getChannelMessages, channelID)
+func (q *Queries) GetChannelMessages(ctx context.Context, arg GetChannelMessagesParams) ([]GetChannelMessagesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getChannelMessages, arg.ThreadID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +123,7 @@ func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) (
 		var i GetChannelMessagesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.ChannelID,
+			&i.ThreadID,
 			&i.UserID,
 			&i.Message,
 			&i.CreatedAt,
@@ -138,4 +142,16 @@ func (q *Queries) GetChannelMessages(ctx context.Context, channelID uuid.UUID) (
 		return nil, err
 	}
 	return items, nil
+}
+
+const getThreadTotalMessages = `-- name: GetThreadTotalMessages :one
+
+SELECT COUNT(*) FROM messages m WHERE m.thread_id=$1
+`
+
+func (q *Queries) GetThreadTotalMessages(ctx context.Context, threadID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getThreadTotalMessages, threadID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }

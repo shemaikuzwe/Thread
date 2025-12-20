@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/websocket/internal/db"
-	"github.com/shemaIkuzwe/websocket/internal/redis"
+	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -30,15 +30,15 @@ type Hub struct {
 }
 
 type Channels map[string]struct {
-	Active int
+	Online int
 	users  []string
 }
 type activeInfo struct {
-	Active int      `json:"active"`
+	Online int      `json:"online"`
 	Users  []string `json:"users"`
 }
 
-func newHub() *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		broadcast:  make(chan []byte, 256),
 		register:   make(chan *ClientConn),
@@ -48,7 +48,7 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+func (h *Hub) Run() {
 	for {
 		select {
 		case conn := <-h.register:
@@ -100,24 +100,24 @@ func (h *Hub) incrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
 
-	for _, channel := range userChannels {
-		channelID := channel.String()
-		info := h.channels[channelID]
-		info.Active++
+	for _, thread := range userThreads {
+		ThreadID := thread.String()
+		info := h.channels[ThreadID]
+		info.Online++
 		info.users = append(info.users, userId)
-		h.channels[channelID] = info
-		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		h.channels[ThreadID] = info
+		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
-			Message:   activeInfo,
-			Type:      "USER_CONNECTED",
-			ChannelID: channelID,
-			Date:      time.Now().UTC().String(),
+			Message:  activeInfo,
+			Type:     "USER_CONNECTED",
+			ThreadID: ThreadID,
+			Date:     time.Now().UTC().String(),
 		}
 		message, err := json.Marshal(msg)
 		if err != nil {
@@ -133,15 +133,15 @@ func (h *Hub) decrementChannel(userId string) {
 		log.Println("failed to parse user id", err)
 		return
 	}
-	userChannels, err := db.Db.GetClientChannels(context.Background(), id)
+	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
-	for _, channel := range userChannels {
-		channelID := channel.String()
-		info := h.channels[channelID]
-		info.Active--
+	for _, thread := range userThreads {
+		threadID := thread.String()
+		info := h.channels[threadID]
+		info.Online--
 
 		// Find and remove the user from the slice
 		for i, u := range info.users {
@@ -150,13 +150,13 @@ func (h *Hub) decrementChannel(userId string) {
 				break
 			}
 		}
-		h.channels[channelID] = info
-		activeInfo := activeInfo{Active: info.Active, Users: info.users}
+		h.channels[threadID] = info
+		activeInfo := activeInfo{Online: info.Online, Users: info.users}
 		msg := Message{
-			Message:   activeInfo,
-			Type:      "USER_DISCONNECTED",
-			ChannelID: channelID,
-			Date:      time.Now().UTC().String(),
+			Message:  activeInfo,
+			Type:     "USER_DISCONNECTED",
+			ThreadID: threadID,
+			Date:     time.Now().UTC().String(),
 		}
 		message, err := json.Marshal(msg)
 		if err != nil {
@@ -180,7 +180,7 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	msgId, err := uuid.Parse(msg.ChannelID)
+	msgId, err := uuid.Parse(msg.ThreadID)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
@@ -189,6 +189,10 @@ func CheckUser(message []byte, client string) (bool, error) {
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
+	}
+	log.Println("type: ", msg.Type, "message: ", msg.Message)
+	if msg.Type == UPDATE_LAST_READ && msg.UserID != client {
+		return false, nil
 	}
 	if slices.Contains(usersChannels, msgId) {
 		return true, nil
@@ -202,7 +206,7 @@ func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
 	if ok && err == nil {
 		return cached, nil
 	}
-	usersChannels, err := db.Db.GetClientChannels(context.Background(), userId)
+	usersChannels, err := db.Db.GetClientThreads(context.Background(), userId)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return nil, err
