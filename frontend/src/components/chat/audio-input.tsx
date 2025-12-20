@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from "react";
 import { LiveMicrophoneWaveform } from "../ui/waveform";
 import { Button } from "../ui/button";
-import { Square } from "lucide-react";
+import { Pause, Play, Trash2 } from "lucide-react";
 import type { UploadFile } from "@/lib/types";
 
 interface Props {
   ref: React.RefObject<HTMLButtonElement | null>;
-  setFiles: React.Dispatch<React.SetStateAction<UploadFile[]>>;
+  setFile: React.Dispatch<React.SetStateAction<UploadFile | null>>;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
   onRecordDone: () => Promise<void>;
@@ -14,7 +14,7 @@ interface Props {
 
 export default function AudioInput({
   ref,
-  setFiles,
+  setFile,
   setIsRecording,
   isRecording,
   onRecordDone,
@@ -23,6 +23,10 @@ export default function AudioInput({
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const isCancelRef = useRef(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const pausedTimeRef = useRef<number>(0);
+  const currentTimeRef = useRef<number>(0);
 
   const formatTime = (seconds: number): string => {
     if (!isFinite(seconds)) return "0:00";
@@ -41,17 +45,26 @@ export default function AudioInput({
         recorder.current.ondataavailable = (e) => {
           audioChunksRef.current.push(e.data);
         };
+
         recorder.current.onstop = () => {
+          if (isCancelRef.current) {
+            isCancelRef.current = false;
+            audioChunksRef.current = [];
+            setIsRecording(false);
+            setRecordingTime(0);
+            return;
+          }
+
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/wav",
           });
           const audioFile = new File([audioBlob], "audio.wav", {
             type: "audio/wav",
           });
-          setFiles([
-            { file: audioFile, dataUrl: window.URL.createObjectURL(audioFile) },
-          ]);
-          console.log("file", audioFile);
+          setFile({
+            file: audioFile,
+            dataUrl: window.URL.createObjectURL(audioFile),
+          });
           audioChunksRef.current = [];
           setIsRecording(false);
           setRecordingTime(0);
@@ -60,11 +73,31 @@ export default function AudioInput({
         recorder.current.onstart = () => {
           setIsRecording(true);
         };
+        recorder.current.onpause = () => {
+          console.log("paused");
+          setIsPaused(true);
+          pausedTimeRef.current = currentTimeRef.current;
+          if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+          }
+        };
+        recorder.current.onresume = () => {
+          console.log("resumed");
+          setIsPaused(false);
+          const resumeTime = Date.now();
+          const pausedElapsed = pausedTimeRef.current;
+          recordingTimerRef.current = setInterval(() => {
+            const elapsed = pausedElapsed + (Date.now() - resumeTime) / 1000;
+            currentTimeRef.current = elapsed;
+            setRecordingTime(elapsed);
+          }, 100);
+        };
         recorder.current.start();
-
         const startTime = Date.now();
         recordingTimerRef.current = setInterval(() => {
           const elapsed = (Date.now() - startTime) / 1000;
+          currentTimeRef.current = elapsed;
           setRecordingTime(elapsed);
         }, 100);
       }
@@ -74,13 +107,29 @@ export default function AudioInput({
     }
   };
 
-  const handleStop = () => {
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
+  const handlePause = () => {
+    if (recorder.current) {
+      if (recorder.current.state === "paused") {
+        recorder.current.resume();
+        return;
+      }
+      recorder.current.pause();
+    }
+  };
+
+  const handleStop = (deleteFile: boolean = false) => {
+    if (deleteFile) {
+      isCancelRef.current = true;
     }
     if (recorder.current) {
       recorder.current.stop();
-      recorder.current = null;
+    }
+    setIsRecording(false);
+    setRecordingTime(0);
+    setIsPaused(false);
+    pausedTimeRef.current = 0;
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
     }
   };
 
@@ -97,6 +146,15 @@ export default function AudioInput({
     <>
       {isRecording && (
         <div className="flex w-80 items-center justify-end gap-4 px-2 h-10 ml-auto">
+          <Button
+            size="icon"
+            variant="destructive"
+            className="h-8 w-8 shrink-0 rounded-full"
+            onClick={() => handleStop(true)}
+          >
+            <span className="sr-only">Delete</span>
+            <Trash2 className="h-4 w-4 fill-current" />
+          </Button>
           {/* Timer */}
           <div className="text-sm font-medium tabular-nums min-w-[40px] text-muted-foreground">
             {formatTime(recordingTime)}
@@ -105,7 +163,7 @@ export default function AudioInput({
           {/* Live Waveform */}
           <div className="flex-1 h-full flex items-center overflow-hidden">
             <LiveMicrophoneWaveform
-              active={isRecording}
+              active={isRecording && !isPaused}
               barWidth={3}
               barGap={2}
               barColor="currentColor"
@@ -114,14 +172,18 @@ export default function AudioInput({
             />
           </div>
 
-          {/* Stop Button */}
+          {/* Pause/Resume Button */}
           <Button
             size="icon"
-            variant="destructive"
+            variant="outline"
             className="h-8 w-8 shrink-0 rounded-full"
-            onClick={handleStop}
+            onClick={handlePause}
           >
-            <Square className="h-4 w-4 fill-current" />
+            {isPaused ? (
+              <Play className="h-4 w-4 fill-current" />
+            ) : (
+              <Pause className="h-4 w-4 fill-current" />
+            )}
           </Button>
         </div>
       )}

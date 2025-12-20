@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
@@ -17,11 +17,9 @@ export function AudioPlayer({
   const [error, setError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Generate waveform bars (simulated)
-  const waveformBars = Array.from({ length: 20 }, (_, i) => {
-    const height = Math.random() * 100;
-    return height;
-  });
+  const waveformBars = useMemo(() => {
+    return Array.from({ length: 20 }, () => Math.random() * 100);
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;

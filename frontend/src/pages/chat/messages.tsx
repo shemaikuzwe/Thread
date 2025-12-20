@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
 import { useCallback, useEffect } from "react";
+import { AudioPlayer } from "@/components/ui/audio";
 
 interface Props {
   chatId: string;
@@ -144,7 +145,11 @@ export default function Messages({
                           key={index}
                           className="max-w-100 max-h-70 relative"
                         >
-                          <FilePreview file={file} message={message} />
+                          {file.type.startsWith("audio/") ? (
+                            <AudioPlayer audioUrl={file.url} />
+                          ) : (
+                            <FilePreview file={file} message={message} />
+                          )}
                           {!existsMessageText && (
                             <Meta
                               isOwn={isOwn}

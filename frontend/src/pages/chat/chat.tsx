@@ -12,16 +12,7 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import {
-  ArrowUp,
-  Loader2Icon,
-  Mic,
-  MicOff,
-  Paperclip,
-  Pause,
-  Square,
-  StopCircleIcon,
-} from "lucide-react";
+import { ArrowUp, Loader2Icon, Mic, Paperclip, Square } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -64,7 +55,7 @@ export default function ChatPage() {
   const queryClient = useQueryClient();
   const messages = data?.messages;
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
 
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
@@ -153,18 +144,34 @@ export default function ChatPage() {
       payload?: MessageStatus
     ) => {
       if (!userId) throw new Error("message is required");
-      if (type === "MESSAGE" && !newMessage.trim() && !files.length) return;
+      if (
+        type === "MESSAGE" &&
+        !newMessage.trim() &&
+        !files.length &&
+        !audioFile
+      )
+        return;
       const message: Message = {
         thread_id: id,
         id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
-        files:
-          files.map((f) => ({
-            name: f.file.name,
-            size: f.file.size,
-            type: f.file.type,
-            url: f.dataUrl as string,
-          })) ?? [],
+        files: files.length
+          ? files.map((f) => ({
+              name: f.file.name,
+              size: f.file.size,
+              type: f.file.type,
+              url: f.dataUrl as string,
+            }))
+          : audioFile
+          ? [
+              {
+                name: audioFile.file.name,
+                size: audioFile.file.size,
+                type: audioFile.file.type,
+                url: audioFile.dataUrl as string,
+              },
+            ]
+          : [],
         message: type === "MESSAGE" ? newMessage : payload?.status ?? "",
         type: type,
         user_id: userId,
@@ -195,8 +202,11 @@ export default function ChatPage() {
         );
       }
 
-      if (files.length && type === "MESSAGE") {
-        const uploaded = await startUpload(files.map((f) => f.file));
+      if ((files.length || audioFile) && type === "MESSAGE") {
+        const toUpload = audioFile
+          ? [audioFile.file]
+          : files.map((f) => f.file);
+        const uploaded = await startUpload(toUpload);
         if (!uploaded?.length) {
           toast.error("Failed to upload files");
         }
@@ -221,6 +231,7 @@ export default function ChatPage() {
       }
     },
     [
+      audioFile,
       setOptimisticUnread,
       sendMessage,
       id,
@@ -334,7 +345,6 @@ export default function ChatPage() {
                   </div>
                 )}
                 <div className="flex items-center w-full h-full">
-                  
                   {!isRecording && (
                     <>
                       <Button
@@ -371,12 +381,12 @@ export default function ChatPage() {
                       />
                     </>
                   )}
-                  
+
                   <AudioInput
                     ref={audioButtonRef}
                     isRecording={isRecording}
                     setIsRecording={setIsRecording}
-                    setFiles={setFiles}
+                    setFile={setAudioFile}
                     onRecordDone={() => handleSendMessage("MESSAGE")}
                   />
                   {!newMessage.trim() && !files.length ? (
@@ -387,7 +397,7 @@ export default function ChatPage() {
                       }}
                     >
                       {isRecording ? (
-                        <Square className="h-10 w-10" />
+                        <ArrowUp className="h-10 w-10" />
                       ) : (
                         <Mic className="h-10 w-10" />
                       )}
