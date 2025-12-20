@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
-import { Waveform } from "../ui/waveform";
+import { useRef, useState, useEffect } from "react";
+import { LiveMicrophoneWaveform } from "../ui/waveform";
+import { Button } from "../ui/button";
+import { Square } from "lucide-react";
 import type { UploadFile } from "@/lib/types";
+
 interface Props {
   ref: React.RefObject<HTMLButtonElement | null>;
   setFiles: React.Dispatch<React.SetStateAction<UploadFile[]>>;
@@ -8,6 +11,7 @@ interface Props {
   isRecording: boolean;
   onRecordDone: () => Promise<void>;
 }
+
 export default function AudioInput({
   ref,
   setFiles,
@@ -16,7 +20,6 @@ export default function AudioInput({
   onRecordDone,
 }: Props) {
   const recorder = useRef<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -27,6 +30,7 @@ export default function AudioInput({
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
   const handleClick = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -35,11 +39,13 @@ export default function AudioInput({
 
       if (recorder.current) {
         recorder.current.ondataavailable = (e) => {
-          console.log("data", e.data.size);
           audioChunksRef.current.push(e.data);
         };
         recorder.current.onstop = () => {
-          const audioFile = new File(audioChunksRef.current, "audio.wav", {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: "audio/wav",
+          });
+          const audioFile = new File([audioBlob], "audio.wav", {
             type: "audio/wav",
           });
           setFiles([
@@ -67,21 +73,56 @@ export default function AudioInput({
       setIsRecording(false);
     }
   };
+
   const handleStop = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+    }
     if (recorder.current) {
       recorder.current.stop();
       recorder.current = null;
     }
   };
-  const data = Array.from({ length: 10 }, (_, i) => i);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <>
       {isRecording && (
-        <div className="flex w-full items-center justify-between">
-          <div className="w-100 justify-center items-center h-full  flex flex-col">
+        <div className="flex w-80 items-center justify-end gap-4 px-2 h-10 ml-auto">
+          {/* Timer */}
+          <div className="text-sm font-medium tabular-nums min-w-[40px] text-muted-foreground">
             {formatTime(recordingTime)}
-            <Waveform data={data} height={20} barWidth={4} barGap={2} />
           </div>
+
+          {/* Live Waveform */}
+          <div className="flex-1 h-full flex items-center overflow-hidden">
+            <LiveMicrophoneWaveform
+              active={isRecording}
+              barWidth={3}
+              barGap={2}
+              barColor="currentColor"
+              className="text-primary w-full h-8"
+              height={32}
+            />
+          </div>
+
+          {/* Stop Button */}
+          <Button
+            size="icon"
+            variant="destructive"
+            className="h-8 w-8 shrink-0 rounded-full"
+            onClick={handleStop}
+          >
+            <Square className="h-4 w-4 fill-current" />
+          </Button>
         </div>
       )}
       <button

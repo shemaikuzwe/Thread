@@ -12,7 +12,16 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Loader2Icon, Mic, Paperclip } from "lucide-react";
+import {
+  ArrowUp,
+  Loader2Icon,
+  Mic,
+  MicOff,
+  Paperclip,
+  Pause,
+  Square,
+  StopCircleIcon,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -21,7 +30,6 @@ import ScrollAnchor from "./scroll-anchor";
 import {
   useMessages,
   useOptimisticUnRead,
-  useUnReadMessages,
   type MessagesRes,
   type UnReadMessage,
 } from "@/hooks/use-messages";
@@ -142,7 +150,7 @@ export default function ChatPage() {
   const handleSendMessage = useCallback(
     async (
       type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
-      payload?: MessageStatus,
+      payload?: MessageStatus
     ) => {
       if (!userId) throw new Error("message is required");
       if (type === "MESSAGE" && !newMessage.trim() && !files.length) return;
@@ -157,7 +165,7 @@ export default function ChatPage() {
             type: f.file.type,
             url: f.dataUrl as string,
           })) ?? [],
-        message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
+        message: type === "MESSAGE" ? newMessage : payload?.status ?? "",
         type: type,
         user_id: userId,
         from: {
@@ -183,7 +191,7 @@ export default function ChatPage() {
               };
             }
             return { total: 1, messages: [{ ...message, status: "PENDING" }] };
-          },
+          }
         );
       }
 
@@ -222,7 +230,7 @@ export default function ChatPage() {
       queryClient,
       userId,
       startUpload,
-    ],
+    ]
   );
   useEffect(() => {
     if (isTyping) {
@@ -255,7 +263,7 @@ export default function ChatPage() {
           reader.onload = (event) => resolve(event.target?.result ?? null);
           reader.onerror = (error) => reject(error);
           reader.readAsDataURL(file);
-        },
+        }
       );
 
       if (fileUrl) newFiles.push({ dataUrl: fileUrl as string, file });
@@ -326,13 +334,7 @@ export default function ChatPage() {
                   </div>
                 )}
                 <div className="flex items-center w-full h-full">
-                  <AudioInput
-                    ref={audioButtonRef}
-                    isRecording={isRecording}
-                    setIsRecording={setIsRecording}
-                    setFiles={setFiles}
-                    onRecordDone={() => handleSendMessage("MESSAGE")}
-                  />
+                  
                   {!isRecording && (
                     <>
                       <Button
@@ -369,6 +371,14 @@ export default function ChatPage() {
                       />
                     </>
                   )}
+                  
+                  <AudioInput
+                    ref={audioButtonRef}
+                    isRecording={isRecording}
+                    setIsRecording={setIsRecording}
+                    setFiles={setFiles}
+                    onRecordDone={() => handleSendMessage("MESSAGE")}
+                  />
                   {!newMessage.trim() && !files.length ? (
                     <Button
                       variant={"secondary"}
@@ -376,7 +386,11 @@ export default function ChatPage() {
                         audioButtonRef.current?.click();
                       }}
                     >
-                      <Mic className="h-10 w-10" />
+                      {isRecording ? (
+                        <Square className="h-10 w-10" />
+                      ) : (
+                        <Mic className="h-10 w-10" />
+                      )}
                     </Button>
                   ) : (
                     <Button

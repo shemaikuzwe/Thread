@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import ChatAvatar from "../ui/user-avatar";
 import { formatDate } from "date-fns";
 import PDF from "../ui/pdf";
+import { AudioPlayer } from "../ui/audio";
 
 interface Props {
   file: MessageFile;
@@ -57,7 +58,7 @@ export function FilePreview({
       );
     }
     if (file.type.startsWith("audio/")) {
-      return <audio src={file.url} />;
+      return <AudioPlayer audioUrl={file.url} />;
     }
     if (file.type.startsWith("application/pdf")) {
       return (
