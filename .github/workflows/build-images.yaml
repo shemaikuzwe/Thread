@@ -11,8 +11,45 @@ permissions:
   contents: read
 
 jobs:
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build Backend
+        run: |
+          cd backend
+          go mod download
+          go build -v ./...
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          pnpm install --frozen-lockfile
+          pnpm run build
+
   build-and-push-images:
     name: Build and Push Images
+    needs: build-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

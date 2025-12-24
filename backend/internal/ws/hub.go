@@ -54,6 +54,7 @@ func (h *Hub) Run() {
 		case conn := <-h.register:
 			userID := conn.userID
 			connID := conn.connID
+			//Add redis
 			if h.clients[userID] == nil {
 				h.clients[userID] = make(map[string]*ClientConn)
 				go h.incrementChannel(userID)
@@ -108,11 +109,20 @@ func (h *Hub) incrementChannel(userId string) {
 
 	for _, thread := range userThreads {
 		ThreadID := thread.String()
-		info := h.channels[ThreadID]
+		key := "online:" + ThreadID
+		// TODO:separate online and users separate redis keys
+		info, _, err := redis.Get[activeInfo](key)
+		if err != nil {
+			log.Println("failed to get online info", err)
+			continue
+		}
+		// if !exists {
+		// 	info = activeInfo{Online: 0, Users: []string{userId}}
+		// }
 		info.Online++
-		info.users = append(info.users, userId)
-		h.channels[ThreadID] = info
-		activeInfo := activeInfo{Online: info.Online, Users: info.users}
+		info.Users = append(info.Users, userId)
+		err = redis.Set(key, info, 0)
+		activeInfo := activeInfo{Online: info.Online, Users: info.Users}
 		msg := Message{
 			Message:  activeInfo,
 			Type:     "USER_CONNECTED",
@@ -140,18 +150,29 @@ func (h *Hub) decrementChannel(userId string) {
 	}
 	for _, thread := range userThreads {
 		threadID := thread.String()
-		info := h.channels[threadID]
+		key := "online:" + threadID
+		info, _, err := redis.Get[activeInfo](key)
+		if err != nil {
+			log.Println("failed to get active info", err)
+			continue
+		}
+
 		info.Online--
 
 		// Find and remove the user from the slice
-		for i, u := range info.users {
+		for i, u := range info.Users {
 			if u == userId {
-				info.users = append(info.users[:i], info.users[i+1:]...)
+				info.Users = append(info.Users[:i], info.Users[i+1:]...)
 				break
 			}
 		}
-		h.channels[threadID] = info
-		activeInfo := activeInfo{Online: info.Online, Users: info.users}
+		err = redis.Set(key, info, 0)
+		if err != nil {
+			log.Println("failed to set active info", err)
+			continue
+		}
+
+		activeInfo := activeInfo{Online: info.Online, Users: info.Users}
 		msg := Message{
 			Message:  activeInfo,
 			Type:     "USER_DISCONNECTED",
