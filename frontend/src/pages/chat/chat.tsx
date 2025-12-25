@@ -210,7 +210,7 @@ export default function ChatPage() {
         queryClient.setQueryData(
           ["chat", message.thread_id],
           (oldMsg: MessagesRes): MessagesRes => {
-            if (oldMsg && oldMsg.messages.length) {
+            if (oldMsg && oldMsg.messages && oldMsg.messages.length) {
               return {
                 total: oldMsg.total + 1,
                 messages: [

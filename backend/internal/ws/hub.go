@@ -116,11 +116,12 @@ func (h *Hub) incrementChannel(userId string) {
 			log.Println("failed to get online info", err)
 			continue
 		}
-		// if !exists {
-		// 	info = activeInfo{Online: 0, Users: []string{userId}}
-		// }
-		info.Online++
-		info.Users = append(info.Users, userId)
+
+		if !slices.Contains(info.Users, userId) {
+			info.Users = append(info.Users, userId)
+		}
+		info.Online = len(info.Users)
+
 		err = redis.Set(key, info, 0)
 		activeInfo := activeInfo{Online: info.Online, Users: info.Users}
 		msg := Message{
@@ -157,15 +158,11 @@ func (h *Hub) decrementChannel(userId string) {
 			continue
 		}
 
-		info.Online--
+		info.Users = slices.DeleteFunc(info.Users, func(u string) bool {
+			return u == userId
+		})
+		info.Online = len(info.Users)
 
-		// Find and remove the user from the slice
-		for i, u := range info.Users {
-			if u == userId {
-				info.Users = append(info.Users[:i], info.Users[i+1:]...)
-				break
-			}
-		}
 		err = redis.Set(key, info, 0)
 		if err != nil {
 			log.Println("failed to set active info", err)

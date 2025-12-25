@@ -70,10 +70,11 @@ SELECT
     WHERE
       m.thread_id = l.thread_id
       AND m.user_id != $1
-     AND m.created_at > l.updated_at
+     AND m.created_at > lm.created_at
 
   ) AS unread_count
 FROM last_read l
+JOIN messages lm ON l.last_read_message_id = lm.id
 WHERE l.user_id = $1;
 
 -- name: GetClientThreads :many
