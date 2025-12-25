@@ -3,7 +3,7 @@ import type { ChatWithUsers, Message } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
 import { useWebSocket } from "./ws/websocket";
-import type { MessagesRes, UnReadMessage } from "./use-messages";
+import { type MessagesRes, type UnReadMessage } from "./use-messages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 

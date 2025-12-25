@@ -211,7 +211,6 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	log.Println("type: ", msg.Type, "message: ", msg.Message)
 	if msg.Type == UPDATE_LAST_READ && msg.UserID != client {
 		return false, nil
 	}

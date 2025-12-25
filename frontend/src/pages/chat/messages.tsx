@@ -4,7 +4,7 @@ import EmptyChat from "@/components/chat/empty-messages.tsx";
 import { Meta } from "./message-meta";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";
-import { useOptimisticUnRead, type UnReadMessage } from "@/hooks/use-messages";
+import { type UnReadMessage } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { useInView } from "react-intersection-observer";
@@ -19,6 +19,8 @@ interface Props {
   messages: Message[] | undefined;
   userId: string | undefined;
   chatType?: "dm" | "group";
+  optimisticUnread: UnReadMessage | null;
+  setOptimisticUnread: (val: UnReadMessage | null) => void;
 }
 
 export default function Messages({
@@ -29,6 +31,8 @@ export default function Messages({
   ref,
   chatType,
   messagesRef,
+  optimisticUnread,
+  setOptimisticUnread,
 }: Props) {
   const getLastMessage = useCallback(() => {
     if (!userId) return;
@@ -53,8 +57,7 @@ export default function Messages({
   });
 
   const queryClient = useQueryClient();
-  // const { data: unReadMessages } = useUnReadMessages(chatId);
-  const { optimisticUnread, setOptimisticUnread } = useOptimisticUnRead(chatId);
+  // const { optimisticUnread, setOptimisticUnread } = useOptimisticUnRead(chatId);
 
   useEffect(() => {
     if (inView) {
@@ -77,7 +80,7 @@ export default function Messages({
               return { last_read: lastMessage, unread_count: 0 };
             }
             return oldData;
-          },
+          }
         );
       }
     };
@@ -125,7 +128,7 @@ export default function Messages({
                 id={message.id}
                 className={cn(
                   "flex gap-2 p-1.5 w-full",
-                  isOwn ? "justify-end" : "justify-start",
+                  isOwn ? "justify-end" : "justify-start"
                 )}
               >
                 <div className="w-8 h-8 flex-shrink-0">
@@ -166,7 +169,7 @@ export default function Messages({
                     <div
                       className={cn(
                         "rounded-md pl-2 pr-1 py-1 min-w-30 rounded-br-md",
-                        isOwn ? "bg-primary text-white" : "bg-secondary",
+                        isOwn ? "bg-primary text-white" : "bg-secondary"
                       )}
                     >
                       <p className="text-sm leading-relaxed">

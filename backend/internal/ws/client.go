@@ -155,7 +155,8 @@ func ServeWs(hub *Hub, ctx *gin.Context) {
 	if clients[user.Id] == nil {
 		clients[user.Id] = make(map[string]*ClientConn)
 	}
-
+	// key := "user:" + user.Id
+	// err :=redis.LSet[*&websocket.Conn](key,conn)
 	client := &ClientConn{
 		hub:    hub,
 		conn:   conn,

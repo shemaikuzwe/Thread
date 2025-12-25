@@ -12,7 +12,7 @@ import { useParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header.tsx";
-import { ArrowUp, Loader2Icon, Mic, Paperclip, Square } from "lucide-react";
+import { ArrowUp, Loader2Icon, Mic, Paperclip } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
@@ -50,7 +50,8 @@ export default function ChatPage() {
   const { data, isLoading } = useMessages(id, limit);
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const audioButtonRef = useRef<HTMLButtonElement>(null);
-  const { setOptimisticUnread } = useOptimisticUnRead(id);
+  const { setOptimisticUnread, optimisticUnread } = useOptimisticUnRead(id);
+  const lastMessageRef = useRef<string | null>(null);
   const [scroll, setScroll] = useState(false);
   const queryClient = useQueryClient();
   const messages = data?.messages;
@@ -69,6 +70,27 @@ export default function ChatPage() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    lastMessageRef.current = null;
+  }, [id]);
+
+  useEffect(() => {
+    const lastMsg = messages?.[messages.length - 1];
+    const lastMsgId = lastMsg?.id;
+
+    if (
+      lastMessageRef.current &&
+      lastMsgId &&
+      lastMsgId !== lastMessageRef.current
+    ) {
+      setOptimisticUnread(null);
+    }
+
+    if (lastMsgId) {
+      lastMessageRef.current = lastMsgId;
+    }
+  }, [messages, setOptimisticUnread]);
 
   useEffect(() => {
     if (chat && userId) {
@@ -318,6 +340,8 @@ export default function ChatPage() {
                   messages={messages}
                   chatType={chat?.type}
                   userId={userId}
+                  optimisticUnread={optimisticUnread}
+                  setOptimisticUnread={setOptimisticUnread}
                 />
               </>
             )}
