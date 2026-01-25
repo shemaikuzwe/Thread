@@ -37,6 +37,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "geist": "^1.5.1",
     "isbot": "^5",
     "lucide-react": "^0.544.0",
     "media-chrome": "^4.15.1",

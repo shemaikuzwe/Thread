@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { ChatWithUsers, Message } from "@/lib/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "@/components/providers/session-provider";
 import { useWebSocket } from "./ws/websocket";
 import { type MessagesRes, type UnReadMessage } from "./use-messages";
@@ -21,7 +21,10 @@ export function useWebsocket() {
 
   useEffect(() => {
     if (!message) return;
-    if (message.type === "USER_CONNECTED" || message.type === "USER_DISCONNECTED") {
+    if (
+      message.type === "USER_CONNECTED" ||
+      message.type === "USER_DISCONNECTED"
+    ) {
       queryClient.setQueryData(["online", message.thread_id], {
         online: Number(message.message.online),
         users: message.message.users,
@@ -31,18 +34,43 @@ export function useWebsocket() {
     if (message.type === "MESSAGE") {
       queryClient.setQueryData(
         ["chat", message.thread_id],
-        (oldMsg: MessagesRes | undefined): MessagesRes => {
-          const exists =
-            oldMsg && oldMsg.messages.length && oldMsg.messages.some((m) => m.id === message.id);
+        (
+          oldData: InfiniteData<MessagesRes> | undefined,
+        ): InfiniteData<MessagesRes> | undefined => {
+          if (!oldData) return undefined;
+
+          const exists = oldData.pages.some((page) =>
+            page.messages.some((m) => m.id === message.id),
+          );
+
           if (exists) {
             return {
-              total: oldMsg.total,
-              messages: oldMsg.messages.map((m) =>
-                m.id === message.id ? { ...m, status: "SENT" } : m,
-              ),
+              ...oldData,
+              pages: oldData.pages.map((page) => ({
+                ...page,
+                messages: page.messages.map((m) =>
+                  m.id === message.id ? { ...m, status: "SENT" } : m,
+                ),
+              })),
             };
           }
-          return { total: 1, messages: [...(oldMsg?.messages ?? []), message] };
+
+          const newPages = [...oldData.pages];
+          if (newPages.length > 0) {
+            const lastPageIndex = newPages.length - 1;
+            const lastPage = newPages[lastPageIndex];
+
+            newPages[lastPageIndex] = {
+              ...lastPage,
+              messages: [...lastPage.messages, message],
+              total: (lastPage.total || 0) + 1,
+            };
+          }
+
+          return {
+            ...oldData,
+            pages: newPages,
+          };
         },
       );
       //Update last message in thread

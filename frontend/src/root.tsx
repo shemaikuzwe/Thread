@@ -33,11 +33,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
-          rel="stylesheet"
-        />
         <link rel="favicon" href="/favicon.ico" />
         <title>Thread</title>
         <Links />
