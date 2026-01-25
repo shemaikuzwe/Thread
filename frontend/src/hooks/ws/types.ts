@@ -26,8 +26,7 @@ export interface Options {
   disableJson?: boolean;
 }
 
-export type EventSourceOnly = Omit<Options, "eventSourceOptions"> &
-  EventSourceInit;
+export type EventSourceOnly = Omit<Options, "eventSourceOptions"> & EventSourceInit;
 
 export type HeartbeatOptions = {
   message?: "ping" | "pong" | string | (() => string);
@@ -48,18 +47,10 @@ export type ReadyStateState = {
   [url: string]: ReadyState;
 };
 
-export type WebSocketMessage =
-  | string
-  | ArrayBuffer
-  | SharedArrayBuffer
-  | Blob
-  | ArrayBufferView;
+export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
-export type SendJsonMessage = <T = unknown>(
-  jsonMessage: T,
-  keep?: boolean,
-) => void;
+export type SendJsonMessage = <T = unknown>(jsonMessage: T, keep?: boolean) => void;
 
 export type Subscriber<T = WebSocketEventMap["message"]> = {
   setLastMessage: (message: T) => void;
@@ -70,10 +61,7 @@ export type Subscriber<T = WebSocketEventMap["message"]> = {
   reconnect: MutableRefObject<() => void>;
 };
 
-export type WebSocketHook<
-  T = unknown,
-  P = WebSocketEventMap["message"] | null,
-> = {
+export type WebSocketHook<T = unknown, P = WebSocketEventMap["message"] | null> = {
   sendMessage: SendMessage;
   sendJsonMessage: SendJsonMessage;
   lastMessage: P;
@@ -84,11 +72,7 @@ export type WebSocketHook<
 
 export type EventSourceHook = Omit<
   WebSocketHook<EventSourceEventMap["message"]>,
-  | "sendMessage"
-  | "sendJsonMessage"
-  | "lastMessage"
-  | "lastJsonMessage"
-  | "getWebSocket"
+  "sendMessage" | "sendJsonMessage" | "lastMessage" | "lastJsonMessage" | "getWebSocket"
 > & {
   lastEvent: EventSourceEventMap["message"] | null;
   getEventSource: () => WebSocketLike | null;

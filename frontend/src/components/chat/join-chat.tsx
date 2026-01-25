@@ -30,9 +30,7 @@ export default function JoinChat({
             </Avatar>
           </EmptyMedia>
           <EmptyTitle>Join Channel</EmptyTitle>
-          <EmptyDescription>
-            Join this channel to start chatting.
-          </EmptyDescription>
+          <EmptyDescription>Join this channel to start chatting.</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <JoinButton id={chat.id} setJoin={setJoin} />

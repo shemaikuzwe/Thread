@@ -4,11 +4,7 @@ type IfEquals<X, Y, A = X, B = never> =
   (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B;
 
 type WritableKeys<T> = {
-  [P in keyof T]-?: IfEquals<
-    { [Q in P]: T[P] },
-    { -readonly [Q in P]: T[P] },
-    P
-  >;
+  [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P>;
 }[keyof T];
 
 export const websocketWrapper = (
@@ -30,11 +26,7 @@ export const websocketWrapper = (
         return val;
       }
     },
-    set: <T extends WritableKeys<WebSocket>>(
-      obj: WebSocket,
-      key: T,
-      val: WebSocket[T],
-    ) => {
+    set: <T extends WritableKeys<WebSocket>>(obj: WebSocket, key: T, val: WebSocket[T]) => {
       if (/^on/.test(key)) {
         console.warn(
           "The websocket's event handlers should be defined through the options object passed into useWebSocket.",

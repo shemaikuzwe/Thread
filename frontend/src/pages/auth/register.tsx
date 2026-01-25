@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
@@ -62,16 +56,11 @@ export default function RegisterPage() {
 
             <div className="flex items-center gap-4 my-6">
               <Separator className="flex-1" />
-              <span className="text-sm text-muted-foreground font-medium">
-                Or
-              </span>
+              <span className="text-sm text-muted-foreground font-medium">Or</span>
               <Separator className="flex-1" />
             </div>
             <Form {...form}>
-              <form
-                className="space-y-4"
-                onSubmit={form.handleSubmit((data) => mutate(data))}
-              >
+              <form className="space-y-4" onSubmit={form.handleSubmit((data) => mutate(data))}>
                 <FormField
                   control={form.control}
                   name="email"
@@ -79,11 +68,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="Enter your email"
-                          {...field}
-                        />
+                        <Input type="email" placeholder="Enter your email" {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -97,10 +82,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>FirstName</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your First Name"
-                          />
+                          <Input {...field} placeholder="Enter your First Name" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -112,10 +94,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>LastName</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your Last Name"
-                          />
+                          <Input {...field} placeholder="Enter your Last Name" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -130,11 +109,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Enter your Password"
-                          />
+                          <Input {...field} type="password" placeholder="Enter your Password" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -146,11 +121,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>ConfirmPassword</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Confirm password"
-                          />
+                          <Input {...field} type="password" placeholder="Confirm password" />
                         </FormControl>
                       </FormItem>
                     )}

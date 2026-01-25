@@ -25,9 +25,7 @@ export const useWebSocket = <T = unknown>(
   options: Options = DEFAULT_OPTIONS,
   connect: boolean = true,
 ): WebSocketHook<T> => {
-  const [lastMessage, setLastMessage] = useState<
-    WebSocketEventMap["message"] | null
-  >(null);
+  const [lastMessage, setLastMessage] = useState<WebSocketEventMap["message"] | null>(null);
   const [readyState, setReadyState] = useState<ReadyStateState>({});
   const lastJsonMessage: T = useMemo(() => {
     if (!options.disableJson && lastMessage) {
@@ -56,9 +54,7 @@ export const useWebSocket = <T = unknown>(
         ? ReadyState.CONNECTING
         : ReadyState.UNINSTANTIATED;
 
-  const stringifiedQueryParams = options.queryParams
-    ? JSON.stringify(options.queryParams)
-    : null;
+  const stringifiedQueryParams = options.queryParams ? JSON.stringify(options.queryParams) : null;
 
   const sendMessage: SendMessage = useCallback((message, keep = true) => {
     if (isEventSourceSupported && webSocketRef.current instanceof EventSource) {
@@ -107,9 +103,7 @@ export const useWebSocket = <T = unknown>(
         convertedUrl.current = await getUrl(url, optionsCache);
 
         if (convertedUrl.current === null) {
-          console.error(
-            "Failed to get a valid URL. WebSocket connection aborted.",
-          );
+          console.error("Failed to get a valid URL. WebSocket connection aborted.");
           convertedUrl.current = "ABORTED";
           flushSync(() =>
             setReadyState((prev) => ({
@@ -121,9 +115,7 @@ export const useWebSocket = <T = unknown>(
           return;
         }
 
-        const protectedSetLastMessage = (
-          message: WebSocketEventMap["message"],
-        ) => {
+        const protectedSetLastMessage = (message: WebSocketEventMap["message"]) => {
           if (!expectClose) {
             flushSync(() => setLastMessage(message));
           }

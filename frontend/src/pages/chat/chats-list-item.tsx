@@ -2,14 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { useChatMeta } from "@/hooks";
-import {
-  useMessageStatus,
-  useUnReadMessages,
-  type UnReadMessage,
-} from "@/hooks/use-messages";
+import { useMessageStatus, useUnReadMessages, type UnReadMessage } from "@/hooks/use-messages";
 import type { ChatWithUsers } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { useLocation, useNavigate } from "react-router";
 
 export default function ChatListItem({
@@ -25,8 +21,7 @@ export default function ChatListItem({
   const { name } = useChatMeta(chat);
   const { data: un_read } = useUnReadMessages(chat.id, {
     last_read: unReadMesssage?.last_read ?? null,
-    unread_count:
-      (unReadMesssage?.unread_count && unReadMesssage.unread_count) ?? 0,
+    unread_count: (unReadMesssage?.unread_count && unReadMesssage.unread_count) ?? 0,
   });
   const isActive = !!pathname.includes(chat.id);
   return (
@@ -51,14 +46,16 @@ export default function ChatListItem({
             )}
           </div>
           {msgStatus?.status === "TYPING" ? (
-            <span className="text-sm text-primary font-semibold">
-              typing...
-            </span>
+            <span className="text-sm text-primary font-semibold">typing...</span>
           ) : (
             chat.last_message && (
               <div className="flex justify-between w-full text-muted-foreground/90 text-sm">
                 <span>{chat.last_message.message}</span>
-                <span>{format(chat.last_message.created_at, "HH:mm")}</span>
+                <span>
+                  {chat.last_message.created_at && isValid(new Date(chat.last_message.created_at))
+                    ? format(new Date(chat.last_message.created_at), "HH:mm")
+                    : ""}
+                </span>
               </div>
             )
           )}

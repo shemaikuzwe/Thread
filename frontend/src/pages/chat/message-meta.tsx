@@ -1,6 +1,6 @@
 import type { Status } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import { CheckCheckIcon, ClockIcon, InfoIcon } from "lucide-react";
 
 interface Props {
@@ -22,9 +22,11 @@ export function Meta({ time, className, status = "SENT", isOwn }: Props) {
         return <CheckCheckIcon className="h-4 w-4 text-xs" />;
     }
   };
+  const date = new Date(time);
+  const isValidDate = isValid(date);
   return (
     <div className={cn("flex gap-1 justify-end", className)}>
-      <span className="text-xs">{formatDate(time, "HH:mm")}</span>
+      <span className="text-xs">{isValidDate ? formatDate(date, "HH:mm") : ""}</span>
       {isOwn && <span>{getMessageStatus(status)}</span>}
     </div>
   );

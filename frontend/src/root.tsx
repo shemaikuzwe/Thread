@@ -16,14 +16,26 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
 
+// export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+//   console.log(error);
+//   return (
+//     <>
+//       <h4>Oops</h4>
+//       <p>Something went wrong</p>
+//       <button onClick={() => window.location.reload()}>Try Again</button>
+//     </>
+//   );
+// }
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
           rel="stylesheet"
         />
         <link rel="favicon" href="/favicon.ico" />

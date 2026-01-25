@@ -81,12 +81,7 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
           {isLoading && <ChatListSkelton />}
           {data && data.length > 0
             ? data.map((d) => (
-                <SearchItem
-                  key={d.id}
-                  item={d}
-                  setSearch={setSearch}
-                  setOpen={setOpen}
-                />
+                <SearchItem key={d.id} item={d} setSearch={setSearch} setOpen={setOpen} />
               ))
             : !isOpen && (
                 <div className="flex flex-col gap-2 w-full">

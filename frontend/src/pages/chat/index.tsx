@@ -20,9 +20,7 @@ export default function Index() {
             <MessageCircleIcon />
           </EmptyMedia>
           <EmptyTitle>Open your chats</EmptyTitle>
-          <EmptyDescription>
-            Open chats to start a conversation.
-          </EmptyDescription>
+          <EmptyDescription>Open chats to start a conversation.</EmptyDescription>
         </EmptyHeader>
         <NewChat>
           <Button variant="outline" size="sm">

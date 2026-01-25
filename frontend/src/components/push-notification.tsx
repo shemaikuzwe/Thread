@@ -6,13 +6,8 @@ import { useState } from "react";
 import { api } from "@/lib/axios";
 
 export function PushNotificationManager() {
-  const {
-    isSupported,
-    subscription,
-    subscribeToPush,
-    unsubscribeFromPush,
-    loading,
-  } = useSubscriptions();
+  const { isSupported, subscription, subscribeToPush, unsubscribeFromPush, loading } =
+    useSubscriptions();
   const [message, setMessage] = useState("");
   async function sendTestNotification() {
     if (subscription) {
@@ -43,11 +38,7 @@ export function PushNotificationManager() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Switch
-        id="pushNotifications"
-        checked={isSubscribed}
-        onCheckedChange={handleToggle}
-      />
+      <Switch id="pushNotifications" checked={isSubscribed} onCheckedChange={handleToggle} />
 
       {isSubscribed && (
         <div className="flex flex-col gap-2">

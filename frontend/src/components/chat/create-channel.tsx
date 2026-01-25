@@ -34,9 +34,11 @@ export const CreateChannelDialog = ({
     // Validate channel name format
     const channelNameRegex = /^[a-z0-9\-_]+$/;
     const cleanName = name.trim().toLowerCase().replace(/\s+/g, "-");
-    
+
     if (!channelNameRegex.test(cleanName)) {
-      setError("Channel names can only contain lowercase letters, numbers, hyphens, and underscores");
+      setError(
+        "Channel names can only contain lowercase letters, numbers, hyphens, and underscores",
+      );
       return;
     }
 
@@ -70,7 +72,7 @@ export const CreateChannelDialog = ({
         <DialogHeader>
           <DialogTitle>Create a channel</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
@@ -93,12 +95,10 @@ export const CreateChannelDialog = ({
                 Channel name will be: <span className="font-mono">#{previewName}</span>
               </p>
             )}
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
             Cancel

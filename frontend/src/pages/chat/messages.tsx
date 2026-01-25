@@ -6,14 +6,19 @@ import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";
 import { type UnReadMessage } from "@/hooks/use-messages";
 import { useQueryClient } from "@tanstack/react-query";
-import { format, isToday, isYesterday, isThisWeek } from "date-fns";
-import { useInView } from "react-intersection-observer";
+import { format, isToday, isYesterday, isThisWeek, isValid } from "date-fns";
 import { useCallback, useEffect } from "react";
 import { AudioPlayer } from "@/components/ui/audio";
 
+const safeFormat = (date: Date | string | number | undefined, formatStr: string) => {
+  if (!date) return "";
+  const d = new Date(date);
+  if (!isValid(d)) return "";
+  return format(d, formatStr);
+};
+
 interface Props {
   chatId: string;
-  handleOnMarkAsRead: () => void;
   ref: React.RefObject<HTMLDivElement | null>;
   messagesRef: React.RefObject<Message[] | undefined>;
   messages: Message[] | undefined;
@@ -25,7 +30,6 @@ interface Props {
 
 export default function Messages({
   chatId,
-  handleOnMarkAsRead,
   messages,
   userId,
   ref,
@@ -36,41 +40,28 @@ export default function Messages({
 }: Props) {
   const getLastMessage = useCallback(() => {
     if (!userId) return;
-    const messages = messagesRef.current;
+    const currentMsgs = messagesRef.current;
     let lastMessageId: string | undefined;
-    if (!messages || messages.length === 0) {
+    if (!currentMsgs || currentMsgs.length === 0) {
       return;
     }
-    for (let i = messages.length - 1; i > 0; i--) {
-      if (messages[i].user_id !== userId) {
-        lastMessageId = messages[i].id;
-        // console.log("last", messages[i].message);
+    for (let i = currentMsgs.length - 1; i >= 0; i--) {
+      const msg = currentMsgs[i];
+      if (msg && msg.user_id !== userId) {
+        lastMessageId = msg.id;
         break;
       }
     }
     return lastMessageId;
   }, [userId, messagesRef]);
 
-  const { ref: bottomRef, inView } = useInView({
-    threshold: 0,
-    rootMargin: "0px 0px 0px 0px",
-  });
-
   const queryClient = useQueryClient();
-  // const { optimisticUnread, setOptimisticUnread } = useOptimisticUnRead(chatId);
-
-  useEffect(() => {
-    if (inView) {
-      console.log("inview");
-      handleOnMarkAsRead();
-    }
-  }, [inView, handleOnMarkAsRead]);
 
   useEffect(() => {
     return () => {
       setOptimisticUnread(null);
-      const currentMessages = messagesRef.current;
-      if (currentMessages && currentMessages.length > 0) {
+      const currentMsgs = messagesRef.current;
+      if (currentMsgs && currentMsgs.length > 0) {
         const lastMessage = getLastMessage();
         if (!lastMessage) return;
         queryClient.setQueryData(
@@ -80,7 +71,7 @@ export default function Messages({
               return { last_read: lastMessage, unread_count: 0 };
             }
             return oldData;
-          }
+          },
         );
       }
     };
@@ -90,16 +81,26 @@ export default function Messages({
     <div className="pb-4">
       <div ref={ref}>
         {messages.map((message, idx) => {
-          const currentDate = format(message.created_at, "yyyy-MM-dd");
+          if (!message) return null;
+          const createdAt = new Date(message.created_at);
+          const isDateValid = isValid(createdAt);
+          const currentDate = isDateValid ? format(createdAt, "yyyy-MM-dd") : "";
           const showDate =
             idx === 0 ||
-            format(messages[idx - 1].created_at, "yyyy-MM-dd") !== currentDate;
+            (isDateValid &&
+              safeFormat(messages[idx - 1]?.created_at, "yyyy-MM-dd") !== currentDate);
           let dateText = "";
-          if (isToday(message.created_at)) dateText = "Today";
-          else if (isYesterday(message.created_at)) dateText = "Yesterday";
-          else if (isThisWeek(message.created_at))
-            dateText = format(message.created_at, "EEEE");
-          else dateText = format(message.created_at, "MMMM d, yyyy");
+          if (!isDateValid) {
+            dateText = "";
+          } else if (isToday(createdAt)) {
+            dateText = "Today";
+          } else if (isYesterday(createdAt)) {
+            dateText = "Yesterday";
+          } else if (isThisWeek(createdAt)) {
+            dateText = format(createdAt, "EEEE");
+          } else {
+            dateText = format(createdAt, "MMMM d, yyyy");
+          }
           const isOwn = message.user_id === userId;
           const existsMessageText = message.message.trim() !== "";
 
@@ -126,10 +127,7 @@ export default function Messages({
                 )}
               <div
                 id={message.id}
-                className={cn(
-                  "flex gap-2 p-1.5 w-full",
-                  isOwn ? "justify-end" : "justify-start"
-                )}
+                className={cn("flex gap-2 p-1.5 w-full", isOwn ? "justify-end" : "justify-start")}
               >
                 <div className="w-8 h-8 flex-shrink-0">
                   <ChatAvatar
@@ -144,10 +142,7 @@ export default function Messages({
                   {message.files.length > 0 && (
                     <div className="mb-2">
                       {message.files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="max-w-100 max-h-70 relative"
-                        >
+                        <div key={index} className="max-w-100 max-h-70 relative">
                           {file.type.startsWith("audio/") ? (
                             <AudioPlayer audioUrl={file.url} />
                           ) : (
@@ -158,7 +153,7 @@ export default function Messages({
                               isOwn={isOwn}
                               status={message?.status}
                               className="absolute bottom-3 right-2 text-white bg-black/50 rounded-md px-1"
-                              time={message.created_at}
+                              time={new Date(message.created_at)}
                             />
                           )}
                         </div>
@@ -169,16 +164,14 @@ export default function Messages({
                     <div
                       className={cn(
                         "rounded-md pl-2 pr-1 py-1 min-w-30 rounded-br-md",
-                        isOwn ? "bg-primary text-white" : "bg-secondary"
+                        isOwn ? "bg-primary text-white" : "bg-secondary",
                       )}
                     >
-                      <p className="text-sm leading-relaxed">
-                        {message.message}
-                      </p>
+                      <p className="text-sm leading-relaxed">{message.message}</p>
                       <Meta
                         isOwn={isOwn}
                         status={message?.status}
-                        time={message.created_at}
+                        time={new Date(message.created_at)}
                       />
                     </div>
                   )}
@@ -187,7 +180,6 @@ export default function Messages({
             </div>
           );
         })}
-        <div ref={bottomRef} className="h-[1px]"></div>
       </div>
     </div>
   ) : (

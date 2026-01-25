@@ -21,10 +21,7 @@ export function useWebsocket() {
 
   useEffect(() => {
     if (!message) return;
-    if (
-      message.type === "USER_CONNECTED" ||
-      message.type === "USER_DISCONNECTED"
-    ) {
+    if (message.type === "USER_CONNECTED" || message.type === "USER_DISCONNECTED") {
       queryClient.setQueryData(["online", message.thread_id], {
         online: Number(message.message.online),
         users: message.message.users,
@@ -36,9 +33,7 @@ export function useWebsocket() {
         ["chat", message.thread_id],
         (oldMsg: MessagesRes | undefined): MessagesRes => {
           const exists =
-            oldMsg &&
-            oldMsg.messages.length &&
-            oldMsg.messages.some((m) => m.id === message.id);
+            oldMsg && oldMsg.messages.length && oldMsg.messages.some((m) => m.id === message.id);
           if (exists) {
             return {
               total: oldMsg.total,

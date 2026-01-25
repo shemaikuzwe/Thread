@@ -84,9 +84,7 @@ export default function ChatsList() {
               <ChatListSkelton />
             ) : sortedChats && sortedChats?.length > 0 ? (
               sortedChats.map((chat) => {
-                const unReadChat = unReadChats?.find(
-                  (c) => c.thread_id === chat.id,
-                );
+                const unReadChat = unReadChats?.find((c) => c.thread_id === chat.id);
                 return (
                   <ChatListItem
                     key={chat.id}
@@ -94,9 +92,7 @@ export default function ChatsList() {
                     unReadMesssage={{
                       last_read: unReadChat?.last_read ?? null,
                       unread_count:
-                        (unReadChat?.unread_count &&
-                          Number(unReadChat.unread_count)) ||
-                        0,
+                        (unReadChat?.unread_count && Number(unReadChat.unread_count)) || 0,
                     }}
                   />
                 );

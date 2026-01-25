@@ -1,8 +1,4 @@
-import {
-  SOCKET_IO_PING_INTERVAL,
-  SOCKET_IO_PATH,
-  SOCKET_IO_PING_CODE,
-} from "./constants";
+import { SOCKET_IO_PING_INTERVAL, SOCKET_IO_PATH, SOCKET_IO_PING_CODE } from "./constants";
 import type { QueryParams, SendMessage } from "./types";
 
 export const parseSocketIOUrl = (url: string) => {
@@ -24,10 +20,7 @@ export const parseSocketIOUrl = (url: string) => {
   return url;
 };
 
-export const appendQueryParams = (
-  url: string,
-  params: QueryParams = {},
-): string => {
+export const appendQueryParams = (url: string, params: QueryParams = {}): string => {
   const hasParamsRegex = /\?([\w]+=[\w]+)/;
   const alreadyHasParams = hasParamsRegex.test(url);
 
@@ -40,10 +33,7 @@ export const appendQueryParams = (
   return `${url}${alreadyHasParams ? "&" : "?"}${stringified}`;
 };
 
-export const setUpSocketIOPing = (
-  sendMessage: SendMessage,
-  interval = SOCKET_IO_PING_INTERVAL,
-) => {
+export const setUpSocketIOPing = (sendMessage: SendMessage, interval = SOCKET_IO_PING_INTERVAL) => {
   const ping = () => sendMessage(SOCKET_IO_PING_CODE);
 
   return window.setInterval(ping, interval);

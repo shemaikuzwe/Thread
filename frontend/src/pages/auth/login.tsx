@@ -1,13 +1,7 @@
 import { OAuthProviders } from "@/components/auth/providers";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
@@ -41,7 +35,7 @@ export default function LoginPage() {
     },
   });
   return (
-    <div className="flex justify-center rounded-md items-center w-full">
+    <div className="flex justify-center  items-center w-full">
       <main className="px-6">
         <div className="max-w-md mx-auto">
           <div className="w-100 bg-card shadow-xl p-8">
@@ -55,16 +49,11 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
               <Separator className="flex-1" />
-              <span className="text-sm text-muted-foreground font-medium">
-                Or
-              </span>
+              <span className="text-sm text-muted-foreground font-medium">Or</span>
               <Separator className="flex-1" />
             </div>
             <Form {...form}>
-              <form
-                className="space-y-4"
-                onSubmit={form.handleSubmit((data) => mutate(data))}
-              >
+              <form className="space-y-4" onSubmit={form.handleSubmit((data) => mutate(data))}>
                 <div>
                   <FormField
                     control={form.control}
@@ -73,11 +62,7 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            {...field}
-                          />
+                          <Input type="email" placeholder="Enter your email" {...field} />
                         </FormControl>
                         {/* <FormMessage/> */}
                       </FormItem>
@@ -93,11 +78,7 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Enter your Password"
-                          />
+                          <Input {...field} type="password" placeholder="Enter your Password" />
                         </FormControl>
                         {/* <FormMessage/> */}
                       </FormItem>

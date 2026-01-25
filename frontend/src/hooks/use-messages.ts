@@ -1,21 +1,41 @@
 import { api } from "@/lib/axios";
 import type { Online, Message, MessageStatus } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState, useRef } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 export type MessagesRes = {
   messages: Message[];
   total: number;
+  nextCursor?: number | null;
 };
-export const useMessages = (id: string, limit: number) => {
-  return useQuery<MessagesRes>({
+
+export const useMessages = (id: string, limit: number = 15) => {
+  const query = useInfiniteQuery<MessagesRes>({
     queryKey: ["chat", id],
-    queryFn: async () => {
-      const res = await api.get(`/chats/${id}/messages?limit=${limit}`);
+    queryFn: async ({ pageParam }) => {
+      const params = new URLSearchParams();
+      params.set("limit", limit.toString());
+      if (pageParam) {
+        params.set("cursor", pageParam.toString());
+      }
+      const res = await api.get(`/chats/${id}/messages?${params.toString()}`);
       if (res.status !== 200) throw new Error("Failed to fetch messages");
       return res.data;
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: 0,
   });
+  const messages = useMemo(() => {
+    if (!query.data?.pages) return undefined;
+    return query.data.pages.flatMap((page) => page.messages);
+  }, [query.data?.pages]);
+
+  const total = query.data?.pages[0]?.total;
+
+  return {
+    ...query,
+    data: { messages, total },
+  };
 };
 export const useOnline = (id: string) => {
   return useQuery<Online>({
@@ -53,8 +73,7 @@ export const useUnReadMessages = (id: string, initialData?: UnReadMessage) => {
   });
 };
 export const useOptimisticUnRead = (id: string) => {
-  const [optimisticUnread, setOptimisticUnread] =
-    useState<UnReadMessage | null>(null);
+  const [optimisticUnread, setOptimisticUnread] = useState<UnReadMessage | null>(null);
   const { data: unReadMessages } = useUnReadMessages(id);
 
   const initialized = useRef(false);

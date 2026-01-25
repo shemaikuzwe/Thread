@@ -6,8 +6,7 @@ export function assertIsWebSocket(
   webSocketInstance: WebSocketLike,
   skip?: boolean,
 ): asserts webSocketInstance is WebSocket {
-  if (!skip && webSocketInstance instanceof WebSocket === false)
-    throw new Error("");
+  if (!skip && webSocketInstance instanceof WebSocket === false) throw new Error("");
 }
 
 export function resetGlobalState(url?: string): void {

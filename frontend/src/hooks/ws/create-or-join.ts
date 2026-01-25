@@ -4,11 +4,7 @@ import type { Options, SendMessage, Subscriber, WebSocketLike } from "./types";
 import { isEventSourceSupported, ReadyState, isReactNative } from "./constants";
 import { attachListeners } from "./attach-listener";
 import { attachSharedListeners } from "./attach-shared-listeners";
-import {
-  addSubscriber,
-  removeSubscriber,
-  hasSubscribers,
-} from "./manage-subcribers";
+import { addSubscriber, removeSubscriber, hasSubscribers } from "./manage-subcribers";
 
 //TODO ensure that all onClose callbacks are called
 
@@ -90,13 +86,7 @@ export const createOrJoinSocket = (
 
     addSubscriber(url, subscriber);
 
-    return cleanSubscribers(
-      url,
-      subscriber,
-      optionsRef,
-      setReadyState,
-      clearSocketIoPingInterval,
-    );
+    return cleanSubscribers(url, subscriber, optionsRef, setReadyState, clearSocketIoPingInterval);
   } else {
     webSocketRef.current = optionsRef.current.eventSourceOptions
       ? new EventSource(url, optionsRef.current.eventSourceOptions)

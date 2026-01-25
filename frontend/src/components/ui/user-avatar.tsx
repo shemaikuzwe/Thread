@@ -21,17 +21,9 @@ interface Props {
   chat?: ChatWithUsers;
   showOnline?: boolean;
 }
-export default function ChatAvatar({
-  user,
-  type,
-  showDropDown,
-  chat,
-  showOnline,
-}: Props) {
+export default function ChatAvatar({ user, type, showDropDown, chat, showOnline }: Props) {
   if (type === "user" && user) {
-    return (
-      <User showOnline={showOnline} user={user} showDropDown={showDropDown} />
-    );
+    return <User showOnline={showOnline} user={user} showDropDown={showDropDown} />;
   }
   return type === "chat" && chat ? <Chat chat={chat} /> : null;
 }
@@ -51,10 +43,7 @@ export function User({
       <DropdownMenuTrigger>
         <div className="relative">
           <Avatar className="rounded-full">
-            <AvatarImage
-              className="rounded-full"
-              src={user?.profile_picture ?? defaultAvatar}
-            />
+            <AvatarImage className="rounded-full" src={user?.profile_picture ?? defaultAvatar} />
             <AvatarFallback>
               {name?.split(" ").map((n) => n[0]?.toUpperCase()) ?? "U"}
             </AvatarFallback>

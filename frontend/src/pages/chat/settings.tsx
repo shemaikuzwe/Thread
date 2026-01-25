@@ -49,11 +49,7 @@ export default function UserProfile() {
 
         {/* Main Content */}
         <div className="flex-1 p-6 w-full">
-          <Tabs
-            defaultValue={tab}
-            className="w-full"
-            onValueChange={handleTabChange}
-          >
+          <Tabs defaultValue={tab} className="w-full" onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile">Personal Info</TabsTrigger>
               <TabsTrigger value="settings">Account Settings</TabsTrigger>
@@ -114,25 +110,17 @@ export default function UserProfile() {
               </Card>
             </TabsContent>
 
-            <TabsContent
-              value="settings"
-              className="mt-6 space-y-4 flex flex-col gap-4 w-full"
-            >
+            <TabsContent value="settings" className="mt-6 space-y-4 flex flex-col gap-4 w-full">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl">
-                    Notification Settings
-                  </CardTitle>
+                  <CardTitle className="text-xl">Notification Settings</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 w-full">
                   <div className="space-y-3 flex gap-2 justify-between">
                     <div className="space-y-1">
-                      <Label className="text-base font-medium">
-                        Push Notifications
-                      </Label>
+                      <Label className="text-base font-medium">Push Notifications</Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive push notifications for important updates and
-                        messages
+                        Receive push notifications for important updates and messages
                       </p>
                     </div>
                     <input />
@@ -144,16 +132,13 @@ export default function UserProfile() {
               {/* Danger Zone */}
               <Card className="border-destructive/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-destructive">
-                    Danger Zone
-                  </CardTitle>
+                  <CardTitle className="text-xl text-destructive">Danger Zone</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 w-full">
                   <div className="space-y-2">
                     <h3 className="font-medium">Delete Account</h3>
                     <p className="text-sm text-muted-foreground">
-                      Once you delete your account, there is no going back.
-                      Please be certain.
+                      Once you delete your account, there is no going back. Please be certain.
                     </p>
                   </div>
                   <Button variant="destructive" className="w-full sm:w-auto">

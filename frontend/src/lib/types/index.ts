@@ -11,12 +11,7 @@ export interface Message {
   message: any;
   status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];
-  type:
-    | "USER_CONNECTED"
-    | "MESSAGE"
-    | "USER_DISCONNECTED"
-    | "MESSAGE_STATUS"
-    | "UPDATE_LAST_READ";
+  type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS" | "UPDATE_LAST_READ";
   created_at: string;
   from: {
     id: string;

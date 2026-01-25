@@ -23,10 +23,4 @@ const createChatSchema = z.object({
 });
 export type CreateChatData = z.infer<typeof createChatSchema>;
 
-export {
-  registerSchema,
-  type RegisterData,
-  loginSchema,
-  type LoginData,
-  createChatSchema,
-};
+export { registerSchema, type RegisterData, loginSchema, type LoginData, createChatSchema };

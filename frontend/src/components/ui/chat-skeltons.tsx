@@ -19,13 +19,9 @@ function ChatListItem() {
 
 function Message({ isOwn = true }: { isOwn?: boolean }) {
   return (
-    <div
-      className={cn("flex gap-3 p-2", isOwn ? "justify-end" : "justify-start")}
-    >
+    <div className={cn("flex gap-3 p-2", isOwn ? "justify-end" : "justify-start")}>
       <Skeleton className="rounded-full w-8 h-8" />
-      <Skeleton
-        className={cn("w-30 h-14 mt-1 rounded-2xl", isOwn ? "order-first" : "")}
-      />
+      <Skeleton className={cn("w-30 h-14 mt-1 rounded-2xl", isOwn ? "order-first" : "")} />
       {/*<Skeleton className="h-3 w-25" />
         <div className="flex justify-end mt-1">
           <Skeleton className="h-2 w-15" />

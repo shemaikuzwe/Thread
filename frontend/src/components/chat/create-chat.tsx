@@ -3,25 +3,13 @@ import { Input } from "@/components/ui/input.tsx";
 import { createChatSchema, type CreateChatData } from "@/lib/schema.ts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "../ui/form.tsx";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form.tsx";
 import { api } from "@/lib/axios.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "../ui/textarea.tsx";
 import { cn } from "@/lib/utils.ts";
 
-export function CreateThread({
-  className,
-  onClose,
-}: {
-  onClose: () => void;
-  className?: string;
-}) {
+export function CreateThread({ className, onClose }: { onClose: () => void; className?: string }) {
   const form = useForm<CreateChatData>({
     resolver: zodResolver(createChatSchema),
   });
@@ -68,11 +56,7 @@ export function CreateThread({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Enter channel description"
-                      rows={2}
-                    />
+                    <Textarea {...field} placeholder="Enter channel description" rows={2} />
                   </FormControl>
                 </FormItem>
               )}

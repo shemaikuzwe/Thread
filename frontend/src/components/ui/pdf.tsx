@@ -13,9 +13,7 @@ interface Props {
 }
 
 export default function PDF({ open, file, className, onDownloadClick }: Props) {
-  const [reactPdf, setReactPdf] = useState<{ Document: any; Page: any } | null>(
-    null,
-  );
+  const [reactPdf, setReactPdf] = useState<{ Document: any; Page: any } | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
   useEffect(() => {
     (async () => {
@@ -63,12 +61,8 @@ export default function PDF({ open, file, className, onDownloadClick }: Props) {
           {Document && Page ? (
             <Document
               file={file.url}
-              onLoadSuccess={({ numPages }: { numPages: number }) =>
-                setNumPages(numPages)
-              }
-              onLoadError={(error: any) =>
-                console.error("PDF load error:", error)
-              }
+              onLoadSuccess={({ numPages }: { numPages: number }) => setNumPages(numPages)}
+              onLoadError={(error: any) => console.error("PDF load error:", error)}
             >
               <Page
                 pageNumber={1}
@@ -78,9 +72,7 @@ export default function PDF({ open, file, className, onDownloadClick }: Props) {
               />
             </Document>
           ) : (
-            <div className="text-sm text-muted-foreground">
-              Loading preview…
-            </div>
+            <div className="text-sm text-muted-foreground">Loading preview…</div>
           )}
         </Suspense>
       </CardContent>

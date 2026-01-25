@@ -38,11 +38,8 @@ export function useChatMeta(chat: ChatWithUsers | undefined): {
   let name = chat.name;
   let avatar: string | undefined = "";
   if (chat.type === "dm") {
-    const filteredUsers = chat.users.filter(
-      (user) => user.id != data?.user?.id,
-    );
-    const fullName =
-      filteredUsers[0].first_name + " " + filteredUsers[0].last_name;
+    const filteredUsers = chat.users.filter((user) => user.id != data?.user?.id);
+    const fullName = filteredUsers[0].first_name + " " + filteredUsers[0].last_name;
     name = fullName;
     avatar = filteredUsers[0]?.profile_picture;
   }

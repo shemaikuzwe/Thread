@@ -3,11 +3,7 @@ import { Link, useParams } from "react-router";
 import JoinButton from "./join-button.tsx";
 import { useOnline } from "@/hooks/use-messages.ts";
 import ThemeToggle from "../theme-toggle.tsx";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu.tsx";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu.tsx";
 import { ArrowLeft, EllipsisVerticalIcon, Video } from "lucide-react";
 import { ChatHeaderSkelton } from "../ui/chat-skeltons.tsx";
 import ChatAvatar from "../ui/user-avatar.tsx";

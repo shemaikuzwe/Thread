@@ -40,10 +40,7 @@ export function heartbeat(
       );
       ws.close();
     } else {
-      if (
-        lastMessageReceivedAt + interval <= timeNow &&
-        lastPingSentAt + interval <= timeNow
-      ) {
+      if (lastMessageReceivedAt + interval <= timeNow && lastPingSentAt + interval <= timeNow) {
         try {
           if (typeof message === "function") {
             ws.send(message());

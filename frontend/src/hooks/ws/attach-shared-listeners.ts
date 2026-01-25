@@ -7,12 +7,7 @@ import {
 } from "./constants";
 import { getSubscribers } from "./manage-subcribers";
 import type { MutableRefObject } from "react";
-import type {
-  HeartbeatOptions,
-  Options,
-  SendMessage,
-  WebSocketLike,
-} from "./types";
+import type { HeartbeatOptions, Options, SendMessage, WebSocketLike } from "./types";
 import { setUpSocketIOPing } from "./socket-io";
 import { heartbeat } from "./heart-beat";
 
@@ -100,15 +95,11 @@ const bindCloseHandler = (webSocketInstance: WebSocketLike, url: string) => {
           subscriber.optionsRef.current.shouldReconnect(event)
         ) {
           const reconnectAttempts =
-            subscriber.optionsRef.current.reconnectAttempts ??
-            DEFAULT_RECONNECT_LIMIT;
+            subscriber.optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
           if (subscriber.reconnectCount.current < reconnectAttempts) {
             const nextReconnectInterval =
-              typeof subscriber.optionsRef.current.reconnectInterval ===
-              "function"
-                ? subscriber.optionsRef.current.reconnectInterval(
-                    subscriber.reconnectCount.current,
-                  )
+              typeof subscriber.optionsRef.current.reconnectInterval === "function"
+                ? subscriber.optionsRef.current.reconnectInterval(subscriber.reconnectCount.current)
                 : subscriber.optionsRef.current.reconnectInterval;
 
             setTimeout(() => {
@@ -120,9 +111,7 @@ const bindCloseHandler = (webSocketInstance: WebSocketLike, url: string) => {
               subscriber.optionsRef.current.onReconnectStop(
                 subscriber.optionsRef.current.reconnectAttempts as number,
               );
-            console.warn(
-              `Max reconnect attempts of ${reconnectAttempts} exceeded`,
-            );
+            console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
           }
         }
       });

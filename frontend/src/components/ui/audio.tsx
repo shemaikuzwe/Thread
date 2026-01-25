@@ -7,10 +7,7 @@ interface AudioPlayerProps {
   variant?: "sent" | "received";
 }
 
-export function AudioPlayer({
-  audioUrl,
-  variant = "received",
-}: AudioPlayerProps) {
+export function AudioPlayer({ audioUrl, variant = "received" }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -42,9 +39,7 @@ export function AudioPlayer({
     const handleError = () => {
       setError(true);
       setIsPlaying(false);
-      console.log(
-        "[v0] Audio loading error - invalid or unsupported audio source"
-      );
+      console.log("[v0] Audio loading error - invalid or unsupported audio source");
     };
 
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -130,8 +125,8 @@ export function AudioPlayer({
                     ? "bg-primary-foreground"
                     : "bg-primary"
                   : variant === "sent"
-                  ? "bg-primary-foreground/30"
-                  : "bg-muted-foreground/30"
+                    ? "bg-primary-foreground/30"
+                    : "bg-muted-foreground/30"
               }`}
               style={{ height: `${Math.max(height * 0.35, 12)}%` }}
             />
@@ -142,16 +137,10 @@ export function AudioPlayer({
       {/* Time Display */}
       <div
         className={`text-xs font-medium tabular-nums shrink-0 ${
-          variant === "sent"
-            ? "text-primary-foreground"
-            : "text-muted-foreground"
+          variant === "sent" ? "text-primary-foreground" : "text-muted-foreground"
         }`}
       >
-        {error
-          ? "Error"
-          : isPlaying
-          ? formatTime(currentTime)
-          : formatTime(duration)}
+        {error ? "Error" : isPlaying ? formatTime(currentTime) : formatTime(duration)}
       </div>
     </div>
   );

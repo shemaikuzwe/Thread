@@ -19,9 +19,7 @@ export default function User() {
   const session = useSession();
   const navigate = useNavigate();
   if (!session || session.status === "pending" || !session.user) return null;
-  const name = `${session.user?.first_name ?? ""} ${
-    session?.user?.last_name ?? ""
-  }`;
+  const name = `${session.user?.first_name ?? ""} ${session?.user?.last_name ?? ""}`;
   const handleLogout = async () => {
     const res = await api.get("/auth/logout");
     if (res.status !== 200) {

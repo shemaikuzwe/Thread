@@ -22,9 +22,7 @@ export default function MessageUser({ userId }: { userId: string }) {
         <Avatar>
           <AvatarImage src={user?.profile_picture ?? defaultAvatar} />
           <AvatarFallback>
-            {user?.first_name +
-              " " +
-              user?.last_name?.split(" ").map((n) => n[0].toUpperCase())}
+            {user?.first_name + " " + user?.last_name?.split(" ").map((n) => n[0].toUpperCase())}
           </AvatarFallback>
         </Avatar>
       )}

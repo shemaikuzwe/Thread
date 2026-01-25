@@ -245,11 +245,7 @@ export function VideoPlayer({
                   className="text-white hover:text-red-500 transition-colors"
                   aria-label={isMuted ? "Unmute" : "Mute"}
                 >
-                  {isMuted ? (
-                    <VolumeX className="w-5 h-5" />
-                  ) : (
-                    <Volume2 className="w-5 h-5" />
-                  )}
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
                 <input
                   type="range"
@@ -283,9 +279,7 @@ export function VideoPlayer({
               <button
                 onClick={toggleFullscreen}
                 className="text-white hover:text-red-500 transition-colors"
-                aria-label={
-                  isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
-                }
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               >
                 {isFullscreen ? (
                   <Minimize className="w-5 h-5" />

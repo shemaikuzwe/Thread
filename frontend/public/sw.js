@@ -25,17 +25,15 @@ self.addEventListener("notificationclick", function (event) {
   const urlToOpen = new URL(relativeLink, self.location.origin).href;
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then(function (clientList) {
-        // If a window tab matching the targeted URL already exists, focus that;
-        for (const client of clientList) {
-          if (client.url === urlToOpen && "focus" in client) {
-            return client.focus();
-          }
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
+      // If a window tab matching the targeted URL already exists, focus that;
+      for (const client of clientList) {
+        if (client.url === urlToOpen && "focus" in client) {
+          return client.focus();
         }
-        // If no matching tab exists, open a new one to the correct URL
-        return clients.openWindow(urlToOpen);
-      }),
+      }
+      // If no matching tab exists, open a new one to the correct URL
+      return clients.openWindow(urlToOpen);
+    }),
   );
 });

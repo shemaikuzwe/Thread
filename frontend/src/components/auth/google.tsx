@@ -3,9 +3,7 @@ import { Button } from "../ui/button";
 export default function Google() {
   // TODO:Make this callbakc robust
   const handleGoogleLogin = async () => {
-    window.location.href = `${
-      import.meta.env.VITE_API_URL
-    }/auth/login?oauth=google`;
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/login?oauth=google`;
     // const popup = window.open(
     //   `${apiUrl}/auth/login?oauth=google`,
     //   "googleAuth",
@@ -22,11 +20,7 @@ export default function Google() {
     // });
   };
   return (
-    <Button
-      variant="outline"
-      className="w-40 rounded-xl font-medium"
-      onClick={handleGoogleLogin}
-    >
+    <Button variant="outline" className="w-40 rounded-xl font-medium" onClick={handleGoogleLogin}>
       <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
         <path
           fill="currentColor"

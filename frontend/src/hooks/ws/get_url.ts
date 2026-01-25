@@ -1,10 +1,7 @@
 import type { MutableRefObject } from "react";
 import { parseSocketIOUrl, appendQueryParams } from "./socket-io";
 import type { Options } from "./types";
-import {
-  DEFAULT_RECONNECT_INTERVAL_MS,
-  DEFAULT_RECONNECT_LIMIT,
-} from "./constants";
+import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from "./constants";
 
 const waitFor = (duration: number) =>
   new Promise((resolve) => window.setTimeout(resolve, duration));
@@ -21,8 +18,7 @@ export const getUrl = async (
       convertedUrl = await url();
     } catch (e) {
       if (optionsRef.current.retryOnError) {
-        const reconnectLimit =
-          optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+        const reconnectLimit = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
         if (retriedAttempts < reconnectLimit) {
           const nextReconnectInterval =
             typeof optionsRef.current.reconnectInterval === "function"
@@ -43,9 +39,7 @@ export const getUrl = async (
     convertedUrl = url;
   }
 
-  const parsedUrl = optionsRef.current.fromSocketIO
-    ? parseSocketIOUrl(convertedUrl)
-    : convertedUrl;
+  const parsedUrl = optionsRef.current.fromSocketIO ? parseSocketIOUrl(convertedUrl) : convertedUrl;
 
   const parsedWithQueryParams = optionsRef.current.queryParams
     ? appendQueryParams(parsedUrl, optionsRef.current.queryParams)

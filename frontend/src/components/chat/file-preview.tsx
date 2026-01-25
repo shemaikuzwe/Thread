@@ -10,17 +10,12 @@ import {
 } from "../ui/dialog";
 import { VideoPlayer } from "../ui/video";
 import { Button } from "../ui/button";
-import {
-  DownloadIcon,
-  FullscreenIcon,
-  MinimizeIcon,
-  XIcon,
-} from "lucide-react";
+import { DownloadIcon, FullscreenIcon, MinimizeIcon, XIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import ChatAvatar from "../ui/user-avatar";
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import PDF from "../ui/pdf";
 import { AudioPlayer } from "../ui/audio";
 
@@ -29,19 +24,11 @@ interface Props {
   className?: string;
   message: Message;
 }
-export function FilePreview({
-  file,
-  className = "h-60 w-55 rounded-md",
-  message,
-}: Props) {
+export function FilePreview({ file, className = "h-60 w-55 rounded-md", message }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  function displayPreview(
-    className: string,
-    open: boolean = false,
-    isPreview: boolean = false,
-  ) {
+  function displayPreview(className: string, open: boolean = false, isPreview: boolean = false) {
     if (file.type.startsWith("image/")) {
       return <img src={file.url} alt={file.name} className={cn(className)} />;
     }
@@ -61,18 +48,9 @@ export function FilePreview({
       return <AudioPlayer audioUrl={file.url} />;
     }
     if (file.type.startsWith("application/pdf")) {
-      return (
-        <PDF
-          file={file}
-          onDownloadClick={handleDownload}
-          open={open}
-          className={className}
-        />
-      );
+      return <PDF file={file} onDownloadClick={handleDownload} open={open} className={className} />;
     }
-    return (
-      <img src="/mime/other.png" alt={file.name} className={cn(className)} />
-    );
+    return <img src="/mime/other.png" alt={file.name} className={cn(className)} />;
   }
 
   const toogleFullScreen = () => {
@@ -147,7 +125,9 @@ export function FilePreview({
                 {message.from.first_name + " " + message.from.last_name}
               </DialogTitle>
               <span className="text-sm text-muted-foreground">
-                {formatDate(new Date(message.created_at), "HH:mm")}
+                {message.created_at && isValid(new Date(message.created_at))
+                  ? formatDate(new Date(message.created_at), "HH:mm")
+                  : ""}
               </span>
             </div>
           </div>
@@ -182,24 +162,13 @@ export function FilePreview({
         </DialogHeader>
 
         <div ref={divRef} className="flex justify-center items-center">
-          {displayPreview(
-            `rounded-md   ${isFullScreen ? "h-full w-full" : "h-130 w-230"}`,
-            true,
-          )}
+          {displayPreview(`rounded-md   ${isFullScreen ? "h-full w-full" : "h-130 w-230"}`, true)}
           {isFullScreen && (
             <div className={"absolute top-10 right-25 flex gap-2"}>
-              <Button
-                onClick={toogleFullScreen}
-                variant={"secondary"}
-                title="Exit Fullscreen"
-              >
+              <Button onClick={toogleFullScreen} variant={"secondary"} title="Exit Fullscreen">
                 <MinimizeIcon className="w-full h-full" />
               </Button>
-              <Button
-                variant={"secondary"}
-                onClick={handleDownload}
-                title="Download"
-              >
+              <Button variant={"secondary"} onClick={handleDownload} title="Download">
                 <DownloadIcon />
               </Button>
             </div>
