@@ -235,6 +235,8 @@ func GetChatMessagesHandler(c *gin.Context) {
 	if limitStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Limit is required"})
 	}
+	cursorStr := c.Query("cursor")
+
 	threadID, err := uuid.Parse(id)
 
 	if err != nil {
@@ -243,11 +245,22 @@ func GetChatMessagesHandler(c *gin.Context) {
 	}
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		log.Println("error converting string")
+		log.Println("error converting limit string")
 	}
+
+	cursor := 0
+	if cursorStr != "" {
+		cursor, err = strconv.Atoi(cursorStr)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid cursor format"})
+			return
+		}
+	}
+
 	messages, err := db.Db.GetChannelMessages(c.Request.Context(), database.GetChannelMessagesParams{
 		ThreadID: threadID,
 		Limit:    int32(limit),
+		Offset:   int32(cursor),
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -261,9 +274,17 @@ func GetChatMessagesHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
+	var nextCursor *int
+	if len(messages) == limit {
+		n := cursor + limit
+		nextCursor = &n
+	}
+
 	c.JSON(200, gin.H{
-		"messages": messages,
-		"total":    total,
+		"messages":   messages,
+		"total":      total,
+		"nextCursor": nextCursor,
 	})
 }
 func GetCurrentUser(c *gin.Context) (Payload, error) {

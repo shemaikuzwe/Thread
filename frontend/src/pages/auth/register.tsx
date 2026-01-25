@@ -45,7 +45,7 @@ export default function RegisterPage() {
     <div className="flex justify-center items-center">
       <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-card  w-105  shadow-xl p-6">
+          <div className="bg-card  w-105  shadow-xl rounded-xl p-6">
             {/* Header */}
             <div className="flex flex-col justify-center items-center text-center mb-8">
               <Logo />

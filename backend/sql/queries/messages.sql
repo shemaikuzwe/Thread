@@ -29,7 +29,8 @@ LEFT JOIN files f ON f.message_id = m.id
 WHERE m.thread_id = $1
 GROUP BY m.id, u.id
 ORDER BY m.created_at DESC
-LIMIT $2;
+LIMIT $2
+OFFSET $3;
 
 -- name: GetThreadTotalMessages :one
 

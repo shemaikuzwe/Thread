@@ -94,11 +94,13 @@ WHERE m.thread_id = $1
 GROUP BY m.id, u.id
 ORDER BY m.created_at DESC
 LIMIT $2
+OFFSET $3
 `
 
 type GetChannelMessagesParams struct {
 	ThreadID uuid.UUID `json:"thread_id"`
 	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type GetChannelMessagesRow struct {
@@ -113,7 +115,7 @@ type GetChannelMessagesRow struct {
 }
 
 func (q *Queries) GetChannelMessages(ctx context.Context, arg GetChannelMessagesParams) ([]GetChannelMessagesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getChannelMessages, arg.ThreadID, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, getChannelMessages, arg.ThreadID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

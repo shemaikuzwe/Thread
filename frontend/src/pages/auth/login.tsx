@@ -38,7 +38,7 @@ export default function LoginPage() {
     <div className="flex justify-center  items-center w-full">
       <main className="px-6">
         <div className="max-w-md mx-auto">
-          <div className="w-100 bg-card shadow-xl p-8">
+          <div className="w-100 bg-card shadow-xl p-8 rounded-xl">
             {/* Header */}
 
             <div className="text-center flex flex-col justify-center items-center mb-8">
@@ -92,7 +92,7 @@ export default function LoginPage() {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4  rounded"
+                      className="h-4 w-4"
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm">
                       Remember me

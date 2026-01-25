@@ -14,6 +14,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@fontsource/geist-mono": "^5.2.7",
+    "@fontsource/geist-sans": "^5.2.5",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
