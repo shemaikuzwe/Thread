@@ -22,7 +22,6 @@ func init() {
 
 func main() {
 	router := gin.Default()
-
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{os.Getenv("CLIENT_APP_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

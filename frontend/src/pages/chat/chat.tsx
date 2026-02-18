@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import ChatsList from "./chats-list";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AudioInput from "@/components/chat/audio-input";
+import { useSubscriptions } from "@/hooks/use-sub";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -55,6 +56,7 @@ export default function ChatPage() {
   const messages = data?.messages;
   const [isRecording, setIsRecording] = useState(false);
   const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
+  const { subscribeToPush } = useSubscriptions();
 
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],

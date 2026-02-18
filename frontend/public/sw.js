@@ -1,7 +1,7 @@
 self.addEventListener("push", function (event) {
   console.log("push triggred");
   if (event.data) {
-    const data = event.data.json();
+    const data = event.data
     const options = {
       body: data.body,
       icon: data.icon || "/logo.png",
