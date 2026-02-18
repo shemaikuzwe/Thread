@@ -1,0 +1,10 @@
+{
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "editor.fontFamily": "'Ubuntu Mono', Consolas, 'Courier New', monospace",
+  "editor.fontSize": 14,
+  "terminal.integrated.fontFamily": "Ubuntu Mono",
+  "terminal.integrated.fontSize": 14,
+  "prisma.pinToPrisma6": false,
+  "typescript.experimental.useTsgo": true,
+  "search.useIgnoreFiles": true
+}

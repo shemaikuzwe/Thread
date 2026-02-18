@@ -3,8 +3,6 @@ services:
     image: postgres:14-alpine
     ports:
       - "5555:5432"
-    env_file:
-      - ./backend/.env
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=${DB_USER}
@@ -21,8 +19,6 @@ services:
 
   migrate:
     image: gomicro/goose:latest
-    env_file:
-      - ./backend/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,7 +27,7 @@ services:
       GOOSE_DBSTRING: user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} host=postgres port=5432 sslmode=disable
       GOOSE_MIGRATION_DIR: /schema
     volumes:
-      - ./backend/sql/schema:/schema
+      - ./apps/chat-server/sql/schema:/schema
     command: goose up
 
   redis:
@@ -48,8 +44,10 @@ services:
       retries: 5
       start_period: 10s
 
-  server:
-    image: thread-backend:latest
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -58,27 +56,50 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     env_file:
-      - ./backend/.env
+      - ./apps/api/.env.example
     environment:
-      - GIN_MODE=release
+      - PORT=8000
+      - CLIENT_APP_URL=http://localhost:3000
+      - AUTH_SECRET=super-secret
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
+      - REDIS_URL=redis://redis:6379
 
-  frontend:
-    image: thread-frontend:latest
+  chat-server:
+    build:
+      context: ./apps/chat-server
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/chat-server/.env.example
+    environment:
+      - PORT=8001
+      - CLIENT_APP_URL=http://localhost:3000
+      - AUTH_SECRET=super-secret
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     restart: unless-stopped
     depends_on:
-      server:
-        condition: service_healthy
+      api:
+        condition: service_started
+      chat-server:
+        condition: service_started
     env_file:
-      - ./frontend/.env
+      - ./apps/web/.env
 
 volumes:
   postgres_data:

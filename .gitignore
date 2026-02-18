@@ -1,2 +1,17 @@
 certificates/
 .env
+node_modules/
+.pnpm-store/
+.turbo/
+
+# JS build output
+build/
+dist/
+.next/
+
+# Go artifacts
+*.out
+tmp/
+
+# Local env files
+**/.env
