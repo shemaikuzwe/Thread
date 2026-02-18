@@ -3,8 +3,8 @@
 This repo is now organized as a Turborepo monorepo:
 
 - `apps/web`: React Router frontend
-- `apps/api`: NestJS HTTP API (Drizzle ORM)
-- `apps/chat-server`: Go WebSocket server
+- `apps/api`: NestJS HTTP API (Drizzle ORM) for auth, users, chats, and reads
+- `apps/chat-server`: Go WebSocket realtime server (WS writes, presence, Redis fanout)
 - `packages/db`: Drizzle schema/client/migrations
 
 ## Dev Commands

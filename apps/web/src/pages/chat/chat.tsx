@@ -125,14 +125,14 @@ export default function ChatPage() {
       const lastMessageId = getLastMessage();
       if (!lastMessageId) return;
       if (lastMessageId !== unRead.last_read) {
-        const msg = {
+      const msg = {
           message: lastMessageId,
           thread_id: id,
           user_id: userId,
           date: new Date().toISOString(),
           type: "UPDATE_LAST_READ",
         };
-        void api.post("/messages/last-read", msg);
+        sendMessage(msg);
       }
     }
   }, [id, queryClient, getLastMessage, userId, sendMessage]);
@@ -247,7 +247,7 @@ export default function ChatPage() {
         if (!uploaded?.length) {
           toast.error("Failed to upload files");
         }
-        await api.post("/messages", {
+        sendMessage({
           ...message,
           files:
             uploaded?.map((upload) => ({
@@ -258,7 +258,7 @@ export default function ChatPage() {
             })) ?? [],
         });
       } else if (type === "MESSAGE") {
-        await api.post("/messages", message);
+        sendMessage(message);
       } else {
         sendMessage(message);
       }

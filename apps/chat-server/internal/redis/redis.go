@@ -5,19 +5,34 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"os"
 	"time"
 
-	"github.com/shemaIkuzwe/thread/internal/db"
+	goredis "github.com/redis/go-redis/v9"
 )
+
+var Client *goredis.Client
+
+func Connect() {
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		log.Fatal("No redis url found")
+	}
+	opt, err := goredis.ParseURL(redisURL)
+	if err != nil {
+		log.Fatal("Failed to parse redis url", err)
+	}
+	Client = goredis.NewClient(opt)
+	log.Println("Connected to redis")
+}
 
 // Expire 0 means no expiration time
 func Set[T any](key string, val T, expire int) error {
-	json, err := json.Marshal(val)
+	jsonVal, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
-	err = db.RedisClient.Set(context.Background(), key, json, time.Duration(expire)).Err()
-	return err
+	return Client.Set(context.Background(), key, jsonVal, time.Duration(expire)).Err()
 }
 
 func Get[T any](key string) (T, bool, error) {
@@ -30,7 +45,7 @@ func Get[T any](key string) (T, bool, error) {
 		return t, exists, nil
 	}
 
-	res, err := db.RedisClient.Get(context.Background(), key).Result()
+	res, err := Client.Get(context.Background(), key).Result()
 	if err != nil {
 		return t, exists, err
 	}
@@ -39,8 +54,7 @@ func Get[T any](key string) (T, bool, error) {
 }
 
 func LSet[T any](key string, val T) error {
-	err := db.RedisClient.LPush(context.Background(), key, val).Err()
-	return err
+	return Client.LPush(context.Background(), key, val).Err()
 }
 
 func LGet[T any](key string, start, stop int64) ([]T, bool, error) {
@@ -52,7 +66,7 @@ func LGet[T any](key string, start, stop int64) ([]T, bool, error) {
 	if !exists {
 		return t, exists, nil
 	}
-	res, err := db.RedisClient.LRange(context.Background(), key, start, stop).Result()
+	res, err := Client.LRange(context.Background(), key, start, stop).Result()
 	if err != nil {
 		return t, exists, err
 	}
@@ -69,7 +83,7 @@ func LGet[T any](key string, start, stop int64) ([]T, bool, error) {
 }
 
 func exists(keys ...string) (bool, error) {
-	exists, err := db.RedisClient.Exists(context.Background(), keys...).Result()
+	exists, err := Client.Exists(context.Background(), keys...).Result()
 	ok := exists > 0
 	if err != nil {
 		return ok, err
@@ -79,6 +93,7 @@ func exists(keys ...string) (bool, error) {
 	}
 	return ok, nil
 }
+
 func Delete(keys ...string) (bool, error) {
 	exists, err := exists(keys...)
 	if err != nil {
@@ -87,7 +102,7 @@ func Delete(keys ...string) (bool, error) {
 	if !exists {
 		return false, errors.New("Cannot find given key")
 	}
-	_, err = db.RedisClient.Del(context.Background(), keys...).Result()
+	_, err = Client.Del(context.Background(), keys...).Result()
 	if err != nil {
 		return false, err
 	}

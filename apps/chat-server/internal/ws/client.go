@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/shemaIkuzwe/thread/internal/controllers"
-	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/api"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 type Message struct {
@@ -139,22 +143,23 @@ func (c *ClientConn) writePump() {
 }
 
 func ServeWs(hub *Hub, ctx *gin.Context) {
+	user, err := authenticateRequest(ctx.Request)
+	if err != nil || user.ID == "" {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println("Upgrade error:", err)
 		return
 	}
-	user, err := controllers.GetCurrentUser(ctx)
-	if err != nil || user.Id == "" {
-		log.Println("error getting user:", err)
-		return
-	}
 	connID := uuid.New().String()
 
 	// Initialize user map if not exists
-	if clients[user.Id] == nil {
-		clients[user.Id] = make(map[string]*ClientConn)
+	if clients[user.ID] == nil {
+		clients[user.ID] = make(map[string]*ClientConn)
 	}
 	// key := "user:" + user.Id
 	// err :=redis.LSet[*&websocket.Conn](key,conn)
@@ -162,11 +167,11 @@ func ServeWs(hub *Hub, ctx *gin.Context) {
 		hub:    hub,
 		conn:   conn,
 		send:   make(chan []byte, 256),
-		userID: user.Id,
+		userID: user.ID,
 		connID: connID,
 	}
 
-	clients[user.Id][connID] = client
+	clients[user.ID][connID] = client
 	hub.register <- client
 
 	go client.writePump()
@@ -180,9 +185,7 @@ func messageCallback(message []byte, userID string) {
 		log.Println("Parsing error: ", err)
 		return
 	}
-	if msg.UserID == "" {
-		msg.UserID = userID
-	}
+	msg.UserID = userID
 	normalized, err := json.Marshal(msg)
 	if err != nil {
 		log.Println("failed to normalize message payload:", err)
@@ -190,22 +193,62 @@ func messageCallback(message []byte, userID string) {
 	}
 	switch msg.Type {
 	case MESSAGE:
-		if err := controllers.HandlerCreateMessage(normalized, userID); err != nil {
+		if err := api.PersistEvent(normalized); err != nil {
 			log.Println("failed to persist message:", err)
 			return
 		}
-		if err := controllers.SendThreadNotification(normalized); err != nil {
-			log.Println("failed to send thread notification:", err)
-		}
 	case UPDATE_LAST_READ:
-		if err := controllers.UpsertLastRead(normalized); err != nil {
+		if err := api.PersistEvent(normalized); err != nil {
 			log.Println("failed to update last-read:", err)
 			return
 		}
 	}
 
-	err = db.RedisClient.Publish(context.Background(), "chat.events.v1", normalized).Err()
+	err = redis.Client.Publish(context.Background(), "chat.events.v1", normalized).Err()
 	if err != nil {
 		log.Println("failed to publish chat event:", err)
 	}
+}
+
+type authPayload struct {
+	ID string `json:"id"`
+	jwt.StandardClaims
+}
+
+func authenticateRequest(r *http.Request) (*authPayload, error) {
+	tokenString, err := getToken(r)
+	if err != nil || tokenString == "" {
+		return nil, fmt.Errorf("token is required")
+	}
+
+	secret := os.Getenv("AUTH_SECRET")
+	payload := &authPayload{}
+	token, err := jwt.ParseWithClaims(tokenString, payload, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header)
+		}
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	if float64(time.Now().Unix()) > float64(payload.ExpiresAt) {
+		return nil, fmt.Errorf("token expired")
+	}
+	return payload, nil
+}
+
+func getToken(r *http.Request) (string, error) {
+	if cookie, err := r.Cookie("auth_token"); err == nil {
+		return cookie.Value, nil
+	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("missing auth token")
+	}
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return "", fmt.Errorf("invalid authorization header")
+	}
+	return strings.TrimPrefix(authHeader, "Bearer "), nil
 }

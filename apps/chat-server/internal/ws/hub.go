@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shemaIkuzwe/thread/internal/db"
+	"github.com/shemaIkuzwe/thread/internal/api"
 	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
@@ -98,26 +98,21 @@ func (h *Hub) Run() {
 }
 
 func (h *Hub) consumeRedisEvents() {
-	sub := db.RedisClient.Subscribe(context.Background(), "chat.events.v1")
+	sub := redis.Client.Subscribe(context.Background(), "chat.events.v1")
 	ch := sub.Channel()
 	for msg := range ch {
 		h.broadcast <- []byte(msg.Payload)
 	}
 }
 func (h *Hub) incrementChannel(userId string) {
-	id, err := uuid.Parse(userId)
-	if err != nil {
-		log.Println("failed to parse user id", err)
-		return
-	}
-	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
+	userThreads, err := api.GetUserThreads(userId)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
 
 	for _, thread := range userThreads {
-		ThreadID := thread.String()
+		ThreadID := thread
 		key := "online:" + ThreadID
 		// TODO:separate online and users separate redis keys
 		info, _, err := redis.Get[activeInfo](key)
@@ -148,18 +143,13 @@ func (h *Hub) incrementChannel(userId string) {
 	}
 }
 func (h *Hub) decrementChannel(userId string) {
-	id, err := uuid.Parse(userId)
-	if err != nil {
-		log.Println("failed to parse user id", err)
-		return
-	}
-	userThreads, err := db.Db.GetClientThreads(context.Background(), id)
+	userThreads, err := api.GetUserThreads(userId)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
 	}
 	for _, thread := range userThreads {
-		threadID := thread.String()
+		threadID := thread
 		key := "online:" + threadID
 		info, _, err := redis.Get[activeInfo](key)
 		if err != nil {
@@ -202,17 +192,17 @@ func CheckUser(message []byte, client string) (bool, error) {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	clientUUID, err := uuid.Parse(client)
+	_, err = uuid.Parse(client)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	msgId, err := uuid.Parse(msg.ThreadID)
+	_, err = uuid.Parse(msg.ThreadID)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
 	}
-	usersChannels, err := getUserChannels(clientUUID)
+	usersChannels, err := getUserChannels(client)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return false, err
@@ -220,19 +210,19 @@ func CheckUser(message []byte, client string) (bool, error) {
 	if msg.Type == UPDATE_LAST_READ && msg.UserID != client {
 		return false, nil
 	}
-	if slices.Contains(usersChannels, msgId) {
+	if slices.Contains(usersChannels, msg.ThreadID) {
 		return true, nil
 	}
 	return false, nil
 }
 
-func getUserChannels(userId uuid.UUID) ([]uuid.UUID, error) {
-	key := fmt.Sprintf("chats:%s", userId)
-	cached, ok, err := redis.Get[[]uuid.UUID](key)
+func getUserChannels(userID string) ([]string, error) {
+	key := fmt.Sprintf("chats:%s", userID)
+	cached, ok, err := redis.Get[[]string](key)
 	if ok && err == nil {
 		return cached, nil
 	}
-	usersChannels, err := db.Db.GetClientThreads(context.Background(), userId)
+	usersChannels, err := api.GetUserThreads(userID)
 	if err != nil {
 		log.Println("failed to parse json", err)
 		return nil, err

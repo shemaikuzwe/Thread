@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { db } from "@thread/db";
 import { sql } from "drizzle-orm";
 
@@ -12,8 +12,104 @@ function toRows<T>(result: unknown): T[] {
   return [];
 }
 
+type ChatEventType = "MESSAGE" | "UPDATE_LAST_READ";
+
+type ChatEventPayload = {
+  id?: string;
+  message?: unknown;
+  thread_id?: string;
+  user_id?: string;
+  type?: string;
+  files?: Array<{
+    name?: string;
+    url?: string;
+    type?: string;
+    size?: number;
+  }>;
+};
+
 @Injectable()
 export class ChatsService {
+  private validateInternalToken(token?: string) {
+    const expected = process.env.CHAT_SERVER_TOKEN;
+    if (!expected || token !== expected) {
+      throw new UnauthorizedException("Invalid chat-server token");
+    }
+  }
+
+  async persistEvent(raw: unknown, token?: string) {
+    this.validateInternalToken(token);
+
+    if (!raw || typeof raw !== "object") {
+      throw new BadRequestException("Invalid event payload");
+    }
+    const payload = raw as ChatEventPayload;
+    const type = payload.type as ChatEventType;
+
+    if (type === "MESSAGE") {
+      if (!payload.id || !payload.thread_id || !payload.user_id) {
+        throw new BadRequestException("MESSAGE event missing id/thread_id/user_id");
+      }
+      const text = typeof payload.message === "string" ? payload.message : "";
+      const files = Array.isArray(payload.files) ? payload.files : [];
+
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`
+          INSERT INTO messages(id, thread_id, user_id, message)
+          VALUES (${payload.id}::uuid, ${payload.thread_id}::uuid, ${payload.user_id}::uuid, ${text})
+          ON CONFLICT (id) DO NOTHING
+        `);
+
+        for (const file of files) {
+          if (!file?.url || !file?.type) {
+            continue;
+          }
+          await tx.execute(sql`
+            INSERT INTO files(url, name, type, size, message_id)
+            VALUES (
+              ${file.url},
+              ${file.name ?? ""},
+              ${file.type},
+              ${Number(file.size ?? 0)},
+              ${payload.id}::uuid
+            )
+          `);
+        }
+      });
+
+      return { ok: true };
+    }
+
+    if (type === "UPDATE_LAST_READ") {
+      if (!payload.thread_id || !payload.user_id || typeof payload.message !== "string") {
+        throw new BadRequestException("UPDATE_LAST_READ event missing fields");
+      }
+
+      await db.execute(sql`
+        INSERT INTO last_read(thread_id, user_id, last_read_message_id)
+        VALUES (${payload.thread_id}::uuid, ${payload.user_id}::uuid, ${payload.message}::uuid)
+        ON CONFLICT (user_id, thread_id)
+        DO UPDATE SET
+          last_read_message_id = EXCLUDED.last_read_message_id,
+          updated_at = NOW()
+      `);
+      return { ok: true };
+    }
+
+    return { ok: true };
+  }
+
+  async getUserThreadIds(userId: string, token?: string) {
+    this.validateInternalToken(token);
+
+    const rows = toRows<{ thread_id: string }>(await db.execute(sql`
+      SELECT thread_id::text
+      FROM thread_user
+      WHERE user_id = ${userId}::uuid
+    `));
+    return rows.map((row) => row.thread_id);
+  }
+
   async getChats(userId: string, search?: string) {
     if (search) {
       const pattern = `%${search.trim()}%`;

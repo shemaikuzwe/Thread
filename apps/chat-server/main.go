@@ -6,17 +6,14 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq" // needed by sqlc
-	"github.com/shemaIkuzwe/thread/internal/db"
-	"github.com/shemaIkuzwe/thread/internal/middleware"
+	"github.com/shemaIkuzwe/thread/internal/redis"
 	"github.com/shemaIkuzwe/thread/internal/ws"
 	"github.com/shemaIkuzwe/thread/utils"
 )
 
 func init() {
 	utils.LoadEnv()
-	db.ConnectDb()
-	db.ConnectRedis()
+	redis.Connect()
 }
 
 func main() {
@@ -29,7 +26,6 @@ func main() {
 	}))
 
 	v1 := gin.RouterGroup(*router.RouterGroup.Group("/v1"))
-	v1.Use(middleware.AuthMiddleware)
 
 	hub := ws.NewHub()
 	go hub.Run()
@@ -54,5 +50,5 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to start server")
 	}
-	defer db.RedisClient.Close()
+	defer redis.Client.Close()
 }

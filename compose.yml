@@ -18,17 +18,16 @@ services:
       start_period: 10s
 
   migrate:
-    image: gomicro/goose:latest
+    image: node:20-alpine
+    working_dir: /workspace
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} host=postgres port=5432 sslmode=disable
-      GOOSE_MIGRATION_DIR: /schema
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
     volumes:
-      - ./apps/chat-server/sql/schema:/schema
-    command: goose up
+      - ./:/workspace
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @thread/db db:migrate"
 
   redis:
     image: redis:7-alpine
@@ -64,6 +63,7 @@ services:
       - AUTH_SECRET=super-secret
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
       - REDIS_URL=redis://redis:6379
+      - CHAT_SERVER_TOKEN=chat-server-token
 
   chat-server:
     build:
@@ -83,8 +83,9 @@ services:
       - PORT=8001
       - CLIENT_APP_URL=http://localhost:3000
       - AUTH_SECRET=super-secret
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
       - REDIS_URL=redis://redis:6379
+      - API_URL=http://api:8000
+      - CHAT_SERVER_TOKEN=chat-server-token
 
   web:
     build:

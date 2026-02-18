@@ -5,7 +5,6 @@ import { AuthModule } from "./auth/auth.module.js";
 import { ChatsModule } from "./chats/chats.module.js";
 import { UsersModule } from "./users/users.module.js";
 import { SubscriptionsModule } from "./subscriptions/subscriptions.module.js";
-import { MessagesModule } from "./messages/messages.module.js";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard.js";
 
 @Module({
@@ -15,7 +14,6 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard.js";
     UsersModule,
     ChatsModule,
     SubscriptionsModule,
-    MessagesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

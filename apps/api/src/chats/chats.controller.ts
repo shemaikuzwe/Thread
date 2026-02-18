@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Param, Post, Query } from "@nestjs/common";
 import { CurrentUser } from "../common/decorators/current-user.decorator.js";
+import { Public } from "../common/decorators/public.decorator.js";
 import { ChatsService } from "./chats.service.js";
 
 @Controller("chats")
@@ -43,5 +44,23 @@ export class ChatsController {
     @Query("cursor") cursor = "0",
   ) {
     return this.chatsService.getMessages(id, Number(limit), Number(cursor));
+  }
+
+  @Public()
+  @Post("events")
+  persistEvent(
+    @Body() body: unknown,
+    @Headers("x-chat-server-token") token?: string,
+  ) {
+    return this.chatsService.persistEvent(body, token);
+  }
+
+  @Public()
+  @Get("internal/users/:id/threads")
+  userThreads(
+    @Param("id") userId: string,
+    @Headers("x-chat-server-token") token?: string,
+  ) {
+    return this.chatsService.getUserThreadIds(userId, token);
   }
 }
