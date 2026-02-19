@@ -1,29 +1,33 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from "@nestjs/common";
-import { CurrentUser } from "../common/decorators/current-user.decorator.js";
-import { Public } from "../common/decorators/public.decorator.js";
-import { ChatsService } from "./chats.service.js";
+import { Body, Controller, Get, Headers, Param, Post, Query, Request } from "@nestjs/common";
+import { ChatsService } from "./chats.service";
+
+type AuthRequest = { user: { id: string } };
 
 @Controller("chats")
 export class ChatsController {
   constructor(private readonly chatsService: ChatsService) {}
 
   @Get()
-  getChats(@CurrentUser("id") userId: string, @Query("search") search?: string) {
+  getChats(@Request() req: AuthRequest, @Query("search") search?: string) {
+    const userId = req.user.id;
     return this.chatsService.getChats(userId, search);
   }
 
   @Get("unread")
-  unread(@CurrentUser("id") userId: string) {
+  unread(@Request() req: AuthRequest) {
+    const userId = req.user.id;
     return this.chatsService.unread(userId);
   }
 
   @Post()
-  create(@CurrentUser("id") userId: string, @Body() body: { name: string; description: string }) {
+  create(@Request() req: AuthRequest, @Body() body: { name: string; description: string }) {
+    const userId = req.user.id;
     return this.chatsService.createChannel(userId, body);
   }
 
   @Post("dm")
-  createDM(@CurrentUser("id") userId: string, @Body() body: { user_id: string }) {
+  createDM(@Request() req: AuthRequest, @Body() body: { user_id: string }) {
+    const userId = req.user.id;
     return this.chatsService.createDM(userId, body.user_id);
   }
 
@@ -33,7 +37,8 @@ export class ChatsController {
   }
 
   @Get(":id/join")
-  join(@Param("id") id: string, @CurrentUser("id") userId: string) {
+  join(@Param("id") id: string, @Request() req: AuthRequest) {
+    const userId = req.user.id;
     return this.chatsService.join(id, userId);
   }
 
@@ -46,7 +51,6 @@ export class ChatsController {
     return this.chatsService.getMessages(id, Number(limit), Number(cursor));
   }
 
-  @Public()
   @Post("events")
   persistEvent(
     @Body() body: unknown,
@@ -55,7 +59,6 @@ export class ChatsController {
     return this.chatsService.persistEvent(body, token);
   }
 
-  @Public()
   @Get("internal/users/:id/threads")
   userThreads(
     @Param("id") userId: string,

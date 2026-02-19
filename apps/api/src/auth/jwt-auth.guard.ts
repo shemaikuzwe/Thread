@@ -4,25 +4,28 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
 import jwt from "jsonwebtoken";
-import { IS_PUBLIC_KEY } from "../decorators/public.decorator.js";
+import type { Request } from "express";
+
+type AuthenticatedRequest = Request & { user?: unknown };
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  private readonly openRoutes = new Set([
+    "POST /v1/auth/signup",
+    "POST /v1/auth/login",
+    "GET /v1/auth/login",
+    "GET /v1/auth/callback/google",
+    "GET /v1/auth/session",
+    "POST /v1/chats/events",
+  ]);
 
   canActivate(context: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (isPublic) {
+    const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    if (this.isOpenRoute(req)) {
       return true;
     }
 
-    const req = context.switchToHttp().getRequest();
     const token = this.extractToken(req);
     if (!token) {
       throw new UnauthorizedException();
@@ -42,7 +45,20 @@ export class JwtAuthGuard implements CanActivate {
     }
   }
 
-  private extractToken(req: { cookies?: Record<string, string>; headers: Record<string, string> }) {
+  private isOpenRoute(req: Request) {
+    const key = `${req.method} ${req.path}`;
+    if (this.openRoutes.has(key)) {
+      return true;
+    }
+
+    return (
+      req.method === "GET" &&
+      req.path.startsWith("/v1/chats/internal/users/") &&
+      req.path.endsWith("/threads")
+    );
+  }
+
+  private extractToken(req: Request) {
     const fromCookie = req.cookies?.auth_token;
     if (fromCookie) {
       return fromCookie;

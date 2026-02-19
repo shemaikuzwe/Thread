@@ -186,25 +186,25 @@ func messageCallback(message []byte, userID string) {
 		return
 	}
 	msg.UserID = userID
-	normalized, err := json.Marshal(msg)
+	m, err := json.Marshal(msg)
 	if err != nil {
 		log.Println("failed to normalize message payload:", err)
 		return
 	}
 	switch msg.Type {
 	case MESSAGE:
-		if err := api.PersistEvent(normalized); err != nil {
+		if err := api.PersistEvent(m); err != nil {
 			log.Println("failed to persist message:", err)
 			return
 		}
 	case UPDATE_LAST_READ:
-		if err := api.PersistEvent(normalized); err != nil {
+		if err := api.PersistEvent(m); err != nil {
 			log.Println("failed to update last-read:", err)
 			return
 		}
 	}
 
-	err = redis.Client.Publish(context.Background(), "chat.events.v1", normalized).Err()
+	err = redis.Client.Publish(context.Background(), "chat.events.v1", m).Err()
 	if err != nil {
 		log.Println("failed to publish chat event:", err)
 	}

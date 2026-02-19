@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
-import { CurrentUser } from "../common/decorators/current-user.decorator.js";
+import { Body, Controller, Delete, Get, Param, Post, Request } from "@nestjs/common";
 import { UsersService } from "./users.service.js";
+
+type AuthRequest = { user: { id: string } };
 
 @Controller("users")
 export class UsersController {
@@ -17,7 +18,8 @@ export class UsersController {
   }
 
   @Post("subscription")
-  subscribe(@CurrentUser("id") userId: string, @Body() body: { sub: unknown }) {
+  subscribe(@Request() req: AuthRequest, @Body() body: { sub: unknown }) {
+    const userId = req.user.id;
     return this.usersService.addSubscription(userId, body.sub);
   }
 
@@ -27,7 +29,8 @@ export class UsersController {
   }
 
   @Delete("subscription/:endpoint")
-  unsubscribe(@CurrentUser("id") userId: string, @Param("endpoint") endpoint: string) {
+  unsubscribe(@Request() req: AuthRequest, @Param("endpoint") endpoint: string) {
+    const userId = req.user.id;
     return this.usersService.removeSubscription(userId, endpoint);
   }
 }

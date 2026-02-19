@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Post, Query, Req, Res } from "@nestjs/common";
 import type { Response } from "express";
 import jwt from "jsonwebtoken";
-import { Public } from "../common/decorators/public.decorator.js";
 import { AuthService } from "./auth.service.js";
 import { LoginDto, RegisterDto } from "./auth.dto.js";
 
@@ -9,7 +8,6 @@ import { LoginDto, RegisterDto } from "./auth.dto.js";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
   @Post("signup")
   async signup(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.signup(dto);
@@ -17,7 +15,6 @@ export class AuthController {
     return { message: "user registered", user: result.user };
   }
 
-  @Public()
   @Post("login")
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(dto);
@@ -25,7 +22,6 @@ export class AuthController {
     return { message: "user logged in", user: result.user };
   }
 
-  @Public()
   @Get("login")
   oauthLogin(@Query("oauth") oauth?: string) {
     if (oauth === "google") {
@@ -36,13 +32,11 @@ export class AuthController {
     return { message: "Unsupported oauth provider" };
   }
 
-  @Public()
   @Get("callback/google")
   callback(@Res() res: Response) {
     return res.redirect(process.env.CLIENT_APP_URL || "http://localhost:5173");
   }
 
-  @Public()
   @Get("session")
   session(@Req() req: { cookies?: Record<string, string> }) {
     const token = req.cookies?.auth_token;

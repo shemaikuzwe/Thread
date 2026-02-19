@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db, users } from "@thread/db";
 import { eq } from "drizzle-orm";
-import type { LoginDto, RegisterDto } from "./auth.dto.js";
+import type { LoginDto, RegisterDto } from "./auth.dto";
 
 @Injectable()
 export class AuthService {
