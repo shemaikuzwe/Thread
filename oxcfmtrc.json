@@ -12,12 +12,5 @@
       ["sibling", "sibling-type"],
       ["index", "index-type"]
     ]
-  },
-
-  "experimentalTailwindcss": {
-    "stylesheet": "./app/globals.css",
-    "attributes": ["class", "className"],
-    "functions": ["clsx", "cn"],
-    "preserveWhitespace": true
   }
 }

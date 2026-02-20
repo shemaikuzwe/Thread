@@ -11,6 +11,7 @@ import {
   primaryKey,
   unique,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const threadTypeEnum = pgEnum("thread_type", ["group", "dm"]);
 
@@ -108,3 +109,69 @@ export const subscriptions = pgTable("subscription", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  threadUsers: many(threadUsers),
+  messages: many(messages),
+  lastReads: many(lastRead),
+  subscriptions: many(subscriptions),
+}));
+
+export const threadsRelations = relations(threads, ({ many }) => ({
+  threadUsers: many(threadUsers),
+  messages: many(messages),
+  lastReads: many(lastRead),
+}));
+
+export const threadUsersRelations = relations(threadUsers, ({ one }) => ({
+  thread: one(threads, {
+    fields: [threadUsers.threadId],
+    references: [threads.id],
+  }),
+  user: one(users, {
+    fields: [threadUsers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  thread: one(threads, {
+    fields: [messages.threadId],
+    references: [threads.id],
+  }),
+  user: one(users, {
+    fields: [messages.userId],
+    references: [users.id],
+  }),
+  files: many(files),
+  lastReads: many(lastRead),
+}));
+
+export const filesRelations = relations(files, ({ one }) => ({
+  message: one(messages, {
+    fields: [files.messageId],
+    references: [messages.id],
+  }),
+}));
+
+export const lastReadRelations = relations(lastRead, ({ one }) => ({
+  thread: one(threads, {
+    fields: [lastRead.threadId],
+    references: [threads.id],
+  }),
+  user: one(users, {
+    fields: [lastRead.userId],
+    references: [users.id],
+  }),
+  lastReadMessage: one(messages, {
+    fields: [lastRead.lastReadMessageId],
+    references: [messages.id],
+  }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
+}));

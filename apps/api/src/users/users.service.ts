@@ -1,37 +1,52 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { db, users } from "@thread/db";
-import { eq, sql } from "drizzle-orm";
+import { db, subscriptions, users } from "@thread/db";
+import { and, eq } from "drizzle-orm";
 
 @Injectable()
 export class UsersService {
   async findAll() {
-    return db.select({
-      id: users.id,
-      first_name: users.firstName,
-      last_name: users.lastName,
-      email: users.email,
-      profile_picture: users.profilePicture,
-    }).from(users);
+    const users = await db.query.users.findMany({
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        profilePicture: true,
+      },
+    });
+
+    return users.map((user) => ({
+      id: user.id,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      email: user.email,
+      profile_picture: user.profilePicture,
+    }));
   }
 
   async findById(id: string) {
-    const [user] = await db
-      .select({
-        id: users.id,
-        first_name: users.firstName,
-        last_name: users.lastName,
-        email: users.email,
-        profile_picture: users.profilePicture,
-      })
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, id),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        profilePicture: true,
+      },
+    });
 
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    return user;
+    return {
+      id: user.id,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      email: user.email,
+      profile_picture: user.profilePicture,
+    };
   }
 
   async addSubscription(userId: string, sub: unknown) {
@@ -40,19 +55,26 @@ export class UsersService {
       throw new NotFoundException("endpoint is required");
     }
 
-    await db.execute(sql`
-      insert into subscription(user_id, sub, endpoint)
-      values (${userId}::uuid, ${JSON.stringify(sub)}::jsonb, ${endpoint})
-      on conflict (endpoint) do update set sub = excluded.sub, user_id = excluded.user_id, updated_at = now()
-    `);
+    await db
+      .insert(subscriptions)
+      .values({ userId, sub, endpoint })
+      .onConflictDoUpdate({
+        target: subscriptions.endpoint,
+        set: { sub, userId, updatedAt: new Date() },
+      });
 
     return "Subscription created successfully";
   }
 
   async removeSubscription(userId: string, endpoint: string) {
-    await db.execute(sql`
-      delete from subscription where endpoint = ${endpoint} and user_id = ${userId}::uuid
-    `);
+    await db
+      .delete(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.endpoint, endpoint),
+          eq(subscriptions.userId, userId),
+        ),
+      );
     return "Subscription created successfully";
   }
 }

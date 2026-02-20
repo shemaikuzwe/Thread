@@ -1,25 +1,28 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { db } from "@thread/db";
-import { sql } from "drizzle-orm";
-
-function toRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === "object" && "rows" in result) {
-    return (result as { rows: T[] }).rows;
-  }
-  return [];
-}
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
+import {
+  db,
+  files as filesTable,
+  lastRead as lastReadTable,
+  messages as messagesTable,
+  threads as threadsTable,
+  threadUsers,
+  users as usersTable,
+} from "@thread/db";
+import { and, count, desc, eq, gt, ilike, inArray, ne, or } from "drizzle-orm";
 
 type ChatEventType = "MESSAGE" | "UPDATE_LAST_READ";
 
 type ChatEventPayload = {
-  id?: string;
+  id: string;
   message?: unknown;
-  thread_id?: string;
-  user_id?: string;
-  type?: string;
+  thread_id: string;
+  user_id: string;
+  type: ChatEventType;
   files?: Array<{
     name?: string;
     url?: string;
@@ -37,43 +40,47 @@ export class ChatsService {
     }
   }
 
-  async persistEvent(raw: unknown, token?: string) {
+  async persistEvent(data: unknown, token?: string) {
     this.validateInternalToken(token);
 
-    if (!raw || typeof raw !== "object") {
+    if (!data || typeof data !== "object") {
       throw new BadRequestException("Invalid event payload");
     }
-    const payload = raw as ChatEventPayload;
+    const payload = data as ChatEventPayload;
     const type = payload.type as ChatEventType;
 
     if (type === "MESSAGE") {
       if (!payload.id || !payload.thread_id || !payload.user_id) {
-        throw new BadRequestException("MESSAGE event missing id/thread_id/user_id");
+        throw new BadRequestException(
+          "MESSAGE event missing id/thread_id/user_id",
+        );
       }
       const text = typeof payload.message === "string" ? payload.message : "";
-      const files = Array.isArray(payload.files) ? payload.files : [];
+      const payloadFiles = Array.isArray(payload.files) ? payload.files : [];
 
       await db.transaction(async (tx) => {
-        await tx.execute(sql`
-          INSERT INTO messages(id, thread_id, user_id, message)
-          VALUES (${payload.id}::uuid, ${payload.thread_id}::uuid, ${payload.user_id}::uuid, ${text})
-          ON CONFLICT (id) DO NOTHING
-        `);
+        await tx
+          .insert(messagesTable)
+          .values({
+            id: payload.id,
+            threadId: payload.thread_id,
+            userId: payload.user_id,
+            message: text,
+          })
+          .onConflictDoNothing({ target: messagesTable.id });
 
-        for (const file of files) {
-          if (!file?.url || !file?.type) {
-            continue;
-          }
-          await tx.execute(sql`
-            INSERT INTO files(url, name, type, size, message_id)
-            VALUES (
-              ${file.url},
-              ${file.name ?? ""},
-              ${file.type},
-              ${Number(file.size ?? 0)},
-              ${payload.id}::uuid
-            )
-          `);
+        const files = payloadFiles
+          .filter((file) => file?.url && file?.type)
+          .map((file) => ({
+            url: file.url as string,
+            name: file.name ?? "",
+            type: file.type as string,
+            size: Number(file.size ?? 0),
+            messageId: payload.id,
+          }));
+
+        if (files.length > 0) {
+          await tx.insert(filesTable).values(files);
         }
       });
 
@@ -81,18 +88,29 @@ export class ChatsService {
     }
 
     if (type === "UPDATE_LAST_READ") {
-      if (!payload.thread_id || !payload.user_id || typeof payload.message !== "string") {
+      if (
+        !payload.thread_id ||
+        !payload.user_id ||
+        typeof payload.message !== "string"
+      ) {
         throw new BadRequestException("UPDATE_LAST_READ event missing fields");
       }
 
-      await db.execute(sql`
-        INSERT INTO last_read(thread_id, user_id, last_read_message_id)
-        VALUES (${payload.thread_id}::uuid, ${payload.user_id}::uuid, ${payload.message}::uuid)
-        ON CONFLICT (user_id, thread_id)
-        DO UPDATE SET
-          last_read_message_id = EXCLUDED.last_read_message_id,
-          updated_at = NOW()
-      `);
+      await db
+        .insert(lastReadTable)
+        .values({
+          threadId: payload.thread_id,
+          userId: payload.user_id,
+          lastReadMessageId: payload.message,
+        })
+        .onConflictDoUpdate({
+          target: [lastReadTable.userId, lastReadTable.threadId],
+          set: {
+            lastReadMessageId: payload.message,
+            updatedAt: new Date(),
+          },
+        });
+
       return { ok: true };
     }
 
@@ -102,206 +120,268 @@ export class ChatsService {
   async getUserThreadIds(userId: string, token?: string) {
     this.validateInternalToken(token);
 
-    const rows = toRows<{ thread_id: string }>(await db.execute(sql`
-      SELECT thread_id::text
-      FROM thread_user
-      WHERE user_id = ${userId}::uuid
-    `));
-    return rows.map((row) => row.thread_id);
+    const threads = await db.query.threadUsers.findMany({
+      where: eq(threadUsers.userId, userId),
+      columns: {
+        threadId: true,
+      },
+    });
+
+    return threads.map((t) => t.threadId);
   }
 
   async getChats(userId: string, search?: string) {
     if (search) {
       const pattern = `%${search.trim()}%`;
-      const result = await db.execute(sql`
-        SELECT t.id, t.name, 'group' as type
-        FROM thread t
-        WHERE t.name ILIKE ${pattern} AND t.is_private = false
-        UNION
-        SELECT u.id, CONCAT(u.first_name, ' ', u.last_name) as name, 'user' as type
-        FROM users u
-        WHERE u.first_name ILIKE ${pattern} OR u.last_name ILIKE ${pattern}
-      `);
-      return toRows(result);
+
+      const [groups, users] = await Promise.all([
+        db.query.threads.findMany({
+          where: and(
+            ilike(threadsTable.name, pattern),
+            eq(threadsTable.isPrivate, false),
+          ),
+          columns: { id: true, name: true },
+        }),
+        db.query.users.findMany({
+          where: or(
+            ilike(usersTable.firstName, pattern),
+            ilike(usersTable.lastName, pattern),
+          ),
+          columns: { id: true, firstName: true, lastName: true },
+        }),
+      ]);
+
+      return [
+        ...groups.map((t) => ({
+          id: t.id,
+          name: t.name,
+          type: "group" as const,
+        })),
+        ...users.map((u) => ({
+          id: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          type: "user" as const,
+        })),
+      ];
     }
 
-    const result = await db.execute(sql`
-      SELECT
-        thread.*,
-        json_agg(json_build_object(
-            'id', users.id,
-            'first_name', users.first_name,
-            'last_name', users.last_name,
-            'email', users.email,
-            'profile_picture', users.profile_picture
-        )) AS users,
-        COALESCE(
-            (
-                SELECT json_build_object(
-                    'id', m.id,
-                    'message', m.message,
-                    'user_id', m.user_id,
-                    'created_at', m.created_at
-                )
-                FROM messages m
-                WHERE m.thread_id = thread.id
-                ORDER BY m.created_at DESC
-                LIMIT 1
-            ),
-            'null'
-        )::json AS last_message
-      FROM thread
-      JOIN thread_user cu1 ON thread.id = cu1.thread_id
-      JOIN thread_user cu2 ON thread.id = cu2.thread_id
-      JOIN users ON cu2.user_id = users.id
-      WHERE cu1.user_id = ${userId}::uuid
-      GROUP BY thread.id
-    `);
-    return toRows(result);
+    const userThreads = await db.query.threadUsers.findMany({
+      where: eq(threadUsers.userId, userId),
+      with: {
+        thread: {
+          with: {
+            threadUsers: {
+              with: {
+                user: {
+                  columns: {
+                    password: false,
+                  },
+                },
+              },
+            },
+            messages: {
+              orderBy: [desc(messagesTable.createdAt)],
+              limit: 1,
+            },
+          },
+        },
+      },
+    });
+
+    return userThreads
+      .filter((ut) => !!ut.thread)
+      .map(({ thread }) => {
+        const lastMessage = thread.messages[0];
+
+        return {
+          id: thread.id,
+          name: thread.name,
+          description: thread.description,
+          is_private: thread.isPrivate,
+          type: thread.type,
+          created_at: thread.createdAt,
+          updated_at: thread.updatedAt,
+          users: thread.threadUsers.map((tu) => ({
+            id: tu.user.id,
+            first_name: tu.user.firstName,
+            last_name: tu.user.lastName,
+            email: tu.user.email,
+            profile_picture: tu.user.profilePicture,
+          })),
+          last_message: lastMessage
+            ? {
+                id: lastMessage.id,
+                message: lastMessage.message,
+                user_id: lastMessage.userId,
+                created_at: lastMessage.createdAt,
+              }
+            : null,
+        };
+      });
   }
 
   async unread(userId: string) {
-    const result = await db.execute(sql`
-      SELECT
-        l.last_read_message_id AS last_read,
-        l.thread_id,
-        (
-          SELECT COUNT(m.id)
-          FROM messages m
-          WHERE
-            m.thread_id = l.thread_id
-            AND m.user_id != ${userId}::uuid
-            AND m.created_at > lm.created_at
-        ) AS unread_count
-      FROM last_read l
-      JOIN messages lm ON l.last_read_message_id = lm.id
-      WHERE l.user_id = ${userId}::uuid
-    `);
-    return toRows(result);
+    const readRows = await db.query.lastRead.findMany({
+      where: eq(lastReadTable.userId, userId),
+      with: {
+        lastReadMessage: true,
+      },
+    });
+
+    const results = await Promise.all(
+      readRows.map(async (row) => {
+        const since = row.lastReadMessage?.createdAt;
+        if (!since) {
+          return {
+            last_read: row.lastReadMessageId,
+            thread_id: row.threadId,
+            unread_count: 0,
+          };
+        }
+        const unreadCount = await db
+          .select({ count: count() })
+          .from(messagesTable)
+          .where(
+            and(
+              eq(messagesTable.threadId, row.threadId),
+              ne(messagesTable.userId, userId),
+              gt(messagesTable.createdAt, since),
+            ),
+          );
+        return {
+          last_read: row.lastReadMessageId,
+          thread_id: row.threadId,
+          unread_count: unreadCount[0]?.count ?? 0,
+        };
+      }),
+    );
+
+    return results;
   }
 
-  async createChannel(userId: string, body: { name: string; description: string }) {
-    const result = await db.execute(sql`
-      INSERT INTO thread(name, description, type)
-      VALUES (${body.name}, ${body.description}, 'group'::thread_type)
-      RETURNING id
-    `);
+  async createChannel(
+    userId: string,
+    body: { name: string; description: string },
+  ) {
+    const [thread] = await db
+      .insert(threadsTable)
+      .values({
+        name: body.name,
+        description: body.description,
+        type: "group",
+      })
+      .returning({ id: threadsTable.id });
 
-    const rows = toRows<{ id: string }>(result);
-    const threadId = (rows[0] as { id: string }).id;
+    await db.insert(threadUsers).values({
+      threadId: thread.id,
+      userId,
+    });
 
-    await db.execute(sql`
-      INSERT INTO thread_user(thread_id, user_id)
-      VALUES (${threadId}::uuid, ${userId}::uuid)
-    `);
-
-    return threadId;
+    return thread.id;
   }
 
   async createDM(userId: string, otherUserId: string) {
-    const existing = toRows<{ id: string }>(await db.execute(sql`
-      SELECT t.id
-      FROM thread t
-      JOIN thread_user tu1 ON t.id = tu1.thread_id
-      JOIN thread_user tu2 ON t.id = tu2.thread_id
-      WHERE t.type = 'dm'::thread_type
-      AND tu1.user_id = ${userId}::uuid
-      AND tu2.user_id = ${otherUserId}::uuid
-      LIMIT 1
-    `));
+    const userThreads = await db.query.threadUsers.findMany({
+      where: eq(threadUsers.userId, userId),
+      with: {
+        thread: true,
+      },
+    });
 
-    if (existing.length) {
-      return { id: (existing[0] as { id: string }).id };
+    const dmThreadIds = userThreads
+      .filter((ut) => ut.thread?.type === "dm")
+      .map((ut) => ut.threadId);
+
+    if (dmThreadIds.length) {
+      const existing = await db.query.threadUsers.findFirst({
+        where: and(
+          inArray(threadUsers.threadId, dmThreadIds),
+          eq(threadUsers.userId, otherUserId),
+        ),
+      });
+      if (existing) {
+        return { id: existing.threadId };
+      }
     }
 
-    const rows = toRows<{ id: string }>(await db.execute(sql`
-      INSERT INTO thread(type) VALUES ('dm'::thread_type) RETURNING id
-    `));
-    const id = (rows[0] as { id: string }).id;
+    return await db.transaction(async (tx) => {
+      const [thread] = await tx
+        .insert(threadsTable)
+        .values({ type: "dm" })
+        .returning({ id: threadsTable.id });
 
-    await db.execute(sql`
-      INSERT INTO thread_user(thread_id, user_id)
-      VALUES (${id}::uuid, ${userId}::uuid), (${id}::uuid, ${otherUserId}::uuid)
-    `);
+      await tx.insert(threadUsers).values([
+        { threadId: thread.id, userId },
+        { threadId: thread.id, userId: otherUserId },
+      ]);
 
-    return { id };
+      return { id: thread.id };
+    });
   }
 
   async getChatById(id: string) {
-    const rows = toRows(await db.execute(sql`
-      SELECT  thread.*,json_agg(json_build_object(
-      'id', users.id,
-      'first_name', users.first_name,
-      'last_name', users.last_name,
-      'profile_picture',users.profile_picture,
-      'email', users.email)) AS users
-      FROM thread INNER JOIN thread_user
-      ON thread.id = thread_user.thread_id
-      INNER JOIN users ON thread_user.user_id = users.id
-      WHERE  thread.id = ${id}::uuid
-      GROUP BY thread.id
-    `));
-
-    if (!rows.length) {
+    const chat = await db.query.threads.findFirst({
+      where: eq(threadsTable.id, id),
+      with: {
+        threadUsers: {
+          with: { user: { columns: { password: false } } },
+        },
+      },
+    });
+    if (!chat) {
       throw new NotFoundException("chat not found");
     }
-
-    return rows[0];
+    return {
+      id: chat.id,
+      name: chat.name,
+      description: chat.description,
+      is_private: chat.isPrivate,
+      type: chat.type,
+      created_at: chat.createdAt,
+      updated_at: chat.updatedAt,
+      users: chat.threadUsers.flatMap((t) => ({
+        id: t.user.id,
+        first_name: t.user.firstName,
+        last_name: t.user.lastName,
+        profile_picture: t.user.profilePicture,
+        email: t.user.email,
+      })),
+    };
   }
 
   async join(id: string, userId: string) {
-    await db.execute(sql`
-      INSERT INTO thread_user(thread_id, user_id)
-      VALUES (${id}::uuid, ${userId}::uuid)
-      ON CONFLICT DO NOTHING
-    `);
+    await db.insert(threadUsers).values({
+      threadId: id,
+      userId,
+    });
+
     return { message: "Joined channel" };
   }
 
   async getMessages(id: string, limit: number, cursor: number) {
-    const messages = toRows(await db.execute(sql`
-      SELECT
-      m.*,
-      json_build_object(
-        'id', u.id,
-        'first_name', u.first_name,
-        'last_name', u.last_name,
-        'email', u.email,
-        'profile_picture', u.profile_picture
-      ) AS "from",
-      COALESCE(
-      json_arrayagg(
-        json_build_object(
-          'id', f.id,
-          'url', f.url,
-          'type', f.type,
-          'size', f.size,
-          'name',f.name
-        )
-        ORDER BY f.id
-        ABSENT ON NULL
-      ) FILTER (WHERE f.id IS NOT NULL),
-      '[]'
-      )::json
-      AS files
-    FROM messages m
-    INNER JOIN users u ON m.user_id = u.id
-    LEFT JOIN files f ON f.message_id = m.id
-    WHERE m.thread_id = ${id}::uuid
-    GROUP BY m.id, u.id
-    ORDER BY m.created_at DESC
-    LIMIT ${limit}
-    OFFSET ${cursor}
-    `));
+    const [messages, total] = await Promise.all([
+      db.query.messages.findMany({
+        where: eq(messagesTable.threadId, id),
+        orderBy: [desc(messagesTable.createdAt)],
+        limit,
+        offset: cursor,
+        with: {
+          user: { columns: { password: false } },
+          files: true,
+        },
+      }),
+      db
+        .select({ id: count() })
+        .from(messagesTable)
+        .where(eq(messagesTable.threadId, id)),
+    ]);
 
-    const totalRows = toRows<{ total: number }>(await db.execute(sql`
-      SELECT COUNT(*)::int AS total FROM messages WHERE thread_id = ${id}::uuid
-    `));
-
-    const total = Number((totalRows[0] as { total: number }).total);
-    const sorted = [...messages].reverse();
     const nextCursor = messages.length === limit ? cursor + limit : null;
 
-    return { messages: sorted, total, nextCursor };
+    return {
+      messages: messages.toReversed(),
+      total: total.length,
+      nextCursor,
+    };
   }
 }
