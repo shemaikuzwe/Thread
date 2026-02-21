@@ -1,9 +1,11 @@
+"use client";
+
 import { ChatSidebar } from "@/components/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useWebsocket } from "@/hooks/use-weboscket";
 import { useEffect } from "react";
-import { Outlet } from "react-router";
-export default function ChatLayout() {
+
+export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const { readyState } = useWebsocket();
 
   useEffect(() => {
@@ -11,11 +13,12 @@ export default function ChatLayout() {
       console.log("websocket connected");
     }
   }, [readyState]);
+
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="flex  h-screen w-full">
+      <div className="flex h-screen w-full">
         <ChatSidebar />
-        <Outlet />
+        {children}
       </div>
     </SidebarProvider>
   );

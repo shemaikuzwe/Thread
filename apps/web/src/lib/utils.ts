@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { generateReactHelpers, generateUploadButton } from "@uploadthing/react";
-import type { UploadRouter } from "@/pages/api.uploadthing";
+import type { UploadRouter } from "@/app/api/uploadthing/route";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

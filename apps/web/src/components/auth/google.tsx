@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 export default function Google() {
   // TODO:Make this callbakc robust
   const handleGoogleLogin = async () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/login?oauth=google`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/login?oauth=google`;
     // const popup = window.open(
     //   `${apiUrl}/auth/login?oauth=google`,
     //   "googleAuth",

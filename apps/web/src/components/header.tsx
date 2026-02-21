@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import Link from "next/link";
 import Logo from "./logo";
 import { Button } from "./ui/button";
 
@@ -10,20 +10,20 @@ export default function Header() {
           <Logo />
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="font-medium">
+          <Link href="/" className="font-medium">
             Home
           </Link>
-          <Link to="#features" className="font-medium">
+          <Link href="#features" className="font-medium">
             Features
           </Link>
-          <Link to="#pricing" className="font-medium">
+          <Link href="#pricing" className="font-medium">
             Pricing
           </Link>
           <Button asChild variant={"ghost"}>
-            <Link to="/auth/login">Login</Link>
+            <Link href="/auth/login">Login</Link>
           </Button>
           <Button asChild>
-            <Link to="/auth/register">Sign Up</Link>
+            <Link href="/auth/register">Sign Up</Link>
           </Button>
         </div>
       </nav>

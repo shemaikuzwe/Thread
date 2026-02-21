@@ -6,7 +6,7 @@ import { useMessageStatus, useUnReadMessages, type UnReadMessage } from "@/hooks
 import type { ChatWithUsers } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
-import { useLocation, useNavigate } from "react-router";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function ChatListItem({
   chat,
@@ -15,8 +15,8 @@ export default function ChatListItem({
   chat: ChatWithUsers;
   unReadMesssage: UnReadMessage | undefined;
 }) {
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const { data: msgStatus } = useMessageStatus(chat.id);
   const { name } = useChatMeta(chat);
   const { data: un_read } = useUnReadMessages(chat.id, {
@@ -28,7 +28,7 @@ export default function ChatListItem({
     <div>
       <div
         onClick={() => {
-          navigate(`/chat/${chat.id}`);
+          router.push(`/chat/${chat.id}`);
         }}
         className={cn(
           "w-full flex items-center gap-3  rounded-md px-1.5 h-16 hover:bg-muted",

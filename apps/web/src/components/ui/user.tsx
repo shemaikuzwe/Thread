@@ -8,16 +8,16 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { AvatarImage } from "./avatar";
-import { Link } from "react-router";
-import defaultAvatar from "@/assets/default.png";
+import Link from "next/link";
+const defaultAvatar = "/default.png";
 import { api } from "@/lib/axios";
-import { useNavigate } from "react-router";
+import { useRouter } from "next/navigation";
 import { useSession } from "../providers/session-provider";
 import ThemeToggle from "../theme-toggle";
 
 export default function User() {
   const session = useSession();
-  const navigate = useNavigate();
+  const router = useRouter();
   if (!session || session.status === "pending" || !session.user) return null;
   const name = `${session.user?.first_name ?? ""} ${session?.user?.last_name ?? ""}`;
   const handleLogout = async () => {
@@ -25,7 +25,7 @@ export default function User() {
     if (res.status !== 200) {
       throw new Error("Something went wrong");
     }
-    navigate("/login");
+    router.push("/auth/login");
   };
 
   return (
@@ -48,10 +48,10 @@ export default function User() {
         <DropdownMenuSeparator />
         <ThemeToggle />
         <DropdownMenuItem asChild>
-          <Link to={`/chat/settings?tab=profile`}>Profile</Link>
+          <Link href={`/chat/settings?tab=profile`}>Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to={`/chat/settings?tab=settings`}>Settings</Link>
+          <Link href={`/chat/settings?tab=settings`}>Settings</Link>
         </DropdownMenuItem>
         {/* <DropdownMenuItem><ThemeToggle /></DropdownMenuItem> */}
         <DropdownMenuSeparator />

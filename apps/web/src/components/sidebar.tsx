@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import User from "./ui/user";
 import { Badge } from "./ui/badge";
-import { Link } from "react-router";
+import Link from "next/link";
 interface Item {
   title: string;
   icon: React.ForwardRefExoticComponent<
@@ -73,7 +73,7 @@ export function ChatSidebar() {
                     className="relative w-full"
                     asChild
                   >
-                    <Link to={"/chat"}>
+                    <Link href={"/chat"}>
                       {item.notifications && item.notifications > 0 && (
                         <Badge
                           className="absolute  top-0 right-1 h-4 text-xs px-1"

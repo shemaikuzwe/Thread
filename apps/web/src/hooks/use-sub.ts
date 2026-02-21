@@ -6,9 +6,7 @@ import { toast } from "sonner";
 export function useSubscriptions() {
   const [isSupported, setIsSupported] = useState(false);
   const [loading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<PushSubscription | null>(
-    null,
-  );
+  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
@@ -31,9 +29,7 @@ export function useSubscriptions() {
       const registration = await navigator.serviceWorker.ready;
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          import.meta.env.VITE_VAPID_PUBLIC_KEY!,
-        ),
+        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       });
       setSubscription(sub);
       subscribeUser(sub).catch(() => {

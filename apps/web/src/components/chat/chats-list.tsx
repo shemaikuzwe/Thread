@@ -1,4 +1,4 @@
-import EmptyChatsList from "@/components/chat/empty-chats-list.tsx";
+import EmptyChatsList from "@/components/chat/empty-chats-list";
 import { api } from "@/lib/axios";
 import type { ChatWithUsers } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";

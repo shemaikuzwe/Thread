@@ -1,3 +1,5 @@
+"use client";
+
 import { OAuthProviders } from "@/components/auth/providers";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -9,8 +11,8 @@ import { loginSchema, type LoginData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
-import { Link } from "react-router";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const form = useForm({
@@ -19,7 +21,7 @@ export default function LoginPage() {
       rememberMe: false,
     },
   });
-  const navigate = useNavigate();
+  const router = useRouter();
   const { mutate } = useMutation({
     mutationFn: async (data: LoginData) => {
       return await api.post(`/auth/login`, {
@@ -28,19 +30,18 @@ export default function LoginPage() {
       });
     },
     onSuccess: () => {
-      navigate("/chat", { replace: true });
+      router.push("/chat");
     },
     onError: () => {
       // TODO: Add toast
     },
   });
   return (
-    <div className="flex justify-center  items-center w-full">
+    <div className="flex justify-center items-center w-full min-h-screen">
       <main className="px-6">
         <div className="max-w-md mx-auto">
           <div className="w-100 bg-card shadow-xl p-8 rounded-xl">
             {/* Header */}
-
             <div className="text-center flex flex-col justify-center items-center mb-8">
               <Logo />
               <h1 className="text-md leading-6 font-bold">Sign in to Thread</h1>
@@ -64,7 +65,6 @@ export default function LoginPage() {
                         <FormControl>
                           <Input type="email" placeholder="Enter your email" {...field} />
                         </FormControl>
-                        {/* <FormMessage/> */}
                       </FormItem>
                     )}
                   />
@@ -80,7 +80,6 @@ export default function LoginPage() {
                         <FormControl>
                           <Input {...field} type="password" placeholder="Enter your Password" />
                         </FormControl>
-                        {/* <FormMessage/> */}
                       </FormItem>
                     )}
                   />
@@ -99,7 +98,7 @@ export default function LoginPage() {
                     </label>
                   </div>
 
-                  <Link to="#" className="text-sm font-medium">
+                  <Link href="#" className="text-sm font-medium">
                     Forgot password?
                   </Link>
                 </div>
@@ -114,7 +113,7 @@ export default function LoginPage() {
             <div className="text-center mt-6">
               <p>
                 Don't have an account?{" "}
-                <Link to="/auth/register" className="text-primary font-medium">
+                <Link href="/auth/register" className="text-primary font-medium">
                   Sign up
                 </Link>
               </p>

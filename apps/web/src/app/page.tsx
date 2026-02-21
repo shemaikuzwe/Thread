@@ -1,40 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
-import { MessageCircle, Video, Check, FileQuestion, RefreshCcw } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import Link from "next/link";
+import { MessageCircle, Video, Check } from "lucide-react";
+import Header from "@/components/header";
 
-export function ErrorBoundary() {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-lg mx-auto rounded-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold text-primary mb-2">Errors</CardTitle>
-          <CardDescription className="text-2xl font-semibold">Oopps!</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-4">
-          <FileQuestion size={100} className="text-muted-foreground" />
-          <p className="text-center text-muted-foreground">Something went wrong</p>
-        </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <Button onClick={() => window.location.reload()}>
-            <RefreshCcw className="w-5 h-5" />
-            Try Again
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-  );
-}
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <Header />
       <main className="px-6 pt-10 pb-20 lg:pt-32 lg:pb-32 relative overflow-hidden">
         <div className="max-w-7xl mx-auto text-center space-y-8">
           <div className="space-y-4 max-w-4xl mx-auto">
@@ -50,10 +22,10 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Button size="lg" className="h-12 px-8 text-lg rounded-full" asChild>
-              <Link to="/auth/register">Start for free</Link>
+              <Link href="/auth/register">Start for free</Link>
             </Button>
             <Button size="lg" variant="outline" className="h-12 px-8 text-lg rounded-full" asChild>
-              <Link to="/auth/login">Live Demo</Link>
+              <Link href="/auth/login">Live Demo</Link>
             </Button>
           </div>
         </div>

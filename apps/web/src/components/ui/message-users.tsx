@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 import { AvatarImage } from "./avatar";
-import defaultAvatar from "@/assets/default.png";
+const defaultAvatar = "/default.png";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { type User } from "@/lib/types";

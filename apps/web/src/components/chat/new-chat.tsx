@@ -10,7 +10,7 @@ import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, PenBoxIcon, UserPlus, Users } from "lucide-react";
 import { startTransition, useState } from "react";
-import { useNavigate } from "react-router";
+import { useRouter } from "next/navigation";
 
 type Result = {
   id: string;
@@ -52,7 +52,7 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         {children ? (
           children
         ) : (
@@ -88,6 +88,7 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
                   <div className="flex flex-col gap-2 w-full">
                     {chatTypes.map((c) => (
                       <Button
+                        key={c.text}
                         type="button"
                         variant="ghost"
                         className="w-full  justify-start gap-3 p-3 h-auto rounded-none hover:bg-muted"
@@ -120,10 +121,10 @@ function SearchItem({
   setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const handleClick = () => {
     if (item.type === "group") {
-      navigate(`/chat/${item.id}`);
+      router.push(`/chat/${item.id}`);
       setSearch("");
       setOpen(false);
       return;
@@ -132,7 +133,7 @@ function SearchItem({
       const res = await api.post("/chats/dm", { user_id: item.id });
       if (!res.data) throw new Error("something went wrong");
       const id = res.data.id;
-      navigate(`/chat/${id}`);
+      router.push(`/chat/${id}`);
       setOpen(false);
       setSearch("");
     });

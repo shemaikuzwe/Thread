@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,20 +7,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, Edit } from "lucide-react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { PushNotificationManager } from "@/components/push-notification";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+const defaultAvatar = "/default.png";
 
 export default function UserProfile() {
   const session = useSession();
   const user = session?.user;
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get("tab") || "profile");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentTab = searchParams.get("tab") || "profile";
+  const [tab, setTab] = useState(currentTab);
+
+  useEffect(() => {
+    setTab(currentTab);
+  }, [currentTab]);
+
   const handleTabChange = (value: string) => {
-    setSearchParams(`?tab=${value}`);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    router.push(`${pathname}?${params.toString()}`);
     setTab(value);
   };
+
   return (
     <div className="w-full h-full bg-background space-y-4">
       <div className="flex max-sm:flex-col w-full">
@@ -26,7 +41,7 @@ export default function UserProfile() {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={user?.profile_picture} alt="Profile" />
+                <AvatarImage src={user?.profile_picture ?? defaultAvatar} alt="Profile" />
                 <AvatarFallback className="text-2xl">
                   <User className="h-16 w-16" />
                 </AvatarFallback>
@@ -49,7 +64,7 @@ export default function UserProfile() {
 
         {/* Main Content */}
         <div className="flex-1 p-6 w-full">
-          <Tabs defaultValue={tab} className="w-full" onValueChange={handleTabChange}>
+          <Tabs value={tab} className="w-full" onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile">Personal Info</TabsTrigger>
               <TabsTrigger value="settings">Account Settings</TabsTrigger>
@@ -123,7 +138,6 @@ export default function UserProfile() {
                         Receive push notifications for important updates and messages
                       </p>
                     </div>
-                    <input />
                     <PushNotificationManager />
                   </div>
                 </CardContent>

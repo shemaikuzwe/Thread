@@ -1,6 +1,6 @@
 import type { Message } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import EmptyChat from "@/components/chat/empty-messages.tsx";
+import EmptyChat from "@/components/chat/empty-messages";
 import { Meta } from "./message-meta";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { FilePreview } from "@/components/chat/file-preview";

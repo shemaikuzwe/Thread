@@ -8,8 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { AvatarImage } from "./avatar";
-import { Link } from "react-router";
-import defaultAvatar from "@/assets/default.png";
+import Link from "next/link";
+const defaultAvatar = "/default.png";
 import type { Chat, ChatWithUsers, User } from "@/lib/types";
 import { useChatMeta } from "@/hooks";
 import { InfoIcon, MessageCircle } from "lucide-react";
@@ -58,12 +58,12 @@ export function User({
           <DropdownMenuLabel>{`${user.first_name} ${user.last_name}`}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to={"#"}>
+            <Link href={"#"}>
               <MessageCircle className="h-1 w-1" /> Message
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to={`#`}>
+            <Link href={`#`}>
               <InfoIcon className="h-1 w-1" /> Info
             </Link>
           </DropdownMenuItem>

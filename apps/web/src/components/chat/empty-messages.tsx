@@ -4,7 +4,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty.tsx";
+} from "@/components/ui/empty";
 import { MessageCircleIcon } from "lucide-react";
 
 export default function EmptyMessages() {

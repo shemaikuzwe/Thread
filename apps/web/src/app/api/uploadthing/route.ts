@@ -1,4 +1,4 @@
-import { createRouteHandler, createUploadthing } from "uploadthing/remix";
+import { createRouteHandler, createUploadthing } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import type { FileRouter } from "uploadthing/types";
 import { auth } from "@/lib/server";
@@ -14,8 +14,8 @@ export const uploadRouter = {
     text: { maxFileSize: "64KB" },
     blob: { maxFileSize: "64MB" },
   })
-    .middleware(async ({ event }) => {
-      const session = await auth(event.request);
+    .middleware(async ({ req }) => {
+      const session = await auth(req);
       if (session.status !== "authenticated" || !session.user) {
         throw new UploadThingError("User not found");
       }
@@ -29,6 +29,4 @@ export const uploadRouter = {
 
 export type UploadRouter = typeof uploadRouter;
 
-const handler = createRouteHandler({ router: uploadRouter });
-export const loader = handler.loader;
-export const action = handler.action;
+export const { GET, POST } = createRouteHandler({ router: uploadRouter });

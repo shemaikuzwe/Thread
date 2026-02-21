@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { createChatSchema, type CreateChatData } from "@/lib/schema.ts";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { createChatSchema, type CreateChatData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form.tsx";
-import { api } from "@/lib/axios.ts";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
+import { api } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "../ui/textarea.tsx";
-import { cn } from "@/lib/utils.ts";
+import { Textarea } from "../ui/textarea";
+import { cn } from "@/lib/utils";
 
 export function CreateThread({ className, onClose }: { onClose: () => void; className?: string }) {
   const form = useForm<CreateChatData>({

@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -7,10 +9,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { MessageCircleIcon } from "lucide-react";
-import ChatsList from "./chats-list";
-import NewChat from "./new-chat";
+import ChatsList from "@/components/chat/chats-list";
+import NewChat from "@/components/chat/new-chat";
 
-export default function Index() {
+export default function ChatIndexPage() {
   return (
     <div className="flex gap-2 justify-center w-full h-full">
       <ChatsList />

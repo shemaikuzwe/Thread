@@ -1,8 +1,10 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -10,10 +12,13 @@ import { api } from "@/lib/axios";
 import { Separator } from "@/components/ui/separator";
 import { OAuthProviders } from "@/components/auth/providers";
 import Logo from "@/components/logo";
+import { useRouter } from "next/navigation";
+
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
   });
+  const router = useRouter();
   const { mutate } = useMutation({
     mutationFn: async (data: RegisterData) => {
       const res = await api.post(
@@ -36,16 +41,18 @@ export default function RegisterPage() {
       }
       return await res.data;
     },
-    onSuccess: () => {},
+    onSuccess: () => {
+      router.push("/chat");
+    },
     onError: () => {
       // TODO: Add toast
     },
   });
   return (
-    <div className="flex justify-center items-center">
+    <div className="flex justify-center items-center min-h-screen">
       <main className="px-6 py-2">
         <div className="max-w-md mx-auto">
-          <div className="bg-card  w-105  shadow-xl rounded-xl p-6">
+          <div className="bg-card w-105 shadow-xl rounded-xl p-6">
             {/* Header */}
             <div className="flex flex-col justify-center items-center text-center mb-8">
               <Logo />
@@ -53,7 +60,6 @@ export default function RegisterPage() {
             </div>
             <OAuthProviders />
             {/* Divider */}
-
             <div className="flex items-center gap-4 my-6">
               <Separator className="flex-1" />
               <span className="text-sm text-muted-foreground font-medium">Or</span>
@@ -101,7 +107,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="flex  gap-2">
+                <div className="flex gap-2">
                   <FormField
                     control={form.control}
                     name="password"
@@ -127,17 +133,17 @@ export default function RegisterPage() {
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full font-semibold  mt-6">
+                <Button type="submit" className="w-full font-semibold mt-6">
                   Sign Up
                 </Button>
               </form>
             </Form>
 
-            {/* Sign up link */}
+            {/* Login link */}
             <div className="text-center mt-3">
               <p>
                 Have an account?{" "}
-                <Link to="/login" className="text-primary font-medium">
+                <Link href="/auth/login" className="text-primary font-medium">
                   Login
                 </Link>
               </p>

@@ -1,15 +1,16 @@
 import type { Chat, ChatWithUsers, User } from "@/lib/types";
-import { Link, useParams } from "react-router";
-import JoinButton from "./join-button.tsx";
-import { useOnline } from "@/hooks/use-messages.ts";
-import ThemeToggle from "../theme-toggle.tsx";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu.tsx";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import JoinButton from "./join-button";
+import { useOnline } from "@/hooks/use-messages";
+import ThemeToggle from "../theme-toggle";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { ArrowLeft, EllipsisVerticalIcon, Video } from "lucide-react";
-import { ChatHeaderSkelton } from "../ui/chat-skeltons.tsx";
-import ChatAvatar from "../ui/user-avatar.tsx";
-import { useChatMeta } from "@/hooks/index.ts";
-import { useIsMobile } from "@/hooks/use-mobile.ts";
-import { Button } from "../ui/button.tsx";
+import { ChatHeaderSkelton } from "../ui/chat-skeltons";
+import ChatAvatar from "../ui/user-avatar";
+import { useChatMeta } from "@/hooks/index";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "../ui/button";
 
 interface Props {
   chat: ChatWithUsers | undefined;
@@ -21,7 +22,7 @@ interface Props {
 export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
   const isMobile = useIsMobile();
   const { id } = useParams();
-  if (!id) throw new Error("Missing chat ID");
+  if (!id || typeof id !== "string") throw new Error("Missing chat ID");
   const { data: online } = useOnline(id);
   const isOnline =
     chat?.type === "dm" &&
@@ -33,7 +34,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
     <div className="border-b cursor-pointer  px-6 py-2 flex justify-between">
       {isMobile && (
         <Button variant={"outline"} size={"icon"} asChild>
-          <Link to={"/chat"}>
+          <Link href={"/chat"}>
             <ArrowLeft />
           </Link>
         </Button>
