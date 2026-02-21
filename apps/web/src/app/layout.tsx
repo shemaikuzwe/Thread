@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { auth } from "@/lib/server";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -20,11 +19,6 @@ export const metadata: Metadata = {
   description: "Connect with your team simpler, faster, better.",
 };
 
-async function SessionWrapper({ children }: { children: React.ReactNode }) {
-  const session = await auth().catch(() => null);
-  return <Providers session={session}>{children}</Providers>;
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,9 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <Suspense>
-          <SessionWrapper>{children}</SessionWrapper>
+          <Providers>{children}</Providers>
         </Suspense>
       </body>
     </html>

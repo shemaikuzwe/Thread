@@ -148,6 +148,7 @@ func ServeWs(hub *Hub, ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
+	log.Println("Client connected")
 
 	// Upgrade HTTP to WebSocket
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)

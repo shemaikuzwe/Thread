@@ -3,7 +3,13 @@
 import { OAuthProviders } from "@/components/auth/providers";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/axios";
@@ -13,6 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const form = useForm({
@@ -33,7 +40,7 @@ export default function LoginPage() {
       router.push("/chat");
     },
     onError: () => {
-      // TODO: Add toast
+      toast.error("Login Failed");
     },
   });
   return (
@@ -50,11 +57,16 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
               <Separator className="flex-1" />
-              <span className="text-sm text-muted-foreground font-medium">Or</span>
+              <span className="text-sm text-muted-foreground font-medium">
+                Or
+              </span>
               <Separator className="flex-1" />
             </div>
             <Form {...form}>
-              <form className="space-y-4" onSubmit={form.handleSubmit((data) => mutate(data))}>
+              <form
+                className="space-y-4"
+                onSubmit={form.handleSubmit((data) => mutate(data))}
+              >
                 <div>
                   <FormField
                     control={form.control}
@@ -63,7 +75,11 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="Enter your email" {...field} />
+                          <Input
+                            type="email"
+                            placeholder="Enter your email"
+                            {...field}
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -78,7 +94,11 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input {...field} type="password" placeholder="Enter your Password" />
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Enter your Password"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -113,7 +133,10 @@ export default function LoginPage() {
             <div className="text-center mt-6">
               <p>
                 Don't have an account?{" "}
-                <Link href="/auth/register" className="text-primary font-medium">
+                <Link
+                  href="/auth/register"
+                  className="text-primary font-medium"
+                >
                   Sign up
                 </Link>
               </p>

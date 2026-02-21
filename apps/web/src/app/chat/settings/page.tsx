@@ -11,7 +11,6 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "@/components/providers/session-provider";
 import { PushNotificationManager } from "@/components/push-notification";
 import { useState, useEffect } from "react";
-const defaultAvatar = "/default.png";
 
 export default function UserProfile() {
   const session = useSession();
@@ -41,7 +40,10 @@ export default function UserProfile() {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={user?.profile_picture ?? defaultAvatar} alt="Profile" />
+                <AvatarImage
+                  src={user?.profile_picture ?? "/default.png"}
+                  alt="Profile"
+                />
                 <AvatarFallback className="text-2xl">
                   <User className="h-16 w-16" />
                 </AvatarFallback>
@@ -125,17 +127,25 @@ export default function UserProfile() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6 space-y-4 flex flex-col gap-4 w-full">
+            <TabsContent
+              value="settings"
+              className="mt-6 space-y-4 flex flex-col gap-4 w-full"
+            >
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl">Notification Settings</CardTitle>
+                  <CardTitle className="text-xl">
+                    Notification Settings
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 w-full">
                   <div className="space-y-3 flex gap-2 justify-between">
                     <div className="space-y-1">
-                      <Label className="text-base font-medium">Push Notifications</Label>
+                      <Label className="text-base font-medium">
+                        Push Notifications
+                      </Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive push notifications for important updates and messages
+                        Receive push notifications for important updates and
+                        messages
                       </p>
                     </div>
                     <PushNotificationManager />
@@ -146,13 +156,16 @@ export default function UserProfile() {
               {/* Danger Zone */}
               <Card className="border-destructive/50">
                 <CardHeader>
-                  <CardTitle className="text-xl text-destructive">Danger Zone</CardTitle>
+                  <CardTitle className="text-xl text-destructive">
+                    Danger Zone
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 w-full">
                   <div className="space-y-2">
                     <h3 className="font-medium">Delete Account</h3>
                     <p className="text-sm text-muted-foreground">
-                      Once you delete your account, there is no going back. Please be certain.
+                      Once you delete your account, there is no going back.
+                      Please be certain.
                     </p>
                   </div>
                   <Button variant="destructive" className="w-full sm:w-auto">

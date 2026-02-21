@@ -5,24 +5,23 @@ import { useSession } from "@/components/providers/session-provider";
 import { useWebSocket } from "./ws/websocket";
 import { type MessagesRes, type UnReadMessage } from "./use-messages";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-const wsUrl = process.env.NEXT_PUBLIC_WS_URL || apiUrl;
+const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
 
 export function useWebsocket() {
   const queryClient = useQueryClient();
   const session = useSession();
-  const userId = session?.user?.id;
-
-  if (!userId) throw new Error("user id is required");
   const {
     sendJsonMessage,
     lastJsonMessage: message,
     readyState,
   } = useWebSocket<Message>(`${wsUrl}/ws`);
-
+  const userId = session?.user?.id;
   useEffect(() => {
     if (!message) return;
-    if (message.type === "USER_CONNECTED" || message.type === "USER_DISCONNECTED") {
+    if (
+      message.type === "USER_CONNECTED" ||
+      message.type === "USER_DISCONNECTED"
+    ) {
       queryClient.setQueryData(["online", message.thread_id], {
         online: Number(message.message.online),
         users: message.message.users,
@@ -32,7 +31,9 @@ export function useWebsocket() {
     if (message.type === "MESSAGE") {
       queryClient.setQueryData(
         ["chat", message.thread_id],
-        (oldData: InfiniteData<MessagesRes> | undefined): InfiniteData<MessagesRes> | undefined => {
+        (
+          oldData: InfiniteData<MessagesRes> | undefined,
+        ): InfiniteData<MessagesRes> | undefined => {
           if (!oldData) return undefined;
 
           const exists = oldData.pages.some((page) =>

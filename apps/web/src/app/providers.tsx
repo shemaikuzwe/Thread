@@ -7,15 +7,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/sonner"; // Assuming double toaster was intentional in root.tsx
 import { SessionProvider } from "@/components/providers/session-provider";
 import { useState } from "react";
-import type { Session } from "@/lib/types";
 
-export function Providers({
-  children,
-  session,
-}: {
-  children: React.ReactNode;
-  session: Session | null;
-}) {
+export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
@@ -24,7 +17,7 @@ export function Providers({
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <SessionProvider session={session}>{children}</SessionProvider>
+          <SessionProvider>{children}</SessionProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
