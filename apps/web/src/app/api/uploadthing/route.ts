@@ -16,10 +16,10 @@ export const uploadRouter = {
   })
     .middleware(async ({ req }) => {
       const session = await auth(req);
-      if (session.status !== "authenticated" || !session.user) {
+      if (!session.data?.user) {
         throw new UploadThingError("User not found");
       }
-      return { userId: session.user.id };
+      return { userId: session.data.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);

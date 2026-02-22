@@ -37,13 +37,13 @@ export function User({
   showDropDown?: boolean;
   showOnline?: boolean;
 }) {
-  const name = user.first_name + " " + user.last_name;
+  const name = user.name;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <div className="relative">
           <Avatar className="rounded-full">
-            <AvatarImage className="rounded-full" src={user?.profile_picture ?? defaultAvatar} />
+            <AvatarImage className="rounded-full" src={user?.image ?? defaultAvatar} />
             <AvatarFallback>
               {name?.split(" ").map((n) => n[0]?.toUpperCase()) ?? "U"}
             </AvatarFallback>
@@ -55,7 +55,7 @@ export function User({
       </DropdownMenuTrigger>
       {showDropDown && (
         <DropdownMenuContent>
-          <DropdownMenuLabel>{`${user.first_name} ${user.last_name}`}</DropdownMenuLabel>
+          <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href={"#"}>

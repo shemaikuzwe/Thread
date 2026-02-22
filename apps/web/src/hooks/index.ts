@@ -1,4 +1,4 @@
-import { useSession } from "@/components/providers/session-provider";
+import { useSession } from "@/lib/auth-client";
 import type { ChatWithUsers } from "@/lib/types";
 import { useState, useEffect, useRef } from "react";
 
@@ -33,15 +33,15 @@ export function useChatMeta(chat: ChatWithUsers | undefined): {
   name: string;
   avatar?: string;
 } {
-  const data = useSession();
+  const session = useSession();
+  const data = session.data;
   if (!chat) return { name: "" };
   let name = chat.name;
   let avatar: string | undefined = "";
   if (chat.type === "dm") {
     const filteredUsers = chat.users.filter((user) => user.id != data?.user?.id);
-    const fullName = filteredUsers[0].first_name + " " + filteredUsers[0].last_name;
-    name = fullName;
-    avatar = filteredUsers[0]?.profile_picture;
+    name = filteredUsers[0].name;
+    avatar = filteredUsers[0]?.image;
   }
   return { name: name || "", avatar };
 }

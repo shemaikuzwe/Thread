@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, Edit } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useSession } from "@/components/providers/session-provider";
+import { useSession } from "@/lib/auth-client";
 import { PushNotificationManager } from "@/components/push-notification";
 import { useState, useEffect } from "react";
 
 export default function UserProfile() {
   const session = useSession();
-  const user = session?.user;
+  const user = session?.data?.user;
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -41,7 +41,7 @@ export default function UserProfile() {
             <div className="relative">
               <Avatar className="h-32 w-32">
                 <AvatarImage
-                  src={user?.profile_picture ?? "/default.png"}
+                  src={user?.image ?? "/default.png"}
                   alt="Profile"
                 />
                 <AvatarFallback className="text-2xl">
@@ -58,7 +58,7 @@ export default function UserProfile() {
             </div>
 
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold">{`${user?.first_name} ${user?.last_name}`}</h2>
+              <h2 className="text-2xl font-semibold">{user?.name}</h2>
               <p className="text-muted-foreground">{user?.email}</p>
             </div>
           </div>
@@ -80,27 +80,14 @@ export default function UserProfile() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">First Name</Label>
+                      <Label htmlFor="fullName">Full Name</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="fullName"
-                          defaultValue={user?.first_name ?? ""}
+                          defaultValue={user?.name ?? ""}
                           className="pl-10"
                           placeholder="Enter full name"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="lastName"
-                          defaultValue={user?.last_name ?? ""}
-                          className="pl-10"
-                          placeholder="Enter last name"
                         />
                       </div>
                     </div>
@@ -115,6 +102,7 @@ export default function UserProfile() {
                           defaultValue={user?.email ?? ""}
                           className="pl-10"
                           placeholder="Enter email address"
+                          disabled
                         />
                       </div>
                     </div>

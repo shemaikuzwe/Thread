@@ -18,7 +18,7 @@ pnpm dev
 
 ```bash
 pnpm lint
-pnpm fmt:check
+pnpm fmt
 ```
 
 Formatting/linting uses `oxfmt` and `oxlint`.

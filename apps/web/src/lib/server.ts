@@ -8,17 +8,23 @@ export async function auth(req?: Request): Promise<Session> {
       ? req.headers.get("Cookie")
       : (await headers()).get("Cookie");
 
-    const res = await api.get("/auth/session", {
+    const res = await api.get("/auth/get-session", {
       headers: {
         Cookie: cookieHeader || "",
       },
     });
-    if (!res.data) {
-      throw new Error("Something went wrong");
-    }
-    return res.data;
+    
+    return {
+      data: res.data,
+      isPending: false,
+      error: null
+    };
   } catch (error) {
     console.error(error);
-    return { status: "un_authenticated", user: null };
+    return { 
+      data: null, 
+      isPending: false, 
+      error: error 
+    };
   }
 }

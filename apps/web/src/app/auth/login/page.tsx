@@ -12,14 +12,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/lib/axios";
 import { loginSchema, type LoginData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const form = useForm({
@@ -28,19 +27,20 @@ export default function LoginPage() {
       rememberMe: false,
     },
   });
-  const router = useRouter();
   const { mutate } = useMutation({
     mutationFn: async (data: LoginData) => {
-      return await api.post(`/auth/login`, {
+      const result = await signIn.email({
         email: data.email,
         password: data.password,
+        rememberMe: data.rememberMe,
+        callbackURL: "/chat",
       });
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
     },
-    onSuccess: () => {
-      router.push("/chat");
-    },
-    onError: () => {
-      toast.error("Login Failed");
+    onError: (err) => {
+      toast.error(err.message || "Login Failed");
     },
   });
   return (

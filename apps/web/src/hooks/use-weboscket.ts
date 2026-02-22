@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { ChatWithUsers, Message } from "@/lib/types";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
-import { useSession } from "@/components/providers/session-provider";
+import { useSession } from "@/lib/auth-client";
 import { useWebSocket } from "./ws/websocket";
 import { type MessagesRes, type UnReadMessage } from "./use-messages";
 
@@ -15,7 +15,7 @@ export function useWebsocket() {
     lastJsonMessage: message,
     readyState,
   } = useWebSocket<Message>(`${wsUrl}/ws`);
-  const userId = session?.user?.id;
+  const userId = session?.data?.user?.id;
   useEffect(() => {
     if (!message) return;
     if (
@@ -83,7 +83,7 @@ export function useWebsocket() {
                     created_at: message.created_at,
                     id: message.id,
                     message: message.message,
-                    user_id: userId,
+                    user_id: message.user_id,
                   },
                 }
               : thread,

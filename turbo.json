@@ -28,6 +28,12 @@
     "fmt:check": {
       "dependsOn": ["^fmt:check"],
       "outputs": []
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
     }
   }
 }

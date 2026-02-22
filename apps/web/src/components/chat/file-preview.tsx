@@ -122,7 +122,7 @@ export function FilePreview({ file, className = "h-60 w-55 rounded-md", message 
             </div>
             <div>
               <DialogTitle className="font-medium text-sm">
-                {message.from.first_name + " " + message.from.last_name}
+                {message.from.name}
               </DialogTitle>
               <span className="text-sm text-muted-foreground">
                 {message.created_at && isValid(new Date(message.created_at))

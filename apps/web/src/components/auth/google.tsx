@@ -1,23 +1,12 @@
+import { signIn } from "@/lib/auth-client";
 import { Button } from "../ui/button";
 
 export default function Google() {
-  // TODO:Make this callbakc robust
   const handleGoogleLogin = async () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/login?oauth=google`;
-    // const popup = window.open(
-    //   `${apiUrl}/auth/login?oauth=google`,
-    //   "googleAuth",
-    //   "width=500,height=600,scrollbars=yes,resizable=yes"
-    // );
-    // const checkClosed = setInterval(async () => {
-    //   if (popup?.closed) {
-    //     clearInterval(checkClosed);
-    //     const status = await checkLogin();
-    //     if (status) {
-    //       navigate("/chat/123");
-    //     }
-    //   }
-    // });
+    await signIn.social({
+      provider: "google",
+      callbackURL: "/chat",
+    });
   };
   return (
     <Button variant="outline" className="w-40 rounded-xl font-medium" onClick={handleGoogleLogin}>

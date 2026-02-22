@@ -1,51 +1,44 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@/lib/schema";
 import { useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/axios";
 import { Separator } from "@/components/ui/separator";
 import { OAuthProviders } from "@/components/auth/providers";
 import Logo from "@/components/logo";
-import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { signUp } from "@/lib/auth-client";
 
 export default function RegisterPage() {
   const form = useForm({
     resolver: zodResolver(registerSchema),
   });
-  const router = useRouter();
   const { mutate } = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const res = await api.post(
-        `/auth/signup`,
-        {
-          email: data.email,
-          password: data.password,
-          first_name: data.firstName,
-          last_name: data.lastName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      if (!res.status.toString().startsWith("2")) {
-        const error = await res.data;
-        throw new Error(error.message || "something went wrong");
+      const result = await signUp.email({
+        email: data.email,
+        password: data.password,
+        name: `${data.firstName} ${data.lastName}`,
+        callbackURL: "/chat",
+      });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-      return await res.data;
+      return result;
     },
-    onSuccess: () => {
-      router.push("/chat");
-    },
-    onError: () => {
-      // TODO: Add toast
+    onError: (err) => {
+      toast.error(err.message || "Registration Failed");
     },
   });
   return (
@@ -62,11 +55,16 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
               <Separator className="flex-1" />
-              <span className="text-sm text-muted-foreground font-medium">Or</span>
+              <span className="text-sm text-muted-foreground font-medium">
+                Or
+              </span>
               <Separator className="flex-1" />
             </div>
             <Form {...form}>
-              <form className="space-y-4" onSubmit={form.handleSubmit((data) => mutate(data))}>
+              <form
+                className="space-y-4"
+                onSubmit={form.handleSubmit((data) => mutate(data))}
+              >
                 <FormField
                   control={form.control}
                   name="email"
@@ -74,7 +72,11 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          {...field}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -88,7 +90,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>FirstName</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter your First Name" />
+                          <Input
+                            {...field}
+                            placeholder="Enter your First Name"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -100,7 +105,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>LastName</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter your Last Name" />
+                          <Input
+                            {...field}
+                            placeholder="Enter your Last Name"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -115,7 +123,11 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input {...field} type="password" placeholder="Enter your Password" />
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Enter your Password"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -127,7 +139,11 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>ConfirmPassword</FormLabel>
                         <FormControl>
-                          <Input {...field} type="password" placeholder="Confirm password" />
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Confirm password"
+                          />
                         </FormControl>
                       </FormItem>
                     )}

@@ -1,23 +1,16 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
-import { AuthModule } from "./auth/auth.module";
 import { ChatsModule } from "./chats/chats.module";
 import { UsersModule } from "./users/users.module";
-import { JwtAuthGuard } from "./auth/jwt-auth.guard";
+import { AuthModule } from "@thallesp/nestjs-better-auth";
+import { auth } from "./lib/auth";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    AuthModule,
+    AuthModule.forRoot({ auth, disableTrustedOriginsCors: true, }),
     UsersModule,
     ChatsModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
   ],
 })
 export class AppModule {}

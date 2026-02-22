@@ -12,19 +12,17 @@ import Link from "next/link";
 const defaultAvatar = "/default.png";
 import { api } from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import { useSession } from "../providers/session-provider";
+import { useSession, signOut } from "@/lib/auth-client";
 import ThemeToggle from "../theme-toggle";
 
 export default function User() {
   const session = useSession();
   const router = useRouter();
-  if (!session || session.status === "pending" || !session.user) return null;
-  const name = `${session.user?.first_name ?? ""} ${session?.user?.last_name ?? ""}`;
+  if (session.isPending || !session.data?.user) return null;
+  const user = session.data.user;
+  const name = user.name;
   const handleLogout = async () => {
-    const res = await api.get("/auth/logout");
-    if (res.status !== 200) {
-      throw new Error("Something went wrong");
-    }
+    await signOut();
     router.push("/auth/login");
   };
 
@@ -34,7 +32,7 @@ export default function User() {
         <div className="flex justify-center items-center gap-2">
           <Avatar>
             <AvatarImage
-              src={session.user?.profile_picture ?? defaultAvatar}
+              src={user.image ?? defaultAvatar}
               className="rounded-full"
             />
             <AvatarFallback>
@@ -44,7 +42,7 @@ export default function User() {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>{session.user?.email}</DropdownMenuLabel>
+        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ThemeToggle />
         <DropdownMenuItem asChild>

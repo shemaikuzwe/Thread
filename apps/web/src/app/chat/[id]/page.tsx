@@ -9,7 +9,6 @@ import type {
   MessageStatus,
   UploadFile,
 } from "@/lib/types";
-import { useSession } from "@/components/providers/session-provider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header";
@@ -33,6 +32,7 @@ import ChatsList from "@/components/chat/chats-list";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AudioInput from "@/components/chat/audio-input";
 import { useSubscriptions } from "@/hooks/use-sub";
+import { useSession } from "@/lib/auth-client";
 
 export default function ChatPage({
   params,
@@ -44,7 +44,7 @@ export default function ChatPage({
   const [newMessage, setNewMessage] = useState("");
   const { sendMessage } = useWebsocket();
   const session = useSession();
-  const userId = session?.user?.id;
+  const userId = session?.data?.user?.id;
 
   const { startUpload } = useUploadThing("media");
   const isMobile = useIsMobile();
@@ -199,10 +199,9 @@ export default function ChatPage({
         user_id: userId,
         from: {
           id: userId,
-          email: session?.user?.email ?? "",
-          first_name: session?.user?.first_name ?? "",
-          last_name: session?.user?.last_name ?? "",
-          profile_picture: session?.user?.profile_picture ?? "",
+          email: session?.data?.user?.email ?? "",
+          name: session?.data?.user?.name ?? "",
+          image: session?.data?.user?.image ?? "",
         },
       };
       //Optimistic ui

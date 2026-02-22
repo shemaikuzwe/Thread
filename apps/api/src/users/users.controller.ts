@@ -1,11 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Post, Request } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+} from "@nestjs/common";
 import { UsersService } from "./users.service.js";
-
-type AuthRequest = { user: { id: string } };
+import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
 
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
   findAll() {
@@ -18,8 +24,8 @@ export class UsersController {
   }
 
   @Post("subscription")
-  subscribe(@Request() req: AuthRequest, @Body() body: { sub: unknown }) {
-    const userId = req.user.id;
+  subscribe(@Session() session: UserSession, @Body() body: { sub: PushSubscription }) {
+    const userId = session?.user?.id;
     return this.usersService.addSubscription(userId, body.sub);
   }
 
@@ -29,8 +35,11 @@ export class UsersController {
   }
 
   @Delete("subscription/:endpoint")
-  unsubscribe(@Request() req: AuthRequest, @Param("endpoint") endpoint: string) {
-    const userId = req.user.id;
+  unsubscribe(
+    @Session() session: UserSession,
+    @Param("endpoint") endpoint: string,
+  ) {
+    const userId = session?.user?.id;
     return this.usersService.removeSubscription(userId, endpoint);
   }
 }

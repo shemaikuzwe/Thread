@@ -16,9 +16,8 @@ export interface Message {
   from: {
     id: string;
     email: string;
-    first_name: string;
-    last_name: string;
-    profile_picture: string;
+    name: string;
+    image: string;
   };
 }
 //CURRENT MESSAGE
@@ -51,22 +50,24 @@ export interface ChatWithUsers extends Chat {
 }
 
 export interface Session {
-  status: "un_authenticated" | "authenticated" | "pending";
-  user: {
-    id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    profile_picture: string;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      image: string;
+    };
+    session: any;
   } | null;
+  isPending: boolean;
+  error: any;
 }
 
 export interface User {
   id: string;
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
-  profile_picture: string;
+  image: string;
 }
 
 export interface Online {

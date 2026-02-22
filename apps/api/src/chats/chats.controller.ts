@@ -1,33 +1,43 @@
-import { Body, Controller, Get, Headers, Param, Post, Query, Request } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { ChatsService } from "./chats.service";
-
-type AuthRequest = { user: { id: string } };
+import { Session, type UserSession, AllowAnonymous } from "@thallesp/nestjs-better-auth";
 
 @Controller("chats")
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(private readonly chatsService: ChatsService) { }
 
   @Get()
-  getChats(@Request() req: AuthRequest, @Query("search") search?: string) {
-    const userId = req.user.id;
+  getChats(@Session() session: UserSession, @Query("search") search?: string) {
+    const userId = session?.user?.id;
     return this.chatsService.getChats(userId, search);
   }
 
   @Get("unread")
-  unread(@Request() req: AuthRequest) {
-    const userId = req.user.id;
+  unread(@Session() session: UserSession) {
+    const userId = session?.user?.id;
     return this.chatsService.unread(userId);
   }
 
   @Post()
-  create(@Request() req: AuthRequest, @Body() body: { name: string; description: string }) {
-    const userId = req.user.id;
+  create(
+    @Session() session: UserSession,
+    @Body() body: { name: string; description: string },
+  ) {
+    const userId = session?.user?.id;
     return this.chatsService.createChannel(userId, body);
   }
 
   @Post("dm")
-  createDM(@Request() req: AuthRequest, @Body() body: { user_id: string }) {
-    const userId = req.user.id;
+  createDM(@Session() session: UserSession, @Body() body: { user_id: string }) {
+    const userId = session?.user?.id;
     return this.chatsService.createDM(userId, body.user_id);
   }
 
@@ -37,8 +47,8 @@ export class ChatsController {
   }
 
   @Get(":id/join")
-  join(@Param("id") id: string, @Request() req: AuthRequest) {
-    const userId = req.user.id;
+  join(@Param("id") id: string, @Session() session: UserSession) {
+    const userId = session?.user?.id;
     return this.chatsService.join(id, userId);
   }
 
@@ -52,13 +62,14 @@ export class ChatsController {
   }
 
   @Post("events")
+  @AllowAnonymous()
   persistEvent(
     @Body() body: unknown,
     @Headers("x-chat-server-token") token?: string,
   ) {
     return this.chatsService.persistEvent(body, token);
   }
-
+  @AllowAnonymous()
   @Get("internal/users/:id/threads")
   userThreads(
     @Param("id") userId: string,

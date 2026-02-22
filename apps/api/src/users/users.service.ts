@@ -1,38 +1,35 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { db, subscriptions, users } from "@thread/db";
+import { db, subscriptions, user as userTable } from "@thread/db";
 import { and, eq } from "drizzle-orm";
 
 @Injectable()
 export class UsersService {
   async findAll() {
-    const users = await db.query.users.findMany({
+    const users = await db.query.user.findMany({
       columns: {
         id: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         email: true,
-        profilePicture: true,
+        image: true,
       },
     });
 
     return users.map((user) => ({
       id: user.id,
-      first_name: user.firstName,
-      last_name: user.lastName,
+      name: user.name,
       email: user.email,
-      profile_picture: user.profilePicture,
+      image: user.image,
     }));
   }
 
   async findById(id: string) {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, id),
+    const user = await db.query.user.findFirst({
+      where: eq(userTable.id, id),
       columns: {
         id: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         email: true,
-        profilePicture: true,
+        image: true,
       },
     });
 
@@ -42,10 +39,9 @@ export class UsersService {
 
     return {
       id: user.id,
-      first_name: user.firstName,
-      last_name: user.lastName,
+      name: user.name,
       email: user.email,
-      profile_picture: user.profilePicture,
+      image: user.image,
     };
   }
 

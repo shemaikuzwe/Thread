@@ -11,9 +11,9 @@ import {
   messages as messagesTable,
   threads as threadsTable,
   threadUsers,
-  users as usersTable,
+  user as userTable,
 } from "@thread/db";
-import { and, count, desc, eq, gt, ilike, inArray, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, gt, ilike, inArray, ne } from "drizzle-orm";
 
 type ChatEventType = "MESSAGE" | "UPDATE_LAST_READ";
 
@@ -142,12 +142,9 @@ export class ChatsService {
           ),
           columns: { id: true, name: true },
         }),
-        db.query.users.findMany({
-          where: or(
-            ilike(usersTable.firstName, pattern),
-            ilike(usersTable.lastName, pattern),
-          ),
-          columns: { id: true, firstName: true, lastName: true },
+        db.query.user.findMany({
+          where: ilike(userTable.name, pattern),
+          columns: { id: true, name: true },
         }),
       ]);
 
@@ -159,7 +156,7 @@ export class ChatsService {
         })),
         ...users.map((u) => ({
           id: u.id,
-          name: `${u.firstName} ${u.lastName}`,
+          name: u.name,
           type: "user" as const,
         })),
       ];
@@ -172,11 +169,7 @@ export class ChatsService {
           with: {
             threadUsers: {
               with: {
-                user: {
-                  columns: {
-                    password: false,
-                  },
-                },
+                user: true,
               },
             },
             messages: {
@@ -203,18 +196,17 @@ export class ChatsService {
           updated_at: thread.updatedAt,
           users: thread.threadUsers.map((tu) => ({
             id: tu.user.id,
-            first_name: tu.user.firstName,
-            last_name: tu.user.lastName,
+            name: tu.user.name,
             email: tu.user.email,
-            profile_picture: tu.user.profilePicture,
+            image: tu.user.image,
           })),
           last_message: lastMessage
             ? {
-                id: lastMessage.id,
-                message: lastMessage.message,
-                user_id: lastMessage.userId,
-                created_at: lastMessage.createdAt,
-              }
+              id: lastMessage.id,
+              message: lastMessage.message,
+              user_id: lastMessage.userId,
+              created_at: lastMessage.createdAt,
+            }
             : null,
         };
       });
@@ -324,7 +316,7 @@ export class ChatsService {
       where: eq(threadsTable.id, id),
       with: {
         threadUsers: {
-          with: { user: { columns: { password: false } } },
+          with: { user: true },
         },
       },
     });
@@ -341,10 +333,9 @@ export class ChatsService {
       updated_at: chat.updatedAt,
       users: chat.threadUsers.flatMap((t) => ({
         id: t.user.id,
-        first_name: t.user.firstName,
-        last_name: t.user.lastName,
-        profile_picture: t.user.profilePicture,
+        name: t.user.name,
         email: t.user.email,
+        image: t.user.image,
       })),
     };
   }
@@ -366,7 +357,7 @@ export class ChatsService {
         limit,
         offset: cursor,
         with: {
-          user: { columns: { password: false } },
+          user: true,
           files: true,
         },
       }),

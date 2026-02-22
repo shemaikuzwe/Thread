@@ -43,10 +43,8 @@ export default function ChatsList() {
         (chat) =>
           chat?.name?.toLowerCase().includes(search.toLowerCase()) ||
           (chat.type === "dm" &&
-            chat.users.filter(
-              (user) =>
-                user.first_name.toLowerCase().includes(search.toLowerCase()) ||
-                user.last_name.toLowerCase().includes(search.toLowerCase()),
+            chat.users.filter((user) =>
+              user.name.toLowerCase().includes(search.toLowerCase()),
             ).length > 0),
       )
     : chats;

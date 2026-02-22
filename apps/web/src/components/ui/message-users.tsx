@@ -20,9 +20,9 @@ export default function MessageUser({ userId }: { userId: string }) {
     <div className="flex justify-center items-center gap-2">
       {isLoading ? null : (
         <Avatar>
-          <AvatarImage src={user?.profile_picture ?? defaultAvatar} />
+          <AvatarImage src={user?.image ?? defaultAvatar} />
           <AvatarFallback>
-            {user?.first_name + " " + user?.last_name?.split(" ").map((n) => n[0].toUpperCase())}
+            {user?.name?.split(" ").map((n: string) => n[0]?.toUpperCase())}
           </AvatarFallback>
         </Avatar>
       )}

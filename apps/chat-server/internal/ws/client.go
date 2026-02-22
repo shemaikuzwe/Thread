@@ -19,6 +19,13 @@ import (
 	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
+type From struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
 type Message struct {
 	ID       string `json:"id"`
 	Message  any    `json:"message"`
@@ -26,6 +33,7 @@ type Message struct {
 	UserID   string `json:"user_id"`
 	Type     Type   `json:"type"`
 	Date     string `json:"created_at"`
+	From     *From  `json:"from,omitempty"`
 }
 
 type Type string
@@ -217,6 +225,7 @@ type authPayload struct {
 }
 
 func authenticateRequest(r *http.Request) (*authPayload, error) {
+	log.Println("headers", r.Header)
 	tokenString, err := getToken(r)
 	if err != nil || tokenString == "" {
 		return nil, fmt.Errorf("token is required")
