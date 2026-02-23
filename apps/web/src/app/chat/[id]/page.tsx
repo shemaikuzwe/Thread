@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, use } from "react";
 import { Button } from "@/components/ui/button";
-import { useWebsocket } from "@/hooks/use-weboscket";
+import { useChatWebsocket } from "@/hooks/chat-websocket-provider";
 import type {
   ChatWithUsers,
   Message,
@@ -42,7 +42,7 @@ export default function ChatPage({
   const { id } = use(params);
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const { sendMessage } = useWebsocket();
+  const { sendMessage } = useChatWebsocket();
   const session = useSession();
   const userId = session?.data?.user?.id;
 

@@ -57,8 +57,10 @@ export class ChatsController {
     @Param("id") id: string,
     @Query("limit") limit = "15",
     @Query("cursor") cursor = "0",
+    @Session() session: UserSession,
   ) {
-    return this.chatsService.getMessages(id, Number(limit), Number(cursor));
+    const userId = session?.user?.id;
+    return this.chatsService.getMessages(id, Number(limit), Number(cursor), userId);
   }
 
   @Post("events")

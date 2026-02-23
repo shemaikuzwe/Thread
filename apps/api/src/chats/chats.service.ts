@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -33,6 +34,17 @@ type ChatEventPayload = {
 
 @Injectable()
 export class ChatsService {
+  private async ensureThreadMembership(threadId: string, userId: string) {
+    const membership = await db.query.threadUsers.findFirst({
+      where: and(eq(threadUsers.threadId, threadId), eq(threadUsers.userId, userId)),
+      columns: { threadId: true },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException("User is not a member of this thread");
+    }
+  }
+
   private validateInternalToken(token?: string) {
     const expected = process.env.CHAT_SERVER_TOKEN;
     if (!expected || token !== expected) {
@@ -55,6 +67,7 @@ export class ChatsService {
           "MESSAGE event missing id/thread_id/user_id",
         );
       }
+      await this.ensureThreadMembership(payload.thread_id, payload.user_id);
       const text = typeof payload.message === "string" ? payload.message : "";
       const payloadFiles = Array.isArray(payload.files) ? payload.files : [];
 
@@ -95,6 +108,7 @@ export class ChatsService {
       ) {
         throw new BadRequestException("UPDATE_LAST_READ event missing fields");
       }
+      await this.ensureThreadMembership(payload.thread_id, payload.user_id);
 
       await db
         .insert(lastReadTable)
@@ -349,7 +363,12 @@ export class ChatsService {
     return { message: "Joined channel" };
   }
 
-  async getMessages(id: string, limit: number, cursor: number) {
+  async getMessages(id: string, limit: number, cursor: number, userId?: string) {
+    if (!userId) {
+      throw new UnauthorizedException("Unauthorized");
+    }
+    await this.ensureThreadMembership(id, userId);
+
     const [messages, total] = await Promise.all([
       db.query.messages.findMany({
         where: eq(messagesTable.threadId, id),
@@ -362,7 +381,7 @@ export class ChatsService {
         },
       }),
       db
-        .select({ id: count() })
+        .select({ count: count() })
         .from(messagesTable)
         .where(eq(messagesTable.threadId, id)),
     ]);
@@ -371,7 +390,7 @@ export class ChatsService {
 
     return {
       messages: messages.toReversed(),
-      total: total.length,
+      total: total[0]?.count ?? 0,
       nextCursor,
     };
   }

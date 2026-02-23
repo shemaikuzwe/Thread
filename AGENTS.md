@@ -1,6 +1,6 @@
 # Agentic Coding Guidelines (AGENTS.md)
 
-This repository is a polyglot monorepo comprising a TypeScript backend (NestJS), a React frontend (React Router), and a Go-based chat server. This guide provides instructions for agentic coding assistants to ensure consistency and quality.
+This repository is a monorepo comprising a TypeScript backend (NestJS), a React frontend (Next JS), and a Go-based chat server. This guide provides instructions for agentic coding assistants to ensure consistency and quality.
 
 ## 🛠 Commands & Operations
 
@@ -12,7 +12,7 @@ This repository is a polyglot monorepo comprising a TypeScript backend (NestJS),
 
 ### App-Specific Commands
 - **API (NestJS):** `pnpm --filter api [dev|build|lint|fmt|typecheck]`
-- **Web (React Router):** `pnpm --filter web [dev|build|lint|fmt|typecheck]`
+- **Web (Next Js):** `pnpm --filter web [dev|build|lint|fmt|typecheck]`
 - **Chat Server (Go):** 
   - Run: `go run main.go` (in `apps/chat-server`)
   - Build: `go build -o thread`

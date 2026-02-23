@@ -8,7 +8,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/shemaIkuzwe/thread/internal/api"
 	"github.com/shemaIkuzwe/thread/internal/redis"
 )
@@ -189,22 +188,18 @@ func CheckUser(message []byte, client string) (bool, error) {
 	msg := &Message{}
 	err := json.Unmarshal(message, msg)
 	if err != nil {
-		log.Println("failed to parse json", err)
+		log.Println("failed to unmarshal broadcast message", err)
 		return false, err
 	}
-	_, err = uuid.Parse(client)
-	if err != nil {
-		log.Println("failed to parse json", err)
-		return false, err
+
+	// User IDs are opaque (not necessarily UUIDs). Missing thread IDs are ignored.
+	if msg.ThreadID == "" {
+		return false, nil
 	}
-	_, err = uuid.Parse(msg.ThreadID)
-	if err != nil {
-		log.Println("failed to parse json", err)
-		return false, err
-	}
+
 	usersChannels, err := getUserChannels(client)
 	if err != nil {
-		log.Println("failed to parse json", err)
+		log.Println("failed to get user channels", err)
 		return false, err
 	}
 	if msg.Type == UPDATE_LAST_READ && msg.UserID != client {
@@ -224,7 +219,7 @@ func getUserChannels(userID string) ([]string, error) {
 	}
 	usersChannels, err := api.GetUserThreads(userID)
 	if err != nil {
-		log.Println("failed to parse json", err)
+		log.Println("failed to fetch user channels", err)
 		return nil, err
 	}
 	err = redis.Set(key, usersChannels, int(time.Hour)*24)

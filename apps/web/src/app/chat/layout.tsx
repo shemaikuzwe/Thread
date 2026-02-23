@@ -2,17 +2,10 @@
 
 import { ChatSidebar } from "@/components/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useWebsocket } from "@/hooks/use-weboscket";
-import { useEffect } from "react";
+import { ChatWebsocketProvider, useChatWebsocket } from "@/hooks/chat-websocket-provider";
 
-export default function ChatLayout({ children }: { children: React.ReactNode }) {
-  const { readyState } = useWebsocket();
-
-  useEffect(() => {
-    if (readyState === WebSocket.OPEN) {
-      console.log("websocket connected");
-    }
-  }, [readyState]);
+function ChatLayoutContent({ children }: { children: React.ReactNode }) {
+  useChatWebsocket();
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -21,5 +14,13 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         {children}
       </div>
     </SidebarProvider>
+  );
+}
+
+export default function ChatLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ChatWebsocketProvider>
+      <ChatLayoutContent>{children}</ChatLayoutContent>
+    </ChatWebsocketProvider>
   );
 }

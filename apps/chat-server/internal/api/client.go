@@ -18,17 +18,6 @@ type User struct {
 	Image string `json:"image"`
 }
 
-type Session struct {
-	ID        string    `json:"id"`
-	UserId    string    `json:"userId"`
-	ExpiresAt time.Time `json:"expiresAt"`
-}
-
-type BetterAuthResponse struct {
-	User    User    `json:"user"`
-	Session Session `json:"session"`
-}
-
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 func baseURL() string {
@@ -54,42 +43,6 @@ func doRequest(method, path string, body []byte) (*http.Response, error) {
 		req.Header.Set("x-chat-server-token", token)
 	}
 	return httpClient.Do(req)
-}
-
-func ValidateSession(r *http.Request) (*User, error) {
-	url := baseURL() + "/v1/auth/get-session"
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if cookie := r.Header.Get("Cookie"); cookie != "" {
-		req.Header.Set("Cookie", cookie)
-	}
-	if auth := r.Header.Get("Authorization"); auth != "" {
-		req.Header.Set("Authorization", auth)
-	}
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("session validation failed: %d", res.StatusCode)
-	}
-
-	var authRes BetterAuthResponse
-	if err := json.NewDecoder(res.Body).Decode(&authRes); err != nil {
-		return nil, err
-	}
-
-	if authRes.User.ID == "" {
-		return nil, fmt.Errorf("invalid session response")
-	}
-
-	return &authRes.User, nil
 }
 
 func PersistEvent(payload []byte) error {
