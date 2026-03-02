@@ -3,7 +3,7 @@ import { api } from "./axios";
 export async function subscribeUser(sub: PushSubscription) {
   const res = await api.post("/users/subscription", { sub });
   if (res.status !== 200) {
-    return { sucess: false };
+    return { success: false };
   }
   return { success: true };
 }

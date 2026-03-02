@@ -6,14 +6,14 @@ import {
 } from "@nestjs/common";
 import {
   db,
-  files,
+  files as filesTable,
   lastRead,
   messages as messagesTable,
   threads as threadsTable,
   threadUsers,
-  user as usersTable,
 } from "@thread/db";
-import { and, count, desc, eq, gt, ilike, inArray, ne, or } from "drizzle-orm";
+import { and, count, eq, gt, ne } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 type ChatEventType = "MESSAGE" | "UPDATE_LAST_READ";
 
@@ -46,6 +46,7 @@ export class ChatsService {
     if (!raw || typeof raw !== "object") {
       throw new BadRequestException("Invalid event payload");
     }
+
     const payload = raw as ChatEventPayload;
     const type = payload.type as ChatEventType;
 
@@ -55,6 +56,7 @@ export class ChatsService {
           "MESSAGE event missing id/thread_id/user_id",
         );
       }
+
       const text = typeof payload.message === "string" ? payload.message : "";
       const payloadFiles = Array.isArray(payload.files) ? payload.files : [];
 
@@ -69,7 +71,7 @@ export class ChatsService {
           })
           .onConflictDoNothing({ target: messagesTable.id });
 
-        const fileRows = payloadFiles
+        const files = payloadFiles
           .filter((file) => file?.url && file?.type)
           .map((file) => ({
             url: file.url as string,
@@ -79,8 +81,8 @@ export class ChatsService {
             messageId: payload.id,
           }));
 
-        if (fileRows.length > 0) {
-          await tx.insert(files).values(fileRows);
+        if (files.length > 0) {
+          await tx.insert(filesTable).values(files);
         }
       });
 
@@ -127,7 +129,7 @@ export class ChatsService {
       },
     });
 
-    return threads.map((t) => t.threadId);
+    return threads.map((thread) => thread.threadId);
   }
 
   async getChats(userId: string, search?: string) {
@@ -172,194 +174,73 @@ export class ChatsService {
       ];
     }
 
-    const membership = await db.query.threadUsers.findMany({
+    const threadIds = await db.query.threadUsers.findMany({
       where: { userId },
       columns: {
         threadId: true,
       },
     });
 
-    const threadIds = [...new Set(membership.map((row) => row.threadId))];
     if (threadIds.length === 0) {
       return [];
     }
 
-    const [threadRows, memberRows, latestMessages] = await Promise.all([
-      db.query.threads.findMany({
-        where: {
-          id: {
-            in: threadIds,
+    const threads = await db.query.threads.findMany({
+      where: {
+        id: {
+          in: threadIds.map((t) => t.threadId),
+        },
+      },
+      with: {
+        threadUsers: {
+          columns: {
+            userId: true,
           },
-        },
-      }),
-      db.query.threadUsers.findMany({
-        where: {
-          threadId: {
-            in: threadIds,
-          },
-        },
-        columns: {
-          threadId: true,
-          userId: true,
-        },
-      }),
-      db.query.messages.findMany({
-        where: {
-          threadId: {
-            in: threadIds,
-          },
-        },
-        columns: {
-          id: true,
-          threadId: true,
-          message: true,
-          userId: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      }),
-    ]);
-
-    const memberUserIds = [...new Set(memberRows.map((row) => row.userId))];
-    const memberUsers =
-      memberUserIds.length > 0
-        ? await db.query.user.findMany({
-            where: {
-              id: {
-                in: memberUserIds,
+          with: {
+            user: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
               },
             },
-            columns: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          })
-        : [];
-
-    const userMap = new Map(memberUsers.map((user) => [user.id, user]));
-    const usersByThread = new Map<
-      string,
-      Array<{
-        id: string;
-        first_name: string;
-        last_name: string;
-        email: string;
-        profile_picture: string;
-      }>
-    >();
-
-    for (const row of memberRows) {
-      const user = userMap.get(row.userId);
-      if (!user) {
-        continue;
-      }
-      const current = usersByThread.get(row.threadId) ?? [];
-      current.push({
-        id: user.id,
-        first_name: user.firstName,
-        last_name: user.lastName,
-        email: user.email,
-        profile_picture: user.profilePicture,
-      });
-      usersByThread.set(row.threadId, current);
-    }
-
-    const latestByThread = new Map<
-      string,
-      {
-        id: string;
-        message: string;
-        user_id: string;
-        created_at: Date;
-      }
-    >();
-
-    for (const row of latestMessages) {
-      if (!latestByThread.has(row.threadId)) {
-        latestByThread.set(row.threadId, {
-          id: row.id,
-          message: row.message,
-          user_id: row.userId,
-          created_at: row.createdAt,
-        });
-      }
-    }
-
-    return threadRows.map((thread) => ({
-      id: thread.id,
-      name: thread.name,
-      description: thread.description,
-      is_private: thread.isPrivate,
-      type: thread.type,
-      created_at: thread.createdAt,
-      updated_at: thread.updatedAt,
-      users: usersByThread.get(thread.id) ?? [],
-      last_message: latestByThread.get(thread.id) ?? null,
-    }));
-  }
-
-  async unread(userId: string) {
-    const readRows = await db.query.lastRead.findMany({
-      where: eq(lastRead.userId, userId),
-      columns: {
-        threadId: true,
-        lastReadMessageId: true,
+          },
+        },
       },
     });
 
-    const readMessageIds = [
-      ...new Set(readRows.map((row) => row.lastReadMessageId)),
-    ];
-    const readMessages =
-      readMessageIds.length > 0
-        ? await db.query.messages.findMany({
-            where: inArray(messagesTable.id, readMessageIds),
-            columns: {
-              id: true,
-              createdAt: true,
-            },
-          })
-        : [];
+    return threads;
+  }
 
-    const readMessageMap = new Map(
-      readMessages.map((message) => [message.id, message.createdAt]),
-    );
+  async unread(userId: string) {
+    const readMessage = alias(messagesTable, "readMessage");
+    const unreadMessage = alias(messagesTable, "unreadMessage");
 
-    const unread = await Promise.all(
-      readRows.map(async (row) => {
-        const since = readMessageMap.get(row.lastReadMessageId);
-        if (!since) {
-          return {
-            last_read: row.lastReadMessageId,
-            thread_id: row.threadId,
-            unread_count: 0,
-          };
-        }
+    const result = await db
+      .select({
+        threadId: lastRead.threadId,
+        lastRead: lastRead.lastReadMessageId,
+        unreadCount: count(unreadMessage.id),
+      })
+      .from(lastRead)
+      .innerJoin(readMessage, eq(readMessage.id, lastRead.lastReadMessageId))
+      .leftJoin(
+        unreadMessage,
+        and(
+          eq(unreadMessage.threadId, lastRead.threadId),
+          ne(unreadMessage.userId, userId),
+          gt(unreadMessage.createdAt, readMessage.createdAt),
+        ),
+      )
+      .where(eq(lastRead.userId, userId))
+      .groupBy(lastRead.threadId, lastRead.lastReadMessageId);
 
-        const unreadRows = await db.query.messages.findMany({
-          where: and(
-            eq(messagesTable.threadId, row.threadId),
-            ne(messagesTable.userId, userId),
-            gt(messagesTable.createdAt, since),
-          ),
-          columns: {
-            id: true,
-          },
-        });
-
-        return {
-          last_read: row.lastReadMessageId,
-          thread_id: row.threadId,
-          unread_count: unreadRows.length,
-        };
-      }),
-    );
-
-    return unread;
+    return result.map((r) => ({
+      lastRead: r.lastRead,
+      threadId: r.threadId,
+      unreadCount: Number(r.unreadCount ?? 0),
+    }));
   }
 
   async createChannel(
@@ -384,37 +265,39 @@ export class ChatsService {
   }
 
   async createDM(userId: string, otherUserId: string) {
-    const [userThreads, otherThreads] = await Promise.all([
-      db.query.threadUsers.findMany({
-        where: { userId },
-        columns: { threadId: true },
-      }),
-      db.query.threadUsers.findMany({
-        where: { userId: otherUserId },
-        columns: { threadId: true },
-      }),
-    ]);
-
-    const otherSet = new Set(otherThreads.map((row) => row.threadId));
-    const candidateIds = userThreads
-      .map((row) => row.threadId)
-      .filter((threadId) => otherSet.has(threadId));
-
-    if (candidateIds.length > 0) {
-      const existing = await db.query.threads.findFirst({
-        where: {
-          id: {
-            in: candidateIds,
+    const memberships = await db.query.threadUsers.findMany({
+      where: { userId },
+      columns: {
+        threadId: true,
+      },
+      with: {
+        thread: {
+          columns: {
+            id: true,
+            type: true,
           },
-          type: "dm",
+          with: {
+            threadUsers: {
+              columns: {
+                userId: true,
+              },
+            },
+          },
         },
-        columns: {
-          id: true,
-        },
-      });
+      },
+    });
 
-      if (existing) {
-        return { id: existing.id };
+    for (const membership of memberships) {
+      const thread = membership.thread;
+      if (!thread || thread.type !== "dm") {
+        continue;
+      }
+
+      const hasOtherUser = thread.threadUsers.some(
+        (threadUser) => threadUser.userId === otherUserId,
+      );
+      if (hasOtherUser) {
+        return { id: thread.id };
       }
     }
 
@@ -435,6 +318,7 @@ export class ChatsService {
           userId: otherUserId,
         },
       ])
+      // TODO: send bad exception
       .onConflictDoNothing();
 
     return { id: thread.id };
@@ -443,57 +327,30 @@ export class ChatsService {
   async getChatById(id: string) {
     const chat = await db.query.threads.findFirst({
       where: { id },
-      with:{
-        members:true,
-
-      }
+      with: {
+        threadUsers: {
+          columns: {
+            userId: true,
+          },
+          with: {
+            user: {
+              columns: {
+                id: true,
+                name: true,
+                image: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!chat) {
       throw new NotFoundException("chat not found");
     }
 
-    const members = await db.query.threadUsers.findMany({
-      where: { threadId: id },
-      columns: {
-        userId: true,
-      },
-  
-    });
-
-    const memberIds = [...new Set(members.map((member) => member.userId))];
-    const memberUsers =
-      memberIds.length > 0
-        ? await db.query.user.findMany({
-            where: {
-              id: {
-                in: memberIds,
-              },
-            },
-            columns: {
-              id: true,
-               name: true,
-               image: true,
-              email: true,
-            },
-          })
-        : [];
-
-    return {
-      id: chat.id,
-      name: chat.name,
-      description: chat.description,
-      is_private: chat.isPrivate,
-      type: chat.type,
-      created_at: chat.createdAt,
-      updated_at: chat.updatedAt,
-      users: memberUsers.map((user) => ({
-        id: user.id,
-        name: user.name,
-        image: user.image,
-        email: user.email,
-      })),
-    };
+    return chat;
   }
 
   async join(id: string, userId: string) {
@@ -509,7 +366,7 @@ export class ChatsService {
   }
 
   async getMessages(id: string, limit: number, cursor: number) {
-    const [messages, total] = await Promise.all([
+    const [messages, [{ total }]] = await Promise.all([
       db.query.messages.findMany({
         where: { threadId: id },
         orderBy: {
@@ -518,11 +375,19 @@ export class ChatsService {
         limit,
         offset: cursor,
         with: {
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
           files: true,
         },
       }),
       db
-        .select({ id: count() })
+        .select({ total: count() })
         .from(messagesTable)
         .where(eq(messagesTable.threadId, id)),
     ]);
@@ -531,7 +396,7 @@ export class ChatsService {
 
     return {
       messages: messages.toReversed(),
-      total: total.length,
+      total: Number(total),
       nextCursor,
     };
   }

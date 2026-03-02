@@ -10,11 +10,14 @@ import { format, isToday, isYesterday, isThisWeek, isValid } from "date-fns";
 import { useCallback, useEffect } from "react";
 import { AudioPlayer } from "@/components/ui/audio";
 
-const safeFormat = (date: Date | string | number | undefined, formatStr: string) => {
+const safeFormat = (
+  date: Date | string | number | undefined,
+  formatStr: string,
+) => {
   if (!date) return "";
-  const d = new Date(date);
-  if (!isValid(d)) return "";
-  return format(d, formatStr);
+  const parsed = new Date(date);
+  if (!isValid(parsed)) return "";
+  return format(parsed, formatStr);
 };
 
 interface Props {
@@ -40,18 +43,21 @@ export default function Messages({
 }: Props) {
   const getLastMessage = useCallback(() => {
     if (!userId) return;
-    const currentMsgs = messagesRef.current;
+    const currentMessages = messagesRef.current;
     let lastMessageId: string | undefined;
-    if (!currentMsgs || currentMsgs.length === 0) {
+
+    if (!currentMessages || currentMessages.length === 0) {
       return;
     }
-    for (let i = currentMsgs.length - 1; i >= 0; i--) {
-      const msg = currentMsgs[i];
-      if (msg && msg.user_id !== userId) {
+
+    for (let i = currentMessages.length - 1; i >= 0; i--) {
+      const msg = currentMessages[i];
+      if (msg && msg.userId !== userId) {
         lastMessageId = msg.id;
         break;
       }
     }
+
     return lastMessageId;
   }, [userId, messagesRef]);
 
@@ -60,15 +66,16 @@ export default function Messages({
   useEffect(() => {
     return () => {
       setOptimisticUnread(null);
-      const currentMsgs = messagesRef.current;
-      if (currentMsgs && currentMsgs.length > 0) {
+      const currentMessages = messagesRef.current;
+      if (currentMessages && currentMessages.length > 0) {
         const lastMessage = getLastMessage();
         if (!lastMessage) return;
+
         queryClient.setQueryData(
           ["un_read_message", chatId],
           (oldData: UnReadMessage | undefined) => {
-            if (oldData && oldData.unread_count > 0) {
-              return { last_read: lastMessage, unread_count: 0 };
+            if (oldData && oldData.unreadCount > 0) {
+              return { lastRead: lastMessage, unreadCount: 0 };
             }
             return oldData;
           },
@@ -77,18 +84,27 @@ export default function Messages({
     };
   }, [chatId, queryClient, getLastMessage, messagesRef, setOptimisticUnread]);
 
-  return messages && messages.length > 0 ? (
+  if (!messages || messages.length === 0) {
+    return <EmptyChat />;
+  }
+
+  return (
     <div className="pb-4">
       <div ref={ref}>
         {messages.map((message, idx) => {
           if (!message) return null;
-          const createdAt = new Date(message.created_at);
+
+          const createdAt = new Date(message.createdAt);
           const isDateValid = isValid(createdAt);
-          const currentDate = isDateValid ? format(createdAt, "yyyy-MM-dd") : "";
+          const currentDate = isDateValid
+            ? format(createdAt, "yyyy-MM-dd")
+            : "";
           const showDate =
             idx === 0 ||
             (isDateValid &&
-              safeFormat(messages[idx - 1]?.created_at, "yyyy-MM-dd") !== currentDate);
+              safeFormat(messages[idx - 1]?.createdAt, "yyyy-MM-dd") !==
+                currentDate);
+
           let dateText = "";
           if (!isDateValid) {
             dateText = "";
@@ -101,10 +117,11 @@ export default function Messages({
           } else {
             dateText = format(createdAt, "MMMM d, yyyy");
           }
-          const isOwn = message.userId === userId;
-          const existsMessageText = message.message.trim() !== "";
 
+          const isOwn = message.userId === userId;
+          const hasMessageText = message.message.trim() !== "";
           const left = messages.length - idx;
+
           return (
             <div key={message.id}>
               {showDate && (
@@ -115,45 +132,53 @@ export default function Messages({
                 </div>
               )}
               {optimisticUnread &&
-                optimisticUnread.unread_count > 0 &&
-                left === optimisticUnread.unread_count &&
-                message.user_id !== userId && (
+                optimisticUnread.unreadCount > 0 &&
+                left === optimisticUnread.unreadCount &&
+                message.userId !== userId && (
                   <div className="relative my-4">
                     <hr className="border-t border-blue-500" />
                     <span className="font-bold absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-blue-500">
-                      {optimisticUnread.unread_count} unread messages
+                      {optimisticUnread.unreadCount} unread messages
                     </span>
                   </div>
                 )}
               <div
                 id={message.id}
-                className={cn("flex gap-2 p-1.5 w-full", isOwn ? "justify-end" : "justify-start")}
+                className={cn(
+                  "flex gap-2 p-1.5 w-full",
+                  isOwn ? "justify-end" : "justify-start",
+                )}
               >
-                <div className="w-8 h-8 flex-shrink-0">
-                  <ChatAvatar
-                    showOnline={false}
-                    type="user"
-                    user={message.user}
-                    showDropDown={!isOwn && chatType === "group"}
-                  />
+                <div className="w-8 h-8 shrink-0">
+                  {message.user && (
+                    <ChatAvatar
+                      showOnline={false}
+                      type="user"
+                      user={message.user}
+                      showDropDown={!isOwn && chatType === "group"}
+                    />
+                  )}
                 </div>
 
                 <div className={cn("max-w-full", isOwn ? "order-first" : "")}>
                   {message.files.length > 0 && (
                     <div className="mb-2">
                       {message.files.map((file, index) => (
-                        <div key={index} className="max-w-100 max-h-70 relative">
+                        <div
+                          key={index}
+                          className="max-w-100 max-h-70 relative"
+                        >
                           {file.type.startsWith("audio/") ? (
                             <AudioPlayer audioUrl={file.url} />
                           ) : (
                             <FilePreview file={file} message={message} />
                           )}
-                          {!existsMessageText && (
+                          {!hasMessageText && (
                             <Meta
                               isOwn={isOwn}
                               status={message?.status}
                               className="absolute bottom-3 right-2 text-white bg-black/50 rounded-md px-1"
-                              time={new Date(message.created_at)}
+                              time={new Date(message.createdAt)}
                             />
                           )}
                         </div>
@@ -167,11 +192,13 @@ export default function Messages({
                         isOwn ? "bg-primary text-white" : "bg-secondary",
                       )}
                     >
-                      <p className="text-sm leading-relaxed">{message.message}</p>
+                      <p className="text-sm leading-relaxed">
+                        {message.message}
+                      </p>
                       <Meta
                         isOwn={isOwn}
                         status={message?.status}
-                        time={new Date(message.created_at)}
+                        time={new Date(message.createdAt)}
                       />
                     </div>
                   )}
@@ -182,7 +209,5 @@ export default function Messages({
         })}
       </div>
     </div>
-  ) : (
-    <EmptyChat />
   );
 }

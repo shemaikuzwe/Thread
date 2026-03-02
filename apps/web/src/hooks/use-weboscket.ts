@@ -10,6 +10,7 @@ export function useWebsocket() {
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
   const queryClient = useQueryClient();
   const session = useSession();
+
   const resolveWebsocketUrl = useCallback(async () => {
     if (!wsUrl) {
       throw new Error("websocket url is not configured");
@@ -33,26 +34,25 @@ export function useWebsocket() {
     reconnectAttempts: 8,
     reconnectInterval: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     shouldReconnect: (event) => {
-      // Avoid reconnect loops for policy/auth-related closure codes.
       return ![1008, 1011, 4001, 4003].includes(event.code);
     },
   });
+
   const userId = session?.data?.user?.id;
+
   useEffect(() => {
     if (!message) return;
-    if (
-      message.type === "USER_CONNECTED" ||
-      message.type === "USER_DISCONNECTED"
-    ) {
-      queryClient.setQueryData(["online", message.thread_id], {
-        online: Number(message.message.online),
-        users: message.message.users,
+
+    if (message.type === "USER_CONNECTED" || message.type === "USER_DISCONNECTED") {
+      queryClient.setQueryData(["online", message.threadId], {
+        online: Number((message.message as { online?: number })?.online ?? 0),
+        users: (message.message as { users?: string[] })?.users ?? [],
       });
     }
 
     if (message.type === "MESSAGE") {
       queryClient.setQueryData(
-        ["chat", message.thread_id],
+        ["chat", message.threadId],
         (
           oldData: InfiniteData<MessagesRes> | undefined,
         ): InfiniteData<MessagesRes> | undefined => {
@@ -92,52 +92,55 @@ export function useWebsocket() {
           };
         },
       );
-      //Update last message in thread
+
       queryClient.setQueryData(
         ["chats"],
         (prev: ChatWithUsers[] | undefined): ChatWithUsers[] | undefined => {
           if (!prev) return prev;
           return prev.map((thread) =>
-            thread.id === message.thread_id
+            thread.id === message.threadId
               ? {
                   ...thread,
-                  last_message: {
-                    created_at: message.created_at,
+                  lastMessage: {
+                    createdAt: message.createdAt,
                     id: message.id,
                     message: message.message,
-                    user_id: message.user_id,
+                    userId: message.userId,
                   },
                 }
               : thread,
           );
         },
       );
-      const isOwn = message.user_id === userId;
+
+      const isOwn = message.userId === userId;
       queryClient.setQueryData(
-        ["un_read_message", message.thread_id],
+        ["un_read_message", message.threadId],
         (prev: UnReadMessage | undefined): UnReadMessage | undefined => {
           if (!prev) return prev;
           return {
             ...prev,
-            unread_count: isOwn ? 0 : (prev?.unread_count || 0) + 1,
+            unreadCount: isOwn ? 0 : (prev?.unreadCount || 0) + 1,
           };
         },
       );
     }
-    if (message.type === "MESSAGE_STATUS" && message.user_id !== userId) {
-      queryClient.setQueryData(["msg-status", message.thread_id], {
+
+    if (message.type === "MESSAGE_STATUS" && message.userId !== userId) {
+      queryClient.setQueryData(["msg-status", message.threadId], {
         status: message.message,
       });
     }
-    if (message.type === "UPDATE_LAST_READ" && message.user_id === userId) {
+    if (message.type === "UPDATE_LAST_READ" && message.userId === userId) {
       queryClient.setQueryData(
-        ["un_read_message", message.thread_id],
+        ["un_read_message", message.threadId],
         (prev: UnReadMessage | undefined): UnReadMessage | undefined => {
           if (!prev) return undefined;
-          return { last_read: message.message, unread_count: 0 };
+          return { lastRead: String(message.message ?? ""), unreadCount: 0 };
         },
       );
     }
   }, [message, queryClient, userId]);
+
   return { sendMessage: sendJsonMessage, readyState };
 }

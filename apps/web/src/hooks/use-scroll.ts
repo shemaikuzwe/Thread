@@ -21,59 +21,67 @@ function useScroll<T extends HTMLElement>(
   });
 
   const getFirstUnreadMessage = useCallback(() => {
-    if (!messages || !read?.last_read || !userId) return null;
-    const lastReadIndex = messages.findIndex((msg) => msg.id === read.last_read);
+    if (!messages || !read?.lastRead || !userId) return null;
+    const lastReadIndex = messages.findIndex((msg) => msg.id === read.lastRead);
     if (lastReadIndex === -1) return null;
+
     for (let i = lastReadIndex + 1; i < messages.length; i++) {
-      if (messages[i].user_id !== userId) {
+      if (messages[i].userId !== userId) {
         return messages[i].id;
       }
     }
+
     return null;
-  }, [messages, read?.last_read, userId]);
+  }, [messages, read?.lastRead, userId]);
+
   const handleScroll = (e: React.UIEvent<T, UIEvent>) => {
     const target = e.target as T;
     const offset = 25;
-    const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - offset;
-    setIsAtBottom(isAtBottom);
-    if (isAtBottom && handleMarkAsRead) {
+    const atBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - offset;
+    setIsAtBottom(atBottom);
+
+    if (atBottom && handleMarkAsRead) {
       handleMarkAsRead();
     }
-    const isAtTop = target.scrollTop <= 5;
-    if (isAtTop) {
-      const oldScrollheight = target.scrollHeight;
 
+    const atTop = target.scrollTop <= 5;
+    if (atTop) {
+      const oldScrollHeight = target.scrollHeight;
       if (loadMore) {
         loadMore().then(() => {
-          const newScrollheight = target.scrollHeight;
-          target.scrollTop = newScrollheight - oldScrollheight;
+          const newScrollHeight = target.scrollHeight;
+          target.scrollTop = newScrollHeight - oldScrollHeight;
         });
       }
     }
-    setIsAtTop(isAtTop);
+
+    setIsAtTop(atTop);
   };
+
   const scrollToBottom = useCallback(
     (bottom?: boolean) => {
-      if (messagesRef.current) {
-        if (!bottom) {
-          const firstUnreadId = getFirstUnreadMessage();
-          if (firstUnreadId) {
-            const element = document.getElementById(firstUnreadId);
-            element?.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-            return;
-          }
+      if (!messagesRef.current) return;
+
+      if (!bottom) {
+        const firstUnreadId = getFirstUnreadMessage();
+        if (firstUnreadId) {
+          const element = document.getElementById(firstUnreadId);
+          element?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+          return;
         }
-        messagesRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "end",
-        });
       }
+
+      messagesRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     },
     [getFirstUnreadMessage],
   );
+
   return {
     messagesRef,
     visibilityRef,

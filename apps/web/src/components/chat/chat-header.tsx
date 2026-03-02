@@ -1,4 +1,4 @@
-import type { Chat, ChatWithUsers, User } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import JoinButton from "./join-button";

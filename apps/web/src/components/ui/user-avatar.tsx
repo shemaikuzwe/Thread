@@ -10,9 +10,10 @@ import {
 import { AvatarImage } from "./avatar";
 import Link from "next/link";
 const defaultAvatar = "/default.png";
-import type { Chat, ChatWithUsers, User } from "@/lib/types";
+import type { ChatWithUsers } from "@/lib/types";
 import { useChatMeta } from "@/hooks";
 import { InfoIcon, MessageCircle } from "lucide-react";
+
 
 interface Props {
   user?: User;
@@ -23,12 +24,12 @@ interface Props {
 }
 export default function ChatAvatar({ user, type, showDropDown, chat, showOnline }: Props) {
   if (type === "user" && user) {
-    return <User showOnline={showOnline} user={user} showDropDown={showDropDown} />;
+    return <UserAvatar showOnline={showOnline} user={user} showDropDown={showDropDown} />;
   }
   return type === "chat" && chat ? <Chat chat={chat} /> : null;
 }
 
-export function User({
+export function UserAvatar({
   user,
   showDropDown,
   showOnline,

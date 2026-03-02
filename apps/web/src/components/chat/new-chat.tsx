@@ -15,8 +15,9 @@ import { useRouter } from "next/navigation";
 type Result = {
   id: string;
   name: string;
-  type: "group" | "dm";
+  type: "group" | "user";
 };
+
 const chatTypes = [
   {
     text: "New Thread",
@@ -29,11 +30,12 @@ const chatTypes = [
     icon: UserPlus,
   },
 ];
+
 export default function NewChat({ children }: { children?: React.ReactNode }) {
   const [search, setSearch] = useState<string>();
   const [open, setOpen] = useState(false);
-  // This is the modal for creating new friend and thread
   const [isOpen, setIsOpen] = useState(false);
+
   const { data, isLoading } = useQuery<Result[]>({
     queryKey: ["new-chat", search],
     queryFn: async () => {
@@ -56,8 +58,8 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
         {children ? (
           children
         ) : (
-          <Button variant={"ghost"}>
-            <span className="sr-only">New </span>
+          <Button variant="ghost">
+            <span className="sr-only">New</span>
             <PenBoxIcon className="h-10 w-10" />
           </Button>
         )}
@@ -65,8 +67,8 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
       <DialogContent className="w-150 min-h-80 flex flex-col gap-2">
         <SearchInput
           disabled={isOpen}
-          placeholder="Search new  user,thread"
-          onSearch={(search) => setSearch(search)}
+          placeholder="Search new user,thread"
+          onSearch={(value) => setSearch(value)}
         />
         <ScrollArea className="flex flex-col h-full w-full justify-start items-start">
           {isOpen && (
@@ -80,25 +82,25 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
           )}
           {isLoading && <ChatListSkelton />}
           {data && data.length > 0
-            ? data.map((d) => (
-                <SearchItem key={d.id} item={d} setSearch={setSearch} setOpen={setOpen} />
+            ? data.map((item) => (
+                <SearchItem key={item.id} item={item} setSearch={setSearch} setOpen={setOpen} />
               ))
             : !isOpen && (
                 <div className="flex flex-col gap-2 w-full">
                   <div className="flex flex-col gap-2 w-full">
-                    {chatTypes.map((c) => (
+                    {chatTypes.map((chatType) => (
                       <Button
-                        key={c.text}
+                        key={chatType.text}
                         type="button"
                         variant="ghost"
-                        className="w-full  justify-start gap-3 p-3 h-auto rounded-none hover:bg-muted"
+                        className="w-full justify-start gap-3 p-3 h-auto rounded-none hover:bg-muted"
                         onClick={() => setIsOpen(!isOpen)}
                       >
                         <div className="w-9 h-9 rounded-full flex items-center justify-center">
-                          <c.icon className="w-5 h-5" />
+                          <chatType.icon className="w-5 h-5" />
                         </div>
                         <span className="flex-1 text-left text-foreground font-medium">
-                          {c.text}
+                          {chatType.text}
                         </span>
                         <ChevronRight className="w-5 h-5 text-muted-foreground" />
                       </Button>
@@ -122,6 +124,7 @@ function SearchItem({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const router = useRouter();
+
   const handleClick = () => {
     if (item.type === "group") {
       router.push(`/chat/${item.id}`);
@@ -129,8 +132,9 @@ function SearchItem({
       setOpen(false);
       return;
     }
+
     startTransition(async () => {
-      const res = await api.post("/chats/dm", { user_id: item.id });
+      const res = await api.post("/chats/dm", { userId: item.id });
       if (!res.data) throw new Error("something went wrong");
       const id = res.data.id;
       router.push(`/chat/${id}`);
@@ -138,6 +142,7 @@ function SearchItem({
       setSearch("");
     });
   };
+
   return (
     <div>
       <div
@@ -145,7 +150,7 @@ function SearchItem({
         className="w-full flex items-center gap-3 px-3 py-2 my-2 rounded-lg text-left hover:bg-muted"
       >
         <Avatar className="w-8 h-8">
-          <AvatarImage src={""} />
+          <AvatarImage src="" />
           <AvatarFallback>
             {item.name
               .split(" ")

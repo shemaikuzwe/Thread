@@ -122,12 +122,12 @@ export default function ChatPage({
       currentMessages &&
       currentMessages.length > 0 &&
       unRead &&
-      unRead.unread_count > 0
+      unRead.unreadCount > 0
     ) {
       console.log("handled mark as read");
       const lastMessageId = getLastMessage();
       if (!lastMessageId) return;
-      if (lastMessageId !== unRead.last_read) {
+      if (lastMessageId !== unRead.lastRead) {
         const msg = {
           message: lastMessageId,
           thread_id: id,
@@ -395,7 +395,7 @@ export default function ChatPage({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="p-2 h-auto flex-shrink-0"
+                        className="p-2 h-auto shrink-0"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Paperclip className="w-4 h-4" />

@@ -8,10 +8,10 @@ import { ChatListSkelton } from "@/components/ui/chat-skeltons";
 import NewChat from "./new-chat";
 import SearchInput from "@/components/ui/search-input";
 
-type Res = {
-  last_read: string;
-  thread_id: string;
-  unread_count: string;
+type UnreadResponse = {
+  lastRead: string;
+  threadId: string;
+  unreadCount: number;
 };
 
 export default function ChatsList() {
@@ -27,7 +27,7 @@ export default function ChatsList() {
     },
   });
 
-  const { data: unReadChats } = useQuery<Res[]>({
+  const { data: unReadChats } = useQuery<UnreadResponse[]>({
     queryKey: ["un_read"],
     queryFn: async () => {
       const res = await api.get("/chats/unread");
@@ -37,6 +37,7 @@ export default function ChatsList() {
       return res.data;
     },
   });
+
   const filteredChats = search
     ? chats &&
       chats.filter(
@@ -51,13 +52,12 @@ export default function ChatsList() {
 
   const sortedChats = filteredChats?.sort(
     (a, b) =>
-      new Date(b.last_message?.created_at || b.created_at).getTime() -
-      new Date(a.last_message?.created_at || a.created_at).getTime(),
+      new Date(b.lastMessage?.createdAt || b.createdAt).getTime() -
+      new Date(a.lastMessage?.createdAt || a.createdAt).getTime(),
   );
 
   return (
     <div className="min-w-80 max-sm:w-full border-r border-border flex flex-col">
-      {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-xl">Chats</h2>
@@ -80,17 +80,16 @@ export default function ChatsList() {
           <div className="space-y-2">
             {isLoading ? (
               <ChatListSkelton />
-            ) : sortedChats && sortedChats?.length > 0 ? (
+            ) : sortedChats && sortedChats.length > 0 ? (
               sortedChats.map((chat) => {
-                const unReadChat = unReadChats?.find((c) => c.thread_id === chat.id);
+                const unReadChat = unReadChats?.find((c) => c.threadId === chat.id);
                 return (
                   <ChatListItem
                     key={chat.id}
                     chat={chat}
-                    unReadMesssage={{
-                      last_read: unReadChat?.last_read ?? null,
-                      unread_count:
-                        (unReadChat?.unread_count && Number(unReadChat.unread_count)) || 0,
+                    unReadMessage={{
+                      lastRead: unReadChat?.lastRead ?? null,
+                      unreadCount: Number(unReadChat?.unreadCount ?? 0),
                     }}
                   />
                 );

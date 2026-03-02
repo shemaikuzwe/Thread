@@ -4,4 +4,6 @@ const { useSession, signIn, signOut, $Infer, signUp,getSession } = createAuthCli
   baseURL: `${process.env.NEXT_PUBLIC_API_URL}/auth`,
 });
 type Session = typeof $Infer.Session;
-export { useSession, signIn, signOut, type Session, signUp,getSession };
+type User = typeof $Infer.Session.user;
+
+export { useSession, signIn, signOut, type Session,type User, signUp,getSession };

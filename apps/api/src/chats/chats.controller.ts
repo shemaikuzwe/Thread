@@ -8,11 +8,15 @@ import {
   Query,
 } from "@nestjs/common";
 import { ChatsService } from "./chats.service";
-import { Session, type UserSession, AllowAnonymous } from "@thallesp/nestjs-better-auth";
+import {
+  Session,
+  type UserSession,
+  AllowAnonymous,
+} from "@thallesp/nestjs-better-auth";
 
 @Controller("chats")
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) { }
+  constructor(private readonly chatsService: ChatsService) {}
 
   @Get()
   getChats(@Session() session: UserSession, @Query("search") search?: string) {
@@ -36,9 +40,9 @@ export class ChatsController {
   }
 
   @Post("dm")
-  createDM(@Session() session: UserSession, @Body() body: { user_id: string }) {
+  createDM(@Session() session: UserSession, @Body() body: { userId: string }) {
     const userId = session?.user?.id;
-    return this.chatsService.createDM(userId, body.user_id);
+    return this.chatsService.createDM(userId, body.userId);
   }
 
   @Get(":id")
@@ -57,10 +61,8 @@ export class ChatsController {
     @Param("id") id: string,
     @Query("limit") limit = "15",
     @Query("cursor") cursor = "0",
-    @Session() session: UserSession,
   ) {
-    const userId = session?.user?.id;
-    return this.chatsService.getMessages(id, Number(limit), Number(cursor), userId);
+    return this.chatsService.getMessages(id, Number(limit), Number(cursor));
   }
 
   @Post("events")
@@ -71,6 +73,7 @@ export class ChatsController {
   ) {
     return this.chatsService.persistEvent(body, token);
   }
+
   @AllowAnonymous()
   @Get("internal/users/:id/threads")
   userThreads(

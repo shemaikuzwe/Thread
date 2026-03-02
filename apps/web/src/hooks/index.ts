@@ -31,13 +31,13 @@ export function useIsTyping(delay = 1000) {
 
 export function useChatMeta(chat: ChatWithUsers | undefined): {
   name: string;
-  avatar?: string;
+  avatar?: string | null;
 } {
   const session = useSession();
   const data = session.data;
   if (!chat) return { name: "" };
   let name = chat.name;
-  let avatar: string | undefined = "";
+  let avatar: string | null | undefined = "";
   if (chat.type === "dm") {
     const filteredUsers = chat.users.filter((user) => user.id != data?.user?.id);
     name = filteredUsers[0].name;

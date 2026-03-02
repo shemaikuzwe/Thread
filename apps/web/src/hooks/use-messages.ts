@@ -25,6 +25,7 @@ export const useMessages = (id: string, limit: number = 15) => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,
   });
+
   const messages = useMemo(() => {
     if (!query.data?.pages) return undefined;
     return query.data.pages.flatMap((page) => page.messages);
@@ -36,6 +37,7 @@ export const useMessages = (id: string, limit: number = 15) => {
     data: { messages, total },
   };
 };
+
 export const useOnline = (id: string) => {
   return useQuery<Online>({
     initialData: { online: 0, users: [] },
@@ -43,7 +45,7 @@ export const useOnline = (id: string) => {
     queryFn: () => {
       return { online: 0, users: [] };
     },
-    enabled: false, //prevents auto execution of queryFn
+    enabled: false,
   });
 };
 
@@ -57,20 +59,23 @@ export const useMessageStatus = (id: string) => {
     enabled: false,
   });
 };
+
 export type UnReadMessage = {
-  last_read: string | null;
-  unread_count: number;
+  lastRead: string | null;
+  unreadCount: number;
 };
+
 export const useUnReadMessages = (id: string, initialData?: UnReadMessage) => {
   return useQuery<UnReadMessage>({
     initialData,
     queryKey: ["un_read_message", id],
     queryFn: () => {
-      return { last_read: "", unread_count: 0 };
+      return { lastRead: "", unreadCount: 0 };
     },
     enabled: false,
   });
 };
+
 export const useOptimisticUnRead = (id: string) => {
   const [optimisticUnread, setOptimisticUnread] =
     useState<UnReadMessage | null>(null);
@@ -89,5 +94,6 @@ export const useOptimisticUnRead = (id: string) => {
       initialized.current = true;
     }
   }, [unReadMessages]);
+
   return { optimisticUnread, setOptimisticUnread };
 };

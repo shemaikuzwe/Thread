@@ -53,7 +53,7 @@ export function FilePreview({ file, className = "h-60 w-55 rounded-md", message 
     return <img src="/mime/other.png" alt={file.name} className={cn(className)} />;
   }
 
-  const toogleFullScreen = () => {
+  const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       divRef.current?.requestFullscreen().then(() => {
         setIsFullScreen(true);
@@ -118,15 +118,15 @@ export function FilePreview({ file, className = "h-60 w-55 rounded-md", message 
         <DialogHeader className="flex items-start  flex-row justify-between w-full px-4">
           <div className="flex gap-2 justify-center items-start">
             <div className="w-10 h-10">
-              <ChatAvatar type="user" user={message.from} />
+              {message.user && <ChatAvatar type="user" user={message.user} />}
             </div>
             <div>
               <DialogTitle className="font-medium text-sm">
-                {message.from.name}
+                {message.user?.name ?? ""}
               </DialogTitle>
               <span className="text-sm text-muted-foreground">
-                {message.created_at && isValid(new Date(message.created_at))
-                  ? formatDate(new Date(message.created_at), "HH:mm")
+                {message.createdAt && isValid(new Date(message.createdAt))
+                  ? formatDate(new Date(message.createdAt), "HH:mm")
                   : ""}
               </span>
             </div>
@@ -134,7 +134,7 @@ export function FilePreview({ file, className = "h-60 w-55 rounded-md", message 
           <div className="flex gap-2">
             <Tooltip>
               <TooltipTrigger>
-                <Button variant={"outline"} onClick={toogleFullScreen}>
+                <Button variant={"outline"} onClick={toggleFullScreen}>
                   <FullscreenIcon />
                 </Button>
               </TooltipTrigger>
@@ -165,7 +165,7 @@ export function FilePreview({ file, className = "h-60 w-55 rounded-md", message 
           {displayPreview(`rounded-md   ${isFullScreen ? "h-full w-full" : "h-130 w-230"}`, true)}
           {isFullScreen && (
             <div className={"absolute top-10 right-25 flex gap-2"}>
-              <Button onClick={toogleFullScreen} variant={"secondary"} title="Exit Fullscreen">
+              <Button onClick={toggleFullScreen} variant={"secondary"} title="Exit Fullscreen">
                 <MinimizeIcon className="w-full h-full" />
               </Button>
               <Button variant={"secondary"} onClick={handleDownload} title="Download">
