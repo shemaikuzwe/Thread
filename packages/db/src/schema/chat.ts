@@ -10,7 +10,6 @@ import {
   primaryKey,
   unique,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 import { user } from "./auth";
 
 export const threadTypeEnum = pgEnum("thread_type", ["group", "dm"]);
@@ -118,56 +117,4 @@ export const lastRead = pgTable(
   }),
 );
 
-
-export const threadsRelations = relations(threads, ({ many }) => ({
-  threadUsers: many(threadUsers),
-  messages: many(messages),
-  lastReads: many(lastRead),
-}));
-
-export const threadUsersRelations = relations(threadUsers, ({ one }) => ({
-  thread: one(threads, {
-    fields: [threadUsers.threadId],
-    references: [threads.id],
-  }),
-  user: one(user, {
-    fields: [threadUsers.userId],
-    references: [user.id],
-  }),
-}));
-
-export const messagesRelations = relations(messages, ({ one, many }) => ({
-  thread: one(threads, {
-    fields: [messages.threadId],
-    references: [threads.id],
-  }),
-  user: one(user, {
-    fields: [messages.userId],
-    references: [user.id],
-  }),
-  files: many(files),
-  lastReads: many(lastRead),
-}));
-
-export const filesRelations = relations(files, ({ one }) => ({
-  message: one(messages, {
-    fields: [files.messageId],
-    references: [messages.id],
-  }),
-}));
-
-export const lastReadRelations = relations(lastRead, ({ one }) => ({
-  thread: one(threads, {
-    fields: [lastRead.threadId],
-    references: [threads.id],
-  }),
-  user: one(user, {
-    fields: [lastRead.userId],
-    references: [user.id],
-  }),
-  lastReadMessage: one(messages, {
-    fields: [lastRead.lastReadMessageId],
-    references: [messages.id],
-  }),
-}));
 

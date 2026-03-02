@@ -31,7 +31,6 @@ export const useMessages = (id: string, limit: number = 15) => {
   }, [query.data?.pages]);
 
   const total = query.data?.pages[0]?.total;
-
   return {
     ...query,
     data: { messages, total },
@@ -73,7 +72,8 @@ export const useUnReadMessages = (id: string, initialData?: UnReadMessage) => {
   });
 };
 export const useOptimisticUnRead = (id: string) => {
-  const [optimisticUnread, setOptimisticUnread] = useState<UnReadMessage | null>(null);
+  const [optimisticUnread, setOptimisticUnread] =
+    useState<UnReadMessage | null>(null);
   const { data: unReadMessages } = useUnReadMessages(id);
 
   const initialized = useRef(false);

@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { useWebsocket } from "./use-weboscket";
+import { useWebsocket as useSocket } from "./use-weboscket";
 
-type ChatWebsocketContextValue = ReturnType<typeof useWebsocket>;
+type ChatWebsocketContextValue = ReturnType<typeof useSocket>;
 
 const ChatWebsocketContext = createContext<ChatWebsocketContextValue | null>(null);
 
@@ -12,7 +12,7 @@ export function ChatWebsocketProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const value = useWebsocket();
+  const value = useSocket();
   return (
     <ChatWebsocketContext.Provider value={value}>
       {children}
@@ -20,7 +20,7 @@ export function ChatWebsocketProvider({
   );
 }
 
-export function useChatWebsocket() {
+export function useWebsocket() {
   const context = useContext(ChatWebsocketContext);
   if (!context) {
     throw new Error("useChatWebsocket must be used within ChatWebsocketProvider");

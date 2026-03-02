@@ -101,7 +101,7 @@ export default function Messages({
           } else {
             dateText = format(createdAt, "MMMM d, yyyy");
           }
-          const isOwn = message.user_id === userId;
+          const isOwn = message.userId === userId;
           const existsMessageText = message.message.trim() !== "";
 
           const left = messages.length - idx;
@@ -133,7 +133,7 @@ export default function Messages({
                   <ChatAvatar
                     showOnline={false}
                     type="user"
-                    user={message.from}
+                    user={message.user}
                     showDropDown={!isOwn && chatType === "group"}
                   />
                 </div>

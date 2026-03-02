@@ -6,14 +6,14 @@ export type MessageFile = {
 };
 export interface Message {
   id: string;
-  user_id: string;
-  thread_id: string;
+  userId: string;
+  threadId: string;
   message: any;
   status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];
   type: "USER_CONNECTED" | "MESSAGE" | "USER_DISCONNECTED" | "MESSAGE_STATUS" | "UPDATE_LAST_READ";
-  created_at: string;
-  from: {
+  createdAt: string;
+  user: {
     id: string;
     email: string;
     name: string;

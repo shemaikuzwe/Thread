@@ -3,9 +3,7 @@ package ws
 import (
 	"bytes"
 	"context"
-	"crypto"
 	"crypto/rsa"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -20,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/shemaIkuzwe/thread/internal/api"
@@ -244,22 +243,11 @@ func messageCallback(message []byte, userID string) {
 }
 
 type authPayload struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Image     string `json:"image"`
-	Subject   string `json:"sub"`
-	Issuer    string `json:"iss"`
-	Audience  any    `json:"aud"`
-	ExpiresAt int64  `json:"exp"`
-	NotBefore int64  `json:"nbf"`
-	IssuedAt  int64  `json:"iat"`
-}
-
-type jwtHeader struct {
-	Alg string `json:"alg"`
-	Kid string `json:"kid"`
-	Typ string `json:"typ"`
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+	jwt.RegisteredClaims
 }
 
 type jwk struct {
@@ -295,41 +283,22 @@ func authenticateRequest(r *http.Request) (*authPayload, error) {
 		return nil, fmt.Errorf("ws_token is required")
 	}
 
-	header, claims, signature, signingInput, err := parseJWT(tokenString)
-	if err != nil {
-		return nil, err
+	options := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{"RS256", "PS256"}),
+		jwt.WithLeeway(time.Duration(clockSkewSeconds()) * time.Second),
+		jwt.WithExpirationRequired(),
 	}
-	if header.Kid == "" {
-		return nil, fmt.Errorf("missing kid header")
+	if expectedIssuer := strings.TrimSpace(os.Getenv("JWT_ISSUER")); expectedIssuer != "" {
+		options = append(options, jwt.WithIssuer(expectedIssuer))
 	}
-	pubKey, err := getPublicKey(header.Kid, header.Alg)
-	if err != nil {
-		return nil, err
-	}
-	if err := verifyJWTSignature(signingInput, signature, header.Alg, pubKey); err != nil {
-		return nil, err
+	if expectedAudience := strings.TrimSpace(os.Getenv("JWT_AUDIENCE")); expectedAudience != "" {
+		options = append(options, jwt.WithAudience(expectedAudience))
 	}
 
-	skew := clockSkewSeconds()
-	now := time.Now().Unix()
-	if claims.ExpiresAt == 0 || now-skew > claims.ExpiresAt {
-		return nil, fmt.Errorf("token expired")
-	}
-	if claims.NotBefore != 0 && now+skew < claims.NotBefore {
-		return nil, fmt.Errorf("token not active")
-	}
-	if claims.IssuedAt != 0 && now+skew < claims.IssuedAt {
-		return nil, fmt.Errorf("invalid issued-at")
-	}
-
-	expectedIssuer := strings.TrimSpace(os.Getenv("JWT_ISSUER"))
-	if expectedIssuer != "" && claims.Issuer != expectedIssuer {
-		return nil, fmt.Errorf("invalid issuer")
-	}
-
-	expectedAudience := strings.TrimSpace(os.Getenv("JWT_AUDIENCE"))
-	if expectedAudience != "" && !hasAudience(claims.Audience, expectedAudience) {
-		return nil, fmt.Errorf("invalid audience")
+	claims := &authPayload{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, jwtKeyFunc, options...)
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	if claims.Subject == "" {
@@ -340,6 +309,15 @@ func authenticateRequest(r *http.Request) (*authPayload, error) {
 	}
 
 	return claims, nil
+}
+
+func jwtKeyFunc(token *jwt.Token) (any, error) {
+	kid, _ := token.Header["kid"].(string)
+	if strings.TrimSpace(kid) == "" {
+		return nil, fmt.Errorf("missing kid header")
+	}
+	alg, _ := token.Header["alg"].(string)
+	return getPublicKey(kid, alg)
 }
 
 func getToken(r *http.Request) (string, error) {
@@ -485,77 +463,4 @@ func parseRSAPublicKey(nB64, eB64 string) (*rsa.PublicKey, error) {
 	}
 
 	return &rsa.PublicKey{N: n, E: e}, nil
-}
-
-func parseJWT(token string) (*jwtHeader, *authPayload, []byte, string, error) {
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return nil, nil, nil, "", fmt.Errorf("invalid token format")
-	}
-
-	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
-	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("invalid token header")
-	}
-	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("invalid token payload")
-	}
-	signature, err := base64.RawURLEncoding.DecodeString(parts[2])
-	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("invalid token signature")
-	}
-
-	var header jwtHeader
-	if err := json.Unmarshal(headerBytes, &header); err != nil {
-		return nil, nil, nil, "", fmt.Errorf("invalid token header json")
-	}
-	var claims authPayload
-	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
-		return nil, nil, nil, "", fmt.Errorf("invalid token payload json")
-	}
-
-	return &header, &claims, signature, parts[0] + "." + parts[1], nil
-}
-
-func verifyJWTSignature(signingInput string, signature []byte, alg string, publicKey *rsa.PublicKey) error {
-	hashed := sha256.Sum256([]byte(signingInput))
-	switch alg {
-	case "RS256":
-		if err := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hashed[:], signature); err != nil {
-			return fmt.Errorf("invalid signature")
-		}
-		return nil
-	case "PS256":
-		if err := rsa.VerifyPSS(publicKey, crypto.SHA256, hashed[:], signature, nil); err != nil {
-			return fmt.Errorf("invalid signature")
-		}
-		return nil
-	default:
-		return fmt.Errorf("unsupported alg: %s", alg)
-	}
-}
-
-func hasAudience(audience any, expected string) bool {
-	switch value := audience.(type) {
-	case string:
-		return value == expected
-	case []any:
-		for _, item := range value {
-			s, ok := item.(string)
-			if ok && s == expected {
-				return true
-			}
-		}
-		return false
-	case []string:
-		for _, item := range value {
-			if item == expected {
-				return true
-			}
-		}
-		return false
-	default:
-		return false
-	}
 }

@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -8,7 +7,6 @@ import {
   uuid,
   jsonb,
 } from "drizzle-orm/pg-core";
-import { lastRead, messages, threadUsers } from "./chat";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -103,31 +101,4 @@ export const jwks = pgTable("jwks", {
   createdAt: timestamp("created_at").notNull(),
   expiresAt: timestamp("expires_at"),
 });
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-  threadUsers: many(threadUsers),
-  messages: many(messages),
-  lastReads: many(lastRead),
-  subscriptions: many(subscriptions),
-}));
 
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-  user: one(user, {
-    fields: [subscriptions.userId],
-    references: [user.id],
-  }),
-}));

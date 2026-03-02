@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, use } from "react";
 import { Button } from "@/components/ui/button";
-import { useChatWebsocket } from "@/hooks/chat-websocket-provider";
 import type {
   ChatWithUsers,
   Message,
@@ -31,8 +30,8 @@ import { toast } from "sonner";
 import ChatsList from "@/components/chat/chats-list";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AudioInput from "@/components/chat/audio-input";
-import { useSubscriptions } from "@/hooks/use-sub";
 import { useSession } from "@/lib/auth-client";
+import { useWebsocket } from "@/hooks/websocket-provider";
 
 export default function ChatPage({
   params,
@@ -42,7 +41,7 @@ export default function ChatPage({
   const { id } = use(params);
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const { sendMessage } = useChatWebsocket();
+  const { sendMessage } = useWebsocket();
   const session = useSession();
   const userId = session?.data?.user?.id;
 
@@ -61,7 +60,6 @@ export default function ChatPage({
   const messages = data?.messages;
   const [isRecording, setIsRecording] = useState(false);
   const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
-  const { subscribeToPush } = useSubscriptions();
 
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],

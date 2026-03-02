@@ -2,10 +2,10 @@
 
 import { ChatSidebar } from "@/components/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ChatWebsocketProvider, useChatWebsocket } from "@/hooks/chat-websocket-provider";
+import { ChatWebsocketProvider, useWebsocket } from "@/hooks/websocket-provider";
 
 function ChatLayoutContent({ children }: { children: React.ReactNode }) {
-  useChatWebsocket();
+  useWebsocket();
 
   return (
     <SidebarProvider defaultOpen={false}>

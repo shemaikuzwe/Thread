@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { db, subscriptions, user as userTable } from "@thread/db";
+import { db, subscriptions as subscriptionsTable } from "@thread/db";
 import { and, eq } from "drizzle-orm";
-
+import webpush from "web-push";
 @Injectable()
 export class UsersService {
   async findAll() {
@@ -24,7 +24,7 @@ export class UsersService {
 
   async findById(id: string) {
     const user = await db.query.user.findFirst({
-      where: eq(userTable.id, id),
+      where: { id },
       columns: {
         id: true,
         name: true,
@@ -52,23 +52,43 @@ export class UsersService {
     }
 
     await db
-      .insert(subscriptions)
+      .insert(subscriptionsTable)
       .values({ userId, sub, endpoint })
       .onConflictDoUpdate({
-        target: subscriptions.endpoint,
+        target: subscriptionsTable.endpoint,
         set: { sub, userId, updatedAt: new Date() },
       });
 
     return "Subscription created successfully";
   }
+  async sendNotification(title: string, message: string, userId: string) {
+    const subscription = await db.query.subscriptions.findMany({
+      where: {
+        userId,
+      },
+    });
+    if (!subscription.length)
+      throw new NotFoundException("No subscription available");
+    for (const sub of subscription) {
+      await webpush.sendNotification(
+        sub.sub as any,
+        JSON.stringify({
+          title: title,
+          body: message,
+          icon: "/logo2.png",
+        }),
+      );
+    }
 
+    return { success: true };
+  }
   async removeSubscription(userId: string, endpoint: string) {
     await db
-      .delete(subscriptions)
+      .delete(subscriptionsTable)
       .where(
         and(
-          eq(subscriptions.endpoint, endpoint),
-          eq(subscriptions.userId, userId),
+          eq(subscriptionsTable.userId, userId),
+          eq(subscriptionsTable.endpoint, endpoint),
         ),
       );
     return "Subscription created successfully";
