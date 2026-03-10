@@ -101,4 +101,3 @@ export const jwks = pgTable("jwks", {
   createdAt: timestamp("created_at").notNull(),
   expiresAt: timestamp("expires_at"),
 });
-

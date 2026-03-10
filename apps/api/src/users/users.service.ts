@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { db, subscriptions as subscriptionsTable } from "@thread/db";
 import { and, eq } from "drizzle-orm";
 import webpush from "web-push";
+
 @Injectable()
 export class UsersService {
   async findAll() {
@@ -37,27 +38,16 @@ export class UsersService {
       throw new NotFoundException("User not found");
     }
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      image: user.image,
-    };
+    return user;
   }
 
-  async addSubscription(userId: string, sub: unknown) {
-    const endpoint = (sub as { endpoint?: string })?.endpoint;
+  async addSubscription(userId: string, sub: webpush.PushSubscription) {
+    const endpoint = sub.endpoint;
     if (!endpoint) {
       throw new NotFoundException("endpoint is required");
     }
 
-    await db
-      .insert(subscriptionsTable)
-      .values({ userId, sub, endpoint })
-      .onConflictDoUpdate({
-        target: subscriptionsTable.endpoint,
-        set: { sub, userId, updatedAt: new Date() },
-      });
+    await db.insert(subscriptionsTable).values({ userId, sub, endpoint });
 
     return "Subscription created successfully";
   }
@@ -71,7 +61,7 @@ export class UsersService {
       throw new NotFoundException("No subscription available");
     for (const sub of subscription) {
       await webpush.sendNotification(
-        sub.sub as any,
+        sub.sub as webpush.PushSubscription,
         JSON.stringify({
           title: title,
           body: message,

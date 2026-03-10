@@ -1,7 +1,7 @@
+import { getSession } from "@/lib/auth-client";
 import { createRouteHandler, createUploadthing } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import type { FileRouter } from "uploadthing/types";
-import { auth } from "@/lib/server";
 
 const f = createUploadthing();
 
@@ -15,7 +15,9 @@ export const uploadRouter = {
     blob: { maxFileSize: "64MB" },
   })
     .middleware(async ({ req }) => {
-      const session = await auth(req);
+      const session = await getSession({
+        fetchOptions: { headers: req.headers },
+      });
       if (!session.data?.user) {
         throw new UploadThingError("User not found");
       }

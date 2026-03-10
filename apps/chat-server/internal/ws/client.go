@@ -25,7 +25,7 @@ import (
 	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
-type From struct {
+type User struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
@@ -35,11 +35,11 @@ type From struct {
 type Message struct {
 	ID       string `json:"id"`
 	Message  any    `json:"message"`
-	ThreadID string `json:"thread_id"`
-	UserID   string `json:"user_id"`
+	ThreadID string `json:"threadId"`
+	UserID   string `json:"userId"`
 	Type     Type   `json:"type"`
-	Date     string `json:"created_at"`
-	From     *From  `json:"from,omitempty"`
+	Date     string `json:"createdAt"`
+	User     *User  `json:"user,omitempty"`
 }
 
 type Type string

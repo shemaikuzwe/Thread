@@ -47,14 +47,16 @@ export class ChatsService {
       throw new BadRequestException("Invalid event payload");
     }
 
-    const payload = raw as ChatEventPayload;
+    const payload = raw as any;
     const type = payload.type as ChatEventType;
 
+    const id = payload.id;
+    const threadId = payload.threadId || payload.thread_id;
+    const userId = payload.userId || payload.user_id;
+
     if (type === "MESSAGE") {
-      if (!payload.id || !payload.thread_id || !payload.user_id) {
-        throw new BadRequestException(
-          "MESSAGE event missing id/thread_id/user_id",
-        );
+      if (!id || !threadId || !userId) {
+        throw new BadRequestException("MESSAGE event missing id/threadId/userId");
       }
 
       const text = typeof payload.message === "string" ? payload.message : "";
@@ -64,9 +66,9 @@ export class ChatsService {
         await tx
           .insert(messagesTable)
           .values({
-            id: payload.id,
-            threadId: payload.thread_id,
-            userId: payload.user_id,
+            id: id,
+            threadId: threadId,
+            userId: userId,
             message: text,
           })
           .onConflictDoNothing({ target: messagesTable.id });
@@ -90,19 +92,15 @@ export class ChatsService {
     }
 
     if (type === "UPDATE_LAST_READ") {
-      if (
-        !payload.thread_id ||
-        !payload.user_id ||
-        typeof payload.message !== "string"
-      ) {
+      if (!threadId || !userId || typeof payload.message !== "string") {
         throw new BadRequestException("UPDATE_LAST_READ event missing fields");
       }
 
       await db
         .insert(lastRead)
         .values({
-          threadId: payload.thread_id,
-          userId: payload.user_id,
+          threadId: threadId,
+          userId: userId,
           lastReadMessageId: payload.message,
         })
         .onConflictDoUpdate({
@@ -174,21 +172,10 @@ export class ChatsService {
       ];
     }
 
-    const threadIds = await db.query.threadUsers.findMany({
-      where: { userId },
-      columns: {
-        threadId: true,
-      },
-    });
-
-    if (threadIds.length === 0) {
-      return [];
-    }
-
     const threads = await db.query.threads.findMany({
       where: {
-        id: {
-          in: threadIds.map((t) => t.threadId),
+        threadUsers: {
+          userId,
         },
       },
       with: {
@@ -210,7 +197,10 @@ export class ChatsService {
       },
     });
 
-    return threads;
+    return threads.map((t) => ({
+      ...t,
+      users: t.threadUsers.flatMap((tu) => tu.user),
+    }));
   }
 
   async unread(userId: string) {
@@ -243,10 +233,7 @@ export class ChatsService {
     }));
   }
 
-  async createChannel(
-    userId: string,
-    body: { name: string; description: string },
-  ) {
+  async createChannel(userId: string, body: { name: string; description: string }) {
     const [thread] = await db
       .insert(threadsTable)
       .values({
@@ -261,7 +248,7 @@ export class ChatsService {
       userId,
     });
 
-    return thread.id;
+    return { id: thread.id };
   }
 
   async createDM(userId: string, otherUserId: string) {
@@ -350,7 +337,10 @@ export class ChatsService {
       throw new NotFoundException("chat not found");
     }
 
-    return chat;
+    return {
+      ...chat,
+      users: chat.threadUsers.flatMap((tu) => tu.user),
+    };
   }
 
   async join(id: string, userId: string) {
@@ -386,10 +376,7 @@ export class ChatsService {
           files: true,
         },
       }),
-      db
-        .select({ total: count() })
-        .from(messagesTable)
-        .where(eq(messagesTable.threadId, id)),
+      db.select({ total: count() }).from(messagesTable).where(eq(messagesTable.threadId, id)),
     ]);
 
     const nextCursor = messages.length === limit ? cursor + limit : null;

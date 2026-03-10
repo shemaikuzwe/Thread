@@ -16,8 +16,8 @@ export interface ChatMessageUser {
 
 export interface Message {
   id: string;
-  user_id: string;
-  thread_id: string;
+  userId: string;
+  threadId: string;
   message: string;
   status?: "PENDING" | "SENT" | "FAILED";
   files: MessageFile[];
@@ -27,9 +27,8 @@ export interface Message {
     | "USER_DISCONNECTED"
     | "MESSAGE_STATUS"
     | "UPDATE_LAST_READ";
-  created_at: string;
-  user?: ChatMessageUser;
-  from?: ChatMessageUser;
+  createdAt: string;
+  user: ChatMessageUser;
 }
 
 export type MessageStatus = {
@@ -58,7 +57,6 @@ export type UserAvatar={
   name: string;
   image: string;
   email: string;
-}
 }
 export interface ChatWithUsers extends Chat {
   users: User[];

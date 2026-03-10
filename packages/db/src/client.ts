@@ -1,7 +1,7 @@
 import "dotenv/config";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { authRelations, chatRelations } from "./schema/relation";
+import { relations } from "./schema/relation";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -12,6 +12,6 @@ const client = postgres(connectionString, { max: 10 });
 
 export const db = drizzle({
   client,
-  relations: { ...authRelations, ...chatRelations },
+  relations,
 });
 export { client };

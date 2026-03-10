@@ -3,7 +3,7 @@ import { AvatarImage } from "./avatar";
 const defaultAvatar = "/default.png";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
-import { type User } from "@/lib/types";
+import { User } from "@/lib/auth-client";
 
 export default function MessageUser({ userId }: { userId: string }) {
   const { data: user, isLoading } = useQuery<User>({

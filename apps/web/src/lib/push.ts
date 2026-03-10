@@ -9,7 +9,7 @@ export async function subscribeUser(sub: PushSubscription) {
 }
 
 export async function unsubscribeUser(sub: PushSubscription) {
-  const res = await api.delete(`/users/subscription/${sub.endpoint}`);
+  const res = await api.delete(`/users/subscription/${encodeURIComponent(sub.endpoint)}`);
   if (res.status !== 200) {
     return { success: false };
   }

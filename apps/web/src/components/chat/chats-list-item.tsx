@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import ChatAvatar from "@/components/ui/user-avatar";
 import { useChatMeta } from "@/hooks";
 import {
+  useMessages,
   useMessageStatus,
   useUnReadMessages,
   type UnReadMessage,
@@ -22,12 +23,13 @@ export default function ChatListItem({
   const pathname = usePathname();
   const router = useRouter();
   const { data: msgStatus } = useMessageStatus(chat.id);
+  const { data } = useMessages(chat.id);
   const { name } = useChatMeta(chat);
   const { data: unread } = useUnReadMessages(chat.id, {
     lastRead: unReadMessage?.lastRead ?? null,
     unreadCount: unReadMessage?.unreadCount ?? 0,
   });
-
+  const lastMessage = data?.messages?.[data?.messages?.length - 1];
   const isActive = pathname.includes(chat.id);
 
   return (
@@ -52,15 +54,17 @@ export default function ChatListItem({
             )}
           </div>
           {msgStatus?.status === "TYPING" ? (
-            <span className="text-sm text-primary font-semibold">typing...</span>
+            <span className="text-sm text-primary font-semibold">
+              typing...
+            </span>
           ) : (
-            chat.lastMessage && (
+            lastMessage && (
               <div className="flex justify-between w-full text-muted-foreground/90 text-sm">
-                <span>{chat.lastMessage.message}</span>
+                <span>{lastMessage.message}</span>
                 <span>
-                  {chat.lastMessage.createdAt &&
-                  isValid(new Date(chat.lastMessage.createdAt))
-                    ? format(new Date(chat.lastMessage.createdAt), "HH:mm")
+                  {lastMessage.createdAt &&
+                  isValid(new Date(lastMessage.createdAt))
+                    ? format(new Date(lastMessage.createdAt), "HH:mm")
                     : ""}
                 </span>
               </div>

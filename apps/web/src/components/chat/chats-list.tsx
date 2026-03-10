@@ -4,7 +4,7 @@ import type { ChatWithUsers } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ChatListItem from "./chats-list-item";
-import { ChatListSkelton } from "@/components/ui/chat-skeltons";
+import { ChatListSkeleton } from "@/components/ui/chat-skeletons";
 import NewChat from "./new-chat";
 import SearchInput from "@/components/ui/search-input";
 
@@ -79,7 +79,7 @@ export default function ChatsList() {
         <div className="p-4">
           <div className="space-y-2">
             {isLoading ? (
-              <ChatListSkelton />
+              <ChatListSkeleton />
             ) : sortedChats && sortedChats.length > 0 ? (
               sortedChats.map((chat) => {
                 const unReadChat = unReadChats?.find((c) => c.threadId === chat.id);

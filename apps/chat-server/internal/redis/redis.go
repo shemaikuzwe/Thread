@@ -100,7 +100,7 @@ func Delete(keys ...string) (bool, error) {
 		return false, err
 	}
 	if !exists {
-		return false, errors.New("Cannot find given key")
+		return false, errors.New("cannot find given key")
 	}
 	_, err = Client.Del(context.Background(), keys...).Result()
 	if err != nil {

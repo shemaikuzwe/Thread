@@ -6,7 +6,7 @@ import { useOnline } from "@/hooks/use-messages";
 import ThemeToggle from "../theme-toggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { ArrowLeft, EllipsisVerticalIcon, Video } from "lucide-react";
-import { ChatHeaderSkelton } from "../ui/chat-skeltons";
+import { ChatHeaderSkeleton } from "../ui/chat-skeletons";
 import ChatAvatar from "../ui/user-avatar";
 import { useChatMeta } from "@/hooks/index";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,7 +40,7 @@ export default function ChatHeader({ join, chat, loading, setJoin }: Props) {
         </Button>
       )}
       {loading ? (
-        <ChatHeaderSkelton />
+        <ChatHeaderSkeleton />
       ) : (
         chat && (
           <div className="flex items-center justify-between gap-3">

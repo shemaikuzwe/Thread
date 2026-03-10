@@ -10,13 +10,13 @@ import {
 import { AvatarImage } from "./avatar";
 import Link from "next/link";
 const defaultAvatar = "/default.png";
-import type { ChatWithUsers } from "@/lib/types";
+import type { ChatWithUsers,UserAvatar } from "@/lib/types";
 import { useChatMeta } from "@/hooks";
 import { InfoIcon, MessageCircle } from "lucide-react";
 
 
 interface Props {
-  user?: User;
+  user?: UserAvatar;
   type: "user" | "chat";
   showDropDown?: boolean;
   chat?: ChatWithUsers;
@@ -34,7 +34,7 @@ export function UserAvatar({
   showDropDown,
   showOnline,
 }: {
-  user: User;
+  user: UserAvatar;
   showDropDown?: boolean;
   showOnline?: boolean;
 }) {

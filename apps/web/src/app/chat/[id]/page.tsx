@@ -2,12 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, use } from "react";
 import { Button } from "@/components/ui/button";
-import type {
-  ChatWithUsers,
-  Message,
-  MessageStatus,
-  UploadFile,
-} from "@/lib/types";
+import type { ChatWithUsers, Message, MessageStatus, UploadFile } from "@/lib/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import ChatHeader from "@/components/chat/chat-header";
@@ -17,12 +12,8 @@ import JoinChat from "@/components/chat/join-chat";
 import { useScroll } from "@/hooks/use-scroll";
 import Messages from "@/components/chat/messages";
 import ScrollAnchor from "@/components/chat/scroll-anchor";
-import {
-  useMessages,
-  useOptimisticUnRead,
-  type UnReadMessage,
-} from "@/hooks/use-messages";
-import { ChatMessagesSkelton } from "@/components/ui/chat-skeltons";
+import { useMessages, useOptimisticUnRead, type UnReadMessage } from "@/hooks/use-messages";
+import { ChatMessagesSkeleton } from "@/components/ui/chat-skeletons";
 import { useIsTyping } from "@/hooks";
 import { FileCard } from "@/components/chat/file-card";
 import { useUploadThing } from "@/lib/utils";
@@ -33,11 +24,7 @@ import AudioInput from "@/components/chat/audio-input";
 import { useSession } from "@/lib/auth-client";
 import { useWebsocket } from "@/hooks/websocket-provider";
 
-export default function ChatPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [join, setJoin] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -50,8 +37,7 @@ export default function ChatPage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const { isTyping, handleTyping } = useIsTyping();
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useMessages(id);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useMessages(id);
   const audioButtonRef = useRef<HTMLButtonElement>(null);
   const { setOptimisticUnread, optimisticUnread } = useOptimisticUnRead(id);
   const lastMessageRef = useRef<string | null>(null);
@@ -82,11 +68,7 @@ export default function ChatPage({
     const lastMsg = messages?.[messages.length - 1];
     const lastMsgId = lastMsg?.id;
 
-    if (
-      lastMessageRef.current &&
-      lastMsgId &&
-      lastMsgId !== lastMessageRef.current
-    ) {
+    if (lastMessageRef.current && lastMsgId && lastMsgId !== lastMessageRef.current) {
       setOptimisticUnread(null);
     }
 
@@ -97,12 +79,12 @@ export default function ChatPage({
 
   useEffect(() => {
     if (chat && userId) {
+      console.log("users", chat.users);
       if (!chat.users.some((user) => user.id === userId)) {
         setJoin(true);
       }
     }
   }, [chat, userId]);
-
   const getLastMessage = useCallback(() => {
     if (!userId) return;
     const currentMsgs = messagesRef.current;
@@ -114,25 +96,17 @@ export default function ChatPage({
 
   const handleMarkAsRead = useCallback(() => {
     const currentMessages = messagesRef.current;
-    const unRead = queryClient.getQueryData<UnReadMessage>([
-      "un_read_message",
-      id,
-    ]);
-    if (
-      currentMessages &&
-      currentMessages.length > 0 &&
-      unRead &&
-      unRead.unreadCount > 0
-    ) {
+    const unRead = queryClient.getQueryData<UnReadMessage>(["un_read_message", id]);
+    if (currentMessages && currentMessages.length > 0 && unRead && unRead.unreadCount > 0) {
       console.log("handled mark as read");
       const lastMessageId = getLastMessage();
       if (!lastMessageId) return;
       if (lastMessageId !== unRead.lastRead) {
         const msg = {
           message: lastMessageId,
-          thread_id: id,
-          user_id: userId,
-          date: new Date().toISOString(),
+          threadId: id,
+          userId: userId,
+          createdAt: new Date().toISOString(),
           type: "UPDATE_LAST_READ",
         };
         sendMessage(msg);
@@ -151,30 +125,17 @@ export default function ChatPage({
     scrollToBottom,
     messagesRef: ref,
     handleScroll,
-  } = useScroll<HTMLDivElement>(
-    id,
-    loadMore,
-    handleMarkAsRead,
-    messages,
-    userId,
-  );
+  } = useScroll<HTMLDivElement>(id, loadMore, handleMarkAsRead, messages, userId);
 
   const handleSendMessage = useCallback(
-    async (
-      type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE",
-      payload?: MessageStatus,
-    ) => {
+    async (type: "MESSAGE" | "MESSAGE_STATUS" = "MESSAGE", payload?: MessageStatus) => {
       if (!userId) return;
-      if (
-        type === "MESSAGE" &&
-        !(newMessage.trim() || files.length || audioFile)
-      )
-        return;
+      if (type === "MESSAGE" && !(newMessage.trim() || files.length || audioFile)) return;
       console.log("message", type);
       const message: Message = {
-        thread_id: id,
+        threadId: id,
         id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         files: files.length
           ? files.map((f) => ({
               name: f.file.name,
@@ -194,8 +155,8 @@ export default function ChatPage({
             : [],
         message: type === "MESSAGE" ? newMessage : (payload?.status ?? ""),
         type: type,
-        user_id: userId,
-        from: {
+        userId: userId,
+        user: {
           id: userId,
           email: session?.data?.user?.email ?? "",
           name: session?.data?.user?.name ?? "",
@@ -204,47 +165,40 @@ export default function ChatPage({
       };
       //Optimistic ui
       if (type === "MESSAGE") {
-        queryClient.setQueryData(
-          ["chat", message.thread_id],
-          (oldData: any) => {
-            if (!oldData?.pages) {
-              return {
-                pages: [
-                  {
-                    messages: [{ ...message, status: "PENDING" }],
-                    total: 1,
-                    nextOffset: 1,
-                  },
-                ],
-                pageParams: [0],
-              };
-            }
-
-            const newPages = [...oldData.pages];
-            const lastPage = newPages[newPages.length - 1];
-            const currentMessages = Array.isArray(lastPage?.messages)
-              ? lastPage.messages
-              : [];
-
-            // Add new message to the last page
-            newPages[newPages.length - 1] = {
-              ...lastPage,
-              messages: [...currentMessages, { ...message, status: "PENDING" }],
-              total: (lastPage?.total || 0) + 1,
-            };
-
+        queryClient.setQueryData(["chat", message.threadId], (oldData: any) => {
+          if (!oldData?.pages) {
             return {
-              ...oldData,
-              pages: newPages,
+              pages: [
+                {
+                  messages: [{ ...message, status: "PENDING" }],
+                  total: 1,
+                  nextOffset: 1,
+                },
+              ],
+              pageParams: [0],
             };
-          },
-        );
+          }
+
+          const newPages = [...oldData.pages];
+          const lastPage = newPages[newPages.length - 1];
+          const currentMessages = Array.isArray(lastPage?.messages) ? lastPage.messages : [];
+
+          // Add new message to the last page
+          newPages[newPages.length - 1] = {
+            ...lastPage,
+            messages: [...currentMessages, { ...message, status: "PENDING" }],
+            total: (lastPage?.total || 0) + 1,
+          };
+
+          return {
+            ...oldData,
+            pages: newPages,
+          };
+        });
       }
 
       if ((files.length || audioFile) && type === "MESSAGE") {
-        const toUpload = audioFile
-          ? [audioFile.file]
-          : files.map((f) => f.file);
+        const toUpload = audioFile ? [audioFile.file] : files.map((f) => f.file);
         const uploaded = await startUpload(toUpload);
         if (!uploaded?.length) {
           toast.error("Failed to upload files");
@@ -310,13 +264,11 @@ export default function ChatPage({
     for (const file of Array.from(fileList)) {
       const reader = new FileReader();
 
-      const fileUrl = await new Promise<string | ArrayBuffer | null>(
-        (resolve, reject) => {
-          reader.onload = (event) => resolve(event.target?.result ?? null);
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(file);
-        },
-      );
+      const fileUrl = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+        reader.onload = (event) => resolve(event.target?.result ?? null);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
 
       if (fileUrl) newFiles.push({ dataUrl: fileUrl as string, file });
     }
@@ -331,19 +283,14 @@ export default function ChatPage({
       <div className="gray-50 flex w-full">
         {/* Main Chat Area */}
         <div className="flex-1 w-full flex flex-col">
-          <ChatHeader
-            join={join}
-            setJoin={setJoin}
-            loading={loading}
-            chat={chat}
-          />
+          <ChatHeader join={join} setJoin={setJoin} loading={loading} chat={chat} />
 
           <ScrollArea
             onScrollCapture={handleScroll}
             className="flex-1 w-full p-6 space-y-4 min-h-0"
           >
             {isLoading ? (
-              <ChatMessagesSkelton />
+              <ChatMessagesSkeleton />
             ) : join && chat ? (
               <JoinChat chat={chat} setJoin={setJoin} />
             ) : (
@@ -367,10 +314,7 @@ export default function ChatPage({
             )}
           </ScrollArea>
           <div className="mx-auto flex justify-center items-center pb-2 pt-0 z-100">
-            <ScrollAnchor
-              isAtBottom={isAtBottom}
-              scrollToBottom={scrollToBottom}
-            />
+            <ScrollAnchor isAtBottom={isAtBottom} scrollToBottom={scrollToBottom} />
           </div>
           <div className="w-full z-10">
             <div className="p-2 flex flex-col w-full h-full">

@@ -30,7 +30,7 @@ function Message({ isOwn = true }: { isOwn?: boolean }) {
   );
 }
 
-export function ChatMessagesSkelton() {
+export function ChatMessagesSkeleton() {
   return (
     <div>
       <Message />
@@ -42,7 +42,7 @@ export function ChatMessagesSkelton() {
     </div>
   );
 }
-export function ChatHeaderSkelton() {
+export function ChatHeaderSkeleton() {
   return (
     <div className="flex items-center gap-3">
       <Avatar />
@@ -53,7 +53,7 @@ export function ChatHeaderSkelton() {
   );
 }
 
-export function ChatListSkelton() {
+export function ChatListSkeleton() {
   return (
     <div>
       <ChatListItem />

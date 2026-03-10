@@ -1,7 +1,33 @@
 import { defineRelationsPart } from "drizzle-orm";
 import * as auth from "./auth";
 import * as chat from "./chat";
-export const chatRelations = defineRelationsPart({ ...auth, ...chat }, (r) => ({
+export const relations = defineRelationsPart({ ...auth, ...chat }, (r) => ({
+    user: {
+        sessions: r.many.session(),
+        accounts: r.many.account(),
+        subscriptions: r.many.subscriptions(),
+        threadUsers: r.many.threadUsers(),
+        messages: r.many.messages(),
+        lastReads: r.many.lastRead(),
+    },
+    session: {
+        user: r.one.user({
+            from: r.session.userId,
+            to: r.user.id,
+        }),
+    },
+    account: {
+        user: r.one.user({
+            from: r.account.userId,
+            to: r.user.id,
+        }),
+    },
+    subscriptions: {
+        user: r.one.user({
+            from: r.subscriptions.userId,
+            to: r.user.id,
+        }),
+    },
     threads: {
         threadUsers: r.many.threadUsers(),
         messages: r.many.messages(),
@@ -51,31 +77,5 @@ export const chatRelations = defineRelationsPart({ ...auth, ...chat }, (r) => ({
     },
 }));
 
-export const authRelations = defineRelationsPart({ ...auth, ...chat }, (r) => ({
-    user: {
-        sessions: r.many.session(),
-        accounts: r.many.account(),
-        subscriptions: r.many.subscriptions(),
-        threadUsers: r.many.threadUsers(),
-        messages: r.many.messages(),
-        lastReads: r.many.lastRead(),
-    },
-    session: {
-        user: r.one.user({
-            from: r.session.userId,
-            to: r.user.id,
-        }),
-    },
-    account: {
-        user: r.one.user({
-            from: r.account.userId,
-            to: r.user.id,
-        }),
-    },
-    subscriptions: {
-        user: r.one.user({
-            from: r.subscriptions.userId,
-            to: r.user.id,
-        }),
-    },
-}));
+export const authRelations = relations;
+export const chatRelations = relations;
