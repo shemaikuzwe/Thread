@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "chat-pb/";
+
+service ChatService {
+  rpc SaveMessage (Message) returns (Response);
+  rpc GetUserThreads (UserRequest) returns (ThreadResponse);
+}
+
+message Message {
+  string id = 1;
+  string threadId = 2;
+  string message = 3;
+  string type = 4;
+}
+
+message Response {
+  int64 status = 1;
+  string message = 2;
+}
+
+message UserRequest {
+  string userId = 1;
+}
+
+message ThreadResponse {
+  repeated string threads = 1;
+}

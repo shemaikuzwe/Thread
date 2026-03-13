@@ -65,14 +65,7 @@ export class ChatsController {
     return this.chatsService.getMessages(id, Number(limit), Number(cursor));
   }
 
-  @Post("events")
-  @AllowAnonymous()
-  persistEvent(
-    @Body() body: unknown,
-    @Headers("x-chat-server-token") token?: string,
-  ) {
-    return this.chatsService.persistEvent(body, token);
-  }
+ 
 
   @AllowAnonymous()
   @Get("internal/users/:id/threads")

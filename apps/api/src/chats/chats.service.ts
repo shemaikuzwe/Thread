@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import {
   db,
-  files as filesTable,
   lastRead,
   messages as messagesTable,
   threads as threadsTable,
@@ -15,22 +13,6 @@ import {
 import { and, count, eq, gt, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-type ChatEventType = "MESSAGE" | "UPDATE_LAST_READ";
-
-type ChatEventPayload = {
-  id?: string;
-  message?: unknown;
-  thread_id?: string;
-  user_id?: string;
-  type?: string;
-  files?: Array<{
-    name?: string;
-    url?: string;
-    type?: string;
-    size?: number;
-  }>;
-};
-
 @Injectable()
 export class ChatsService {
   private validateInternalToken(token?: string) {
@@ -38,83 +20,6 @@ export class ChatsService {
     if (!expected || token !== expected) {
       throw new UnauthorizedException("Invalid chat-server token");
     }
-  }
-
-  async persistEvent(raw: unknown, token?: string) {
-    this.validateInternalToken(token);
-
-    if (!raw || typeof raw !== "object") {
-      throw new BadRequestException("Invalid event payload");
-    }
-
-    const payload = raw as any;
-    const type = payload.type as ChatEventType;
-
-    const id = payload.id;
-    const threadId = payload.threadId || payload.thread_id;
-    const userId = payload.userId || payload.user_id;
-
-    if (type === "MESSAGE") {
-      if (!id || !threadId || !userId) {
-        throw new BadRequestException("MESSAGE event missing id/threadId/userId");
-      }
-
-      const text = typeof payload.message === "string" ? payload.message : "";
-      const payloadFiles = Array.isArray(payload.files) ? payload.files : [];
-
-      await db.transaction(async (tx) => {
-        await tx
-          .insert(messagesTable)
-          .values({
-            id: id,
-            threadId: threadId,
-            userId: userId,
-            message: text,
-          })
-          .onConflictDoNothing({ target: messagesTable.id });
-
-        const files = payloadFiles
-          .filter((file) => file?.url && file?.type)
-          .map((file) => ({
-            url: file.url as string,
-            name: file.name ?? "",
-            type: file.type as string,
-            size: Number(file.size ?? 0),
-            messageId: payload.id,
-          }));
-
-        if (files.length > 0) {
-          await tx.insert(filesTable).values(files);
-        }
-      });
-
-      return { ok: true };
-    }
-
-    if (type === "UPDATE_LAST_READ") {
-      if (!threadId || !userId || typeof payload.message !== "string") {
-        throw new BadRequestException("UPDATE_LAST_READ event missing fields");
-      }
-
-      await db
-        .insert(lastRead)
-        .values({
-          threadId: threadId,
-          userId: userId,
-          lastReadMessageId: payload.message,
-        })
-        .onConflictDoUpdate({
-          target: [lastRead.userId, lastRead.threadId],
-          set: {
-            lastReadMessageId: payload.message,
-            updatedAt: new Date(),
-          },
-        });
-
-      return { ok: true };
-    }
-
-    return { ok: true };
   }
 
   async getUserThreadIds(userId: string, token?: string) {
