@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import {
   db,
   lastRead,
@@ -15,26 +11,6 @@ import { alias } from "drizzle-orm/pg-core";
 
 @Injectable()
 export class ChatsService {
-  private validateInternalToken(token?: string) {
-    const expected = process.env.CHAT_SERVER_TOKEN;
-    if (!expected || token !== expected) {
-      throw new UnauthorizedException("Invalid chat-server token");
-    }
-  }
-
-  async getUserThreadIds(userId: string, token?: string) {
-    this.validateInternalToken(token);
-
-    const threads = await db.query.threadUsers.findMany({
-      where: { userId },
-      columns: {
-        threadId: true,
-      },
-    });
-
-    return threads.map((thread) => thread.threadId);
-  }
-
   async getChats(userId: string, search?: string) {
     if (search) {
       const pattern = `%${search.trim()}%`;

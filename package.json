@@ -11,6 +11,7 @@
     "fmt": "turbo run fmt",
     "fmt:check": "turbo run fmt:check",
     "db:generate": "turbo run db:generate",
+    "db:studio": "turbo run db:studio",
     "db:migrate": "turbo run db:migrate"
   },
   "devDependencies": {

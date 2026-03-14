@@ -32,9 +32,10 @@ export function useSubscriptions() {
         applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       });
       setSubscription(sub);
-      subscribeUser(sub).catch(() => {
-        toast.error("Failed to subscribe to push notifications");
-      });
+     await subscribeUser(sub)
+     // .catch(() => {
+     //    toast.error("Failed to subscribe to push notifications");
+     //  });
     } catch (err) {
       console.log("error", err);
     }

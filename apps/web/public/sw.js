@@ -1,23 +1,26 @@
-
 self.addEventListener("push", function (event) {
-   const body = event.data.text();
+  let body;
+  try {
+    body = event.data.json();
+  } catch (e) {
+    body = event.data.text();
+  }
   console.log("message", body);
   if (event.data) {
-    const data=event?.data;
+    const data = event?.data;
     const options = {
-      body,
+      body: body?.body || body,
       icon: data?.icon ?? "/logo.png",
       badge: "/logo.png",
       vibrate: [100, 50, 100],
-      data:{
+      data: {
         dateOfArrival: Date.now(),
         primaryKey: "2",
       },
     };
-    event.waitUntil(self.registration.showNotification(body, options));
+    event.waitUntil(self.registration.showNotification(body.title || body, options));
   }
 });
-
 
 self.addEventListener("notificationclick", function (event) {
   console.log("Notification click received.");

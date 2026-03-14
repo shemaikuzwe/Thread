@@ -52,13 +52,17 @@ export class UsersService {
     return "Subscription created successfully";
   }
   async sendNotification(title: string, message: string, userId: string) {
+    webpush.setVapidDetails(
+      "https://thread.com",
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
+    );
     const subscription = await db.query.subscriptions.findMany({
       where: {
         userId,
       },
     });
-    if (!subscription.length)
-      throw new NotFoundException("No subscription available");
+    if (!subscription.length) throw new NotFoundException("No subscription available");
     for (const sub of subscription) {
       await webpush.sendNotification(
         sub.sub as webpush.PushSubscription,
@@ -75,12 +79,7 @@ export class UsersService {
   async removeSubscription(userId: string, endpoint: string) {
     await db
       .delete(subscriptionsTable)
-      .where(
-        and(
-          eq(subscriptionsTable.userId, userId),
-          eq(subscriptionsTable.endpoint, endpoint),
-        ),
-      );
+      .where(and(eq(subscriptionsTable.userId, userId), eq(subscriptionsTable.endpoint, endpoint)));
     return "Subscription created successfully";
   }
 }
