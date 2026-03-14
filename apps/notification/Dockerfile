@@ -1,13 +1,13 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache libc6-compat \
-  && corepack enable \
-  && corepack prepare pnpm@9.0.0 --activate
+    && corepack enable \
+    && corepack prepare pnpm@9.0.0 --activate
 
 FROM base AS prepare
 WORKDIR /app
 COPY . .
-RUN pnpm dlx turbo@2.5.6 prune web --docker
+RUN pnpm dlx turbo@2.5.6 prune notification-service --docker
 
 FROM base AS deps
 WORKDIR /app
@@ -19,7 +19,7 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=prepare /app/out/full/ ./
-RUN pnpm --filter web build
+RUN pnpm --filter api build
 
 FROM base AS prod-deps
 WORKDIR /app
@@ -32,9 +32,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache libc6-compat
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=build /app/apps/web/.next ./.next
-COPY --from=build /app/apps/web/public ./public
-COPY --from=build /app/apps/web/package.json ./package.json
-COPY --from=build /app/apps/web/next.config.ts ./next.config.ts
-EXPOSE 3000
-CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]
+COPY --from=build /app/apps/api/dist ./dist
+COPY --from=build /app/apps/api/package.json ./package.json
+EXPOSE 8000
+CMD ["node", "dist/main.js"]

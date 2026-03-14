@@ -18,4 +18,21 @@ generate-ts:
 	$(PROTO_DIR)/*.proto
 
 generate: generate-go generate-ts
+
+build-api:
+	docker build -f apps/api/Dockerfile . -t thread-api
+
+build-web:
+	docker build -f apps/web/Dockerfile . -t thread-web
+
+build-chat-service:
+	docker build -f apps/chat-service/Dockerfile . -t thread-chat-service
+
+build-notification:
+	docker build -f apps/notification/Dockerfile . -t thread-notification
+
+build-ws-server:
+	docker build -f apps/ws-server/Dockerfile ./apps/ws-server -t thread-ws-server
+
+build-all: build-api build-web build-chat-service build-notification build-ws-server
 	

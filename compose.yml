@@ -3,10 +3,8 @@ services:
     image: postgres:14-alpine
     ports:
       - "5555:5432"
-    environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
+    env_file:
+      - ./.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -17,17 +15,6 @@ services:
       retries: 5
       start_period: 10s
 
-  migrate:
-    image: node:20-alpine
-    working_dir: /workspace
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
-    volumes:
-      - ./:/workspace
-    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @thread/db db:migrate"
 
   redis:
     image: redis:7-alpine
@@ -38,6 +25,23 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,18 +60,41 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - ./apps/api/.env.example
-    environment:
-      - PORT=8000
-      - CLIENT_APP_URL=http://localhost:3000
-      - AUTH_SECRET=super-secret
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
-      - REDIS_URL=redis://redis:6379
-      - CHAT_SERVER_TOKEN=chat-server-token
+      - ./apps/api/.env
 
-  chat-server:
+  chat-service:
     build:
-      context: ./apps/chat-server
+      context: .
+      dockerfile: apps/chat-service/Dockerfile
+    ports:
+      - "50051:50051"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./apps/chat-service/.env
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./apps/notification/.env
+
+  ws-server:
+    build:
+      context: ./apps/ws-server
       dockerfile: Dockerfile
     ports:
       - "8001:8001"
@@ -78,26 +105,19 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - ./apps/chat-server/.env.example
-    environment:
-      - PORT=8001
-      - CLIENT_APP_URL=http://localhost:3000
-      - AUTH_SECRET=super-secret
-      - REDIS_URL=redis://redis:6379
-      - API_URL=http://api:8000
-      - CHAT_SERVER_TOKEN=chat-server-token
+      - ./apps/ws-server/.env
 
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
       - "3000:3000"
     restart: unless-stopped
     depends_on:
       api:
         condition: service_started
-      chat-server:
+      ws-server:
         condition: service_started
     env_file:
       - ./apps/web/.env
@@ -105,4 +125,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local
