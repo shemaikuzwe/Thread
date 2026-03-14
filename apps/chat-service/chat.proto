@@ -7,15 +7,27 @@ option go_package = "chat-pb/";
 service ChatService {
   rpc SaveMessage (Message) returns (Response);
   rpc GetUserThreads (UserRequest) returns (ThreadResponse);
+  rpc UpdateLastRead (Message) returns (Response);
 }
-
+enum Type{
+  MESSAGE=0;
+  UPDATE_LAST_READ=1;
+}
+message File{
+  string name=1;
+  string type=2;
+  string url=3;
+  int64 size=4;
+}
 message Message {
   string id = 1;
   string threadId = 2;
   string message = 3;
-  string type = 4;
+  Type type = 4;
+  string userId = 5;
+  repeated File files = 6;
 }
-
+// Standard Response
 message Response {
   int64 status = 1;
   string message = 2;

@@ -1,29 +1,20 @@
 package ws
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"slices"
 	"time"
 
-	"github.com/shemaIkuzwe/thread/internal/api"
 	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
 type Hub struct {
-	// Registered clients.
-	clients map[string]map[string]*ClientConn
-	// Inbound messages from the clients.
+	clients   map[string]map[string]*ClientConn
 	broadcast chan []byte
 
-	// Register requests from the clients.
 	register chan *ClientConn
 
-	// Unregister requests from clients.
 	unregister chan *ClientConn
 	channels   Channels
 }
@@ -48,13 +39,12 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
-	go h.consumeRedisEvents()
 	for {
 		select {
 		case conn := <-h.register:
 			userID := conn.userID
 			connID := conn.connID
-			//Add redis
+			// TODO:Add redis
 			if h.clients[userID] == nil {
 				h.clients[userID] = make(map[string]*ClientConn)
 				go h.incrementChannel(userID)
@@ -78,7 +68,7 @@ func (h *Hub) Run() {
 				ok, err := CheckUser(message, client)
 				if err != nil {
 					log.Println("failed to parse json", err)
-					break
+					continue
 				}
 				if !ok {
 					continue
@@ -96,15 +86,8 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) consumeRedisEvents() {
-	sub := redis.Client.Subscribe(context.Background(), "chat.events.v1")
-	ch := sub.Channel()
-	for msg := range ch {
-		h.broadcast <- []byte(msg.Payload)
-	}
-}
 func (h *Hub) incrementChannel(userId string) {
-	userThreads, err := api.GetUserThreads(userId)
+	userThreads, err := getUserThreads(userId)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
@@ -141,8 +124,9 @@ func (h *Hub) incrementChannel(userId string) {
 		h.broadcast <- message
 	}
 }
+
 func (h *Hub) decrementChannel(userId string) {
-	userThreads, err := api.GetUserThreads(userId)
+	userThreads, err := getUserThreads(userId)
 	if err != nil {
 		log.Println("failed to get client channels", err)
 		return
@@ -183,7 +167,7 @@ func (h *Hub) decrementChannel(userId string) {
 	}
 }
 
-// check if user is in the channel to send message
+// check if user is in the thread to send message
 func CheckUser(message []byte, client string) (bool, error) {
 	msg := &Message{}
 	err := json.Unmarshal(message, msg)
@@ -192,12 +176,11 @@ func CheckUser(message []byte, client string) (bool, error) {
 		return false, err
 	}
 
-	// User IDs are opaque (not necessarily UUIDs). Missing thread IDs are ignored.
 	if msg.ThreadID == "" {
 		return false, nil
 	}
 
-	usersChannels, err := getUserChannels(client)
+	usersChannels, err := getUserThreads(client)
 	if err != nil {
 		log.Println("failed to get user channels", err)
 		return false, err
@@ -209,22 +192,4 @@ func CheckUser(message []byte, client string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func getUserChannels(userID string) ([]string, error) {
-	key := fmt.Sprintf("chats:%s", userID)
-	cached, ok, err := redis.Get[[]string](key)
-	if ok && err == nil {
-		return cached, nil
-	}
-	usersChannels, err := api.GetUserThreads(userID)
-	if err != nil {
-		log.Println("failed to fetch user channels", err)
-		return nil, err
-	}
-	err = redis.Set(key, usersChannels, int(time.Hour)*24)
-	if err != nil {
-		log.Println("unable to set cache", err)
-	}
-	return usersChannels, nil
 }

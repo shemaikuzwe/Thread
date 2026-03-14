@@ -100,12 +100,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     if (currentMessages && currentMessages.length > 0 && unRead && unRead.unreadCount > 0) {
       console.log("handled mark as read");
       const lastMessageId = getLastMessage();
-      if (!lastMessageId) return;
+      if (!lastMessageId || !userId) return;
       if (lastMessageId !== unRead.lastRead) {
-        const msg = {
+        const msg:Message = {
           message: lastMessageId,
+          id:crypto.randomUUID(),
           threadId: id,
           userId: userId,
+
           createdAt: new Date().toISOString(),
           type: "UPDATE_LAST_READ",
         };

@@ -14,6 +14,7 @@ import (
 func init() {
 	utils.LoadEnv()
 	redis.Connect()
+	utils.InitChatService()
 }
 
 func main() {
@@ -46,9 +47,9 @@ func main() {
 		port = "8001"
 	}
 	log.Printf("Starting chat-server at http://localhost:%s", port)
-	err := router.Run(":" + port)
-	if err != nil {
+	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server")
 	}
+
 	defer redis.Client.Close()
 }

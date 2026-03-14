@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  index,
-  uuid,
-  jsonb,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, uuid, jsonb } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -86,11 +78,10 @@ export const subscriptions = pgTable("subscription", {
     .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
   sub: jsonb("sub").notNull(),
   endpoint: text("endpoint").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 

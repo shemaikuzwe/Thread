@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	ChatService_SaveMessage_FullMethodName    = "/chat.ChatService/SaveMessage"
 	ChatService_GetUserThreads_FullMethodName = "/chat.ChatService/GetUserThreads"
+	ChatService_UpdateLastRead_FullMethodName = "/chat.ChatService/UpdateLastRead"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -29,6 +30,7 @@ const (
 type ChatServiceClient interface {
 	SaveMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Response, error)
 	GetUserThreads(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*ThreadResponse, error)
+	UpdateLastRead(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Response, error)
 }
 
 type chatServiceClient struct {
@@ -59,12 +61,23 @@ func (c *chatServiceClient) GetUserThreads(ctx context.Context, in *UserRequest,
 	return out, nil
 }
 
+func (c *chatServiceClient) UpdateLastRead(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Response)
+	err := c.cc.Invoke(ctx, ChatService_UpdateLastRead_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
 type ChatServiceServer interface {
 	SaveMessage(context.Context, *Message) (*Response, error)
 	GetUserThreads(context.Context, *UserRequest) (*ThreadResponse, error)
+	UpdateLastRead(context.Context, *Message) (*Response, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedChatServiceServer) SaveMessage(context.Context, *Message) (*R
 }
 func (UnimplementedChatServiceServer) GetUserThreads(context.Context, *UserRequest) (*ThreadResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserThreads not implemented")
+}
+func (UnimplementedChatServiceServer) UpdateLastRead(context.Context, *Message) (*Response, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateLastRead not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -138,6 +154,24 @@ func _ChatService_GetUserThreads_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_UpdateLastRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).UpdateLastRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_UpdateLastRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).UpdateLastRead(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserThreads",
 			Handler:    _ChatService_GetUserThreads_Handler,
+		},
+		{
+			MethodName: "UpdateLastRead",
+			Handler:    _ChatService_UpdateLastRead_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

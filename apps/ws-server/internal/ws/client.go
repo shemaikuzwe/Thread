@@ -2,7 +2,6 @@ package ws
 
 import (
 	"bytes"
-	"context"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
@@ -21,8 +20,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/shemaIkuzwe/thread/internal/api"
-	"github.com/shemaIkuzwe/thread/internal/redis"
 )
 
 type User struct {
@@ -31,15 +28,21 @@ type User struct {
 	Name  string `json:"name"`
 	Image string `json:"image"`
 }
-
+type Files struct {
+	Url  string `json:"url"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Size int64  `json:"size"`
+}
 type Message struct {
-	ID       string `json:"id"`
-	Message  any    `json:"message"`
-	ThreadID string `json:"threadId"`
-	UserID   string `json:"userId"`
-	Type     Type   `json:"type"`
-	Date     string `json:"createdAt"`
-	User     *User  `json:"user,omitempty"`
+	ID       string  `json:"id"`
+	Message  any     `json:"message"`
+	ThreadID string  `json:"threadId"`
+	UserID   string  `json:"userId"`
+	Type     Type    `json:"type"`
+	Date     string  `json:"createdAt"`
+	User     *User   `json:"user,omitempty"`
+	Files    []Files `json:"files,omitempty"`
 }
 
 type Type string
@@ -55,7 +58,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512000 // Upgrade this to allown large mesages
+	maxMessageSize = 512000 // Upgrade this to allown large messages
 )
 
 var (
@@ -112,6 +115,7 @@ func (c *ClientConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		c.hub.broadcast <- message
 		go messageCallback(message, c.userID)
 	}
 }
@@ -200,16 +204,12 @@ func messageCallback(message []byte, userID string) {
 		return
 	}
 	msg.UserID = userID
-	m, err := json.Marshal(msg)
-	if err != nil {
-		log.Println("failed to normalize message payload:", err)
-		return
-	}
+
 	switch msg.Type {
 	case MESSAGE:
-		if err := api.PersistEvent(m); err != nil {
+		if err := saveMessage(msg); err != nil {
 			log.Printf(
-				"failed to persist message type=%s user_id=%s thread_id=%s err=%v",
+				"failed to save message type=%s user_id=%s thread_id=%s err=%v",
 				msg.Type,
 				userID,
 				msg.ThreadID,
@@ -218,7 +218,7 @@ func messageCallback(message []byte, userID string) {
 			return
 		}
 	case UPDATE_LAST_READ:
-		if err := api.PersistEvent(m); err != nil {
+		if err := updateLastRead(msg); err != nil {
 			log.Printf(
 				"failed to persist message type=%s user_id=%s thread_id=%s err=%v",
 				msg.Type,
@@ -228,17 +228,6 @@ func messageCallback(message []byte, userID string) {
 			)
 			return
 		}
-	}
-
-	err = redis.Client.Publish(context.Background(), "chat.events.v1", m).Err()
-	if err != nil {
-		log.Printf(
-			"failed to publish chat event type=%s user_id=%s thread_id=%s err=%v",
-			msg.Type,
-			userID,
-			msg.ThreadID,
-			err,
-		)
 	}
 }
 

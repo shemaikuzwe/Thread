@@ -21,13 +21,56 @@ import {
 
 export const protobufPackage = "chat";
 
+export enum Type {
+  MESSAGE = 0,
+  UPDATE_LAST_READ = 1,
+  UNRECOGNIZED = -1,
+}
+
+export function typeFromJSON(object: any): Type {
+  switch (object) {
+    case 0:
+    case "MESSAGE":
+      return Type.MESSAGE;
+    case 1:
+    case "UPDATE_LAST_READ":
+      return Type.UPDATE_LAST_READ;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return Type.UNRECOGNIZED;
+  }
+}
+
+export function typeToJSON(object: Type): string {
+  switch (object) {
+    case Type.MESSAGE:
+      return "MESSAGE";
+    case Type.UPDATE_LAST_READ:
+      return "UPDATE_LAST_READ";
+    case Type.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export interface File {
+  name: string;
+  type: string;
+  url: string;
+  size: number;
+}
+
 export interface Message {
   id: string;
   threadId: string;
   message: string;
-  type: string;
+  type: Type;
+  userId: string;
+  files: File[];
 }
 
+/** Standard Response */
 export interface Response {
   status: number;
   message: string;
@@ -41,8 +84,116 @@ export interface ThreadResponse {
   threads: string[];
 }
 
+function createBaseFile(): File {
+  return { name: "", type: "", url: "", size: 0 };
+}
+
+export const File: MessageFns<File> = {
+  encode(message: File, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== "") {
+      writer.uint32(10).string(message.name);
+    }
+    if (message.type !== "") {
+      writer.uint32(18).string(message.type);
+    }
+    if (message.url !== "") {
+      writer.uint32(26).string(message.url);
+    }
+    if (message.size !== 0) {
+      writer.uint32(32).int64(message.size);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): File {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFile();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.type = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.url = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.size = longToNumber(reader.int64());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): File {
+    return {
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      type: isSet(object.type) ? globalThis.String(object.type) : "",
+      url: isSet(object.url) ? globalThis.String(object.url) : "",
+      size: isSet(object.size) ? globalThis.Number(object.size) : 0,
+    };
+  },
+
+  toJSON(message: File): unknown {
+    const obj: any = {};
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.type !== "") {
+      obj.type = message.type;
+    }
+    if (message.url !== "") {
+      obj.url = message.url;
+    }
+    if (message.size !== 0) {
+      obj.size = Math.round(message.size);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<File>, I>>(base?: I): File {
+    return File.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<File>, I>>(object: I): File {
+    const message = createBaseFile();
+    message.name = object.name ?? "";
+    message.type = object.type ?? "";
+    message.url = object.url ?? "";
+    message.size = object.size ?? 0;
+    return message;
+  },
+};
+
 function createBaseMessage(): Message {
-  return { id: "", threadId: "", message: "", type: "" };
+  return { id: "", threadId: "", message: "", type: 0, userId: "", files: [] };
 }
 
 export const Message: MessageFns<Message> = {
@@ -56,8 +207,14 @@ export const Message: MessageFns<Message> = {
     if (message.message !== "") {
       writer.uint32(26).string(message.message);
     }
-    if (message.type !== "") {
-      writer.uint32(34).string(message.type);
+    if (message.type !== 0) {
+      writer.uint32(32).int32(message.type);
+    }
+    if (message.userId !== "") {
+      writer.uint32(42).string(message.userId);
+    }
+    for (const v of message.files) {
+      File.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -94,11 +251,27 @@ export const Message: MessageFns<Message> = {
           continue;
         }
         case 4: {
-          if (tag !== 34) {
+          if (tag !== 32) {
             break;
           }
 
-          message.type = reader.string();
+          message.type = reader.int32() as any;
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.userId = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.files.push(File.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -115,7 +288,9 @@ export const Message: MessageFns<Message> = {
       id: isSet(object.id) ? globalThis.String(object.id) : "",
       threadId: isSet(object.threadId) ? globalThis.String(object.threadId) : "",
       message: isSet(object.message) ? globalThis.String(object.message) : "",
-      type: isSet(object.type) ? globalThis.String(object.type) : "",
+      type: isSet(object.type) ? typeFromJSON(object.type) : 0,
+      userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
+      files: globalThis.Array.isArray(object?.files) ? object.files.map((e: any) => File.fromJSON(e)) : [],
     };
   },
 
@@ -130,8 +305,14 @@ export const Message: MessageFns<Message> = {
     if (message.message !== "") {
       obj.message = message.message;
     }
-    if (message.type !== "") {
-      obj.type = message.type;
+    if (message.type !== 0) {
+      obj.type = typeToJSON(message.type);
+    }
+    if (message.userId !== "") {
+      obj.userId = message.userId;
+    }
+    if (message.files?.length) {
+      obj.files = message.files.map((e) => File.toJSON(e));
     }
     return obj;
   },
@@ -144,7 +325,9 @@ export const Message: MessageFns<Message> = {
     message.id = object.id ?? "";
     message.threadId = object.threadId ?? "";
     message.message = object.message ?? "";
-    message.type = object.type ?? "";
+    message.type = object.type ?? 0;
+    message.userId = object.userId ?? "";
+    message.files = object.files?.map((e) => File.fromPartial(e)) || [];
     return message;
   },
 };
@@ -363,11 +546,21 @@ export const ChatServiceService = {
     responseSerialize: (value: ThreadResponse): Buffer => Buffer.from(ThreadResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): ThreadResponse => ThreadResponse.decode(value),
   },
+  updateLastRead: {
+    path: "/chat.ChatService/UpdateLastRead" as const,
+    requestStream: false as const,
+    responseStream: false as const,
+    requestSerialize: (value: Message): Buffer => Buffer.from(Message.encode(value).finish()),
+    requestDeserialize: (value: Buffer): Message => Message.decode(value),
+    responseSerialize: (value: Response): Buffer => Buffer.from(Response.encode(value).finish()),
+    responseDeserialize: (value: Buffer): Response => Response.decode(value),
+  },
 } as const;
 
 export interface ChatServiceServer extends UntypedServiceImplementation {
   saveMessage: handleUnaryCall<Message, Response>;
   getUserThreads: handleUnaryCall<UserRequest, ThreadResponse>;
+  updateLastRead: handleUnaryCall<Message, Response>;
 }
 
 export interface ChatServiceClient extends Client {
@@ -397,6 +590,18 @@ export interface ChatServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: ThreadResponse) => void,
+  ): ClientUnaryCall;
+  updateLastRead(request: Message, callback: (error: ServiceError | null, response: Response) => void): ClientUnaryCall;
+  updateLastRead(
+    request: Message,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: Response) => void,
+  ): ClientUnaryCall;
+  updateLastRead(
+    request: Message,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: Response) => void,
   ): ClientUnaryCall;
 }
 

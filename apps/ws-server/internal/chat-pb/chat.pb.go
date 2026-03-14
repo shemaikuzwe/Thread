@@ -21,19 +21,135 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Type int32
+
+const (
+	Type_MESSAGE          Type = 0
+	Type_UPDATE_LAST_READ Type = 1
+)
+
+// Enum value maps for Type.
+var (
+	Type_name = map[int32]string{
+		0: "MESSAGE",
+		1: "UPDATE_LAST_READ",
+	}
+	Type_value = map[string]int32{
+		"MESSAGE":          0,
+		"UPDATE_LAST_READ": 1,
+	}
+)
+
+func (x Type) Enum() *Type {
+	p := new(Type)
+	*p = x
+	return p
+}
+
+func (x Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_chat_proto_enumTypes[0].Descriptor()
+}
+
+func (Type) Type() protoreflect.EnumType {
+	return &file_chat_proto_enumTypes[0]
+}
+
+func (x Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Type.Descriptor instead.
+func (Type) EnumDescriptor() ([]byte, []int) {
+	return file_chat_proto_rawDescGZIP(), []int{0}
+}
+
+type File struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Url           string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	Size          int64                  `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *File) Reset() {
+	*x = File{}
+	mi := &file_chat_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *File) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*File) ProtoMessage() {}
+
+func (x *File) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use File.ProtoReflect.Descriptor instead.
+func (*File) Descriptor() ([]byte, []int) {
+	return file_chat_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *File) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *File) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *File) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *File) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
 type Message struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	ThreadId      string                 `protobuf:"bytes,2,opt,name=threadId,proto3" json:"threadId,omitempty"`
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Type          Type                   `protobuf:"varint,4,opt,name=type,proto3,enum=chat.Type" json:"type,omitempty"`
+	UserId        string                 `protobuf:"bytes,5,opt,name=userId,proto3" json:"userId,omitempty"`
+	Files         []*File                `protobuf:"bytes,6,rep,name=files,proto3" json:"files,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Message) Reset() {
 	*x = Message{}
-	mi := &file_chat_proto_msgTypes[0]
+	mi := &file_chat_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +161,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_proto_msgTypes[0]
+	mi := &file_chat_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +174,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_chat_proto_rawDescGZIP(), []int{0}
+	return file_chat_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Message) GetId() string {
@@ -82,13 +198,28 @@ func (x *Message) GetMessage() string {
 	return ""
 }
 
-func (x *Message) GetType() string {
+func (x *Message) GetType() Type {
 	if x != nil {
 		return x.Type
+	}
+	return Type_MESSAGE
+}
+
+func (x *Message) GetUserId() string {
+	if x != nil {
+		return x.UserId
 	}
 	return ""
 }
 
+func (x *Message) GetFiles() []*File {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+// Standard Response
 type Response struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Status        int64                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
@@ -99,7 +230,7 @@ type Response struct {
 
 func (x *Response) Reset() {
 	*x = Response{}
-	mi := &file_chat_proto_msgTypes[1]
+	mi := &file_chat_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -111,7 +242,7 @@ func (x *Response) String() string {
 func (*Response) ProtoMessage() {}
 
 func (x *Response) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_proto_msgTypes[1]
+	mi := &file_chat_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,7 +255,7 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Response.ProtoReflect.Descriptor instead.
 func (*Response) Descriptor() ([]byte, []int) {
-	return file_chat_proto_rawDescGZIP(), []int{1}
+	return file_chat_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Response) GetStatus() int64 {
@@ -150,7 +281,7 @@ type UserRequest struct {
 
 func (x *UserRequest) Reset() {
 	*x = UserRequest{}
-	mi := &file_chat_proto_msgTypes[2]
+	mi := &file_chat_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +293,7 @@ func (x *UserRequest) String() string {
 func (*UserRequest) ProtoMessage() {}
 
 func (x *UserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_proto_msgTypes[2]
+	mi := &file_chat_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +306,7 @@ func (x *UserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserRequest.ProtoReflect.Descriptor instead.
 func (*UserRequest) Descriptor() ([]byte, []int) {
-	return file_chat_proto_rawDescGZIP(), []int{2}
+	return file_chat_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UserRequest) GetUserId() string {
@@ -194,7 +325,7 @@ type ThreadResponse struct {
 
 func (x *ThreadResponse) Reset() {
 	*x = ThreadResponse{}
-	mi := &file_chat_proto_msgTypes[3]
+	mi := &file_chat_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -206,7 +337,7 @@ func (x *ThreadResponse) String() string {
 func (*ThreadResponse) ProtoMessage() {}
 
 func (x *ThreadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_chat_proto_msgTypes[3]
+	mi := &file_chat_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -219,7 +350,7 @@ func (x *ThreadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThreadResponse.ProtoReflect.Descriptor instead.
 func (*ThreadResponse) Descriptor() ([]byte, []int) {
-	return file_chat_proto_rawDescGZIP(), []int{3}
+	return file_chat_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ThreadResponse) GetThreads() []string {
@@ -234,22 +365,35 @@ var File_chat_proto protoreflect.FileDescriptor
 const file_chat_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"chat.proto\x12\x04chat\"c\n" +
+	"chat.proto\x12\x04chat\"T\n" +
+	"\x04File\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x10\n" +
+	"\x03url\x18\x03 \x01(\tR\x03url\x12\x12\n" +
+	"\x04size\x18\x04 \x01(\x03R\x04size\"\xa9\x01\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bthreadId\x18\x02 \x01(\tR\bthreadId\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type\"<\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12\x1e\n" +
+	"\x04type\x18\x04 \x01(\x0e2\n" +
+	".chat.TypeR\x04type\x12\x16\n" +
+	"\x06userId\x18\x05 \x01(\tR\x06userId\x12 \n" +
+	"\x05files\x18\x06 \x03(\v2\n" +
+	".chat.FileR\x05files\"<\n" +
 	"\bResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\x03R\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"%\n" +
 	"\vUserRequest\x12\x16\n" +
 	"\x06userId\x18\x01 \x01(\tR\x06userId\"*\n" +
 	"\x0eThreadResponse\x12\x18\n" +
-	"\athreads\x18\x01 \x03(\tR\athreads2v\n" +
+	"\athreads\x18\x01 \x03(\tR\athreads*)\n" +
+	"\x04Type\x12\v\n" +
+	"\aMESSAGE\x10\x00\x12\x14\n" +
+	"\x10UPDATE_LAST_READ\x10\x012\xa7\x01\n" +
 	"\vChatService\x12,\n" +
 	"\vSaveMessage\x12\r.chat.Message\x1a\x0e.chat.Response\x129\n" +
-	"\x0eGetUserThreads\x12\x11.chat.UserRequest\x1a\x14.chat.ThreadResponseB\n" +
+	"\x0eGetUserThreads\x12\x11.chat.UserRequest\x1a\x14.chat.ThreadResponse\x12/\n" +
+	"\x0eUpdateLastRead\x12\r.chat.Message\x1a\x0e.chat.ResponseB\n" +
 	"Z\bchat-pb/b\x06proto3"
 
 var (
@@ -264,23 +408,30 @@ func file_chat_proto_rawDescGZIP() []byte {
 	return file_chat_proto_rawDescData
 }
 
-var file_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_chat_proto_goTypes = []any{
-	(*Message)(nil),        // 0: chat.Message
-	(*Response)(nil),       // 1: chat.Response
-	(*UserRequest)(nil),    // 2: chat.UserRequest
-	(*ThreadResponse)(nil), // 3: chat.ThreadResponse
+	(Type)(0),              // 0: chat.Type
+	(*File)(nil),           // 1: chat.File
+	(*Message)(nil),        // 2: chat.Message
+	(*Response)(nil),       // 3: chat.Response
+	(*UserRequest)(nil),    // 4: chat.UserRequest
+	(*ThreadResponse)(nil), // 5: chat.ThreadResponse
 }
 var file_chat_proto_depIdxs = []int32{
-	0, // 0: chat.ChatService.SaveMessage:input_type -> chat.Message
-	2, // 1: chat.ChatService.GetUserThreads:input_type -> chat.UserRequest
-	1, // 2: chat.ChatService.SaveMessage:output_type -> chat.Response
-	3, // 3: chat.ChatService.GetUserThreads:output_type -> chat.ThreadResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: chat.Message.type:type_name -> chat.Type
+	1, // 1: chat.Message.files:type_name -> chat.File
+	2, // 2: chat.ChatService.SaveMessage:input_type -> chat.Message
+	4, // 3: chat.ChatService.GetUserThreads:input_type -> chat.UserRequest
+	2, // 4: chat.ChatService.UpdateLastRead:input_type -> chat.Message
+	3, // 5: chat.ChatService.SaveMessage:output_type -> chat.Response
+	5, // 6: chat.ChatService.GetUserThreads:output_type -> chat.ThreadResponse
+	3, // 7: chat.ChatService.UpdateLastRead:output_type -> chat.Response
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_chat_proto_init() }
@@ -293,13 +444,14 @@ func file_chat_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_chat_proto_rawDesc), len(file_chat_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   4,
+			NumEnums:      1,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_chat_proto_goTypes,
 		DependencyIndexes: file_chat_proto_depIdxs,
+		EnumInfos:         file_chat_proto_enumTypes,
 		MessageInfos:      file_chat_proto_msgTypes,
 	}.Build()
 	File_chat_proto = out.File

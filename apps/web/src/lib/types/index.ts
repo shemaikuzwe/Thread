@@ -20,7 +20,7 @@ export interface Message {
   threadId: string;
   message: string;
   status?: "PENDING" | "SENT" | "FAILED";
-  files: MessageFile[];
+  files?: MessageFile[];
   type:
     | "USER_CONNECTED"
     | "MESSAGE"
@@ -28,7 +28,7 @@ export interface Message {
     | "MESSAGE_STATUS"
     | "UPDATE_LAST_READ";
   createdAt: string;
-  user: ChatMessageUser;
+  user?: ChatMessageUser;
 }
 
 export type MessageStatus = {

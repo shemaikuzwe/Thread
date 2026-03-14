@@ -20,11 +20,10 @@ export const threads = pgTable("thread", {
   description: text("description"),
   isPrivate: boolean("is_private").default(false).notNull(),
   type: threadTypeEnum("type").default("group").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -57,11 +56,11 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
   message: text("message").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
+
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -75,11 +74,10 @@ export const files = pgTable("files", {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -102,19 +100,13 @@ export const lastRead = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => ({
-    uniqueUserThread: unique("unique_user_thread").on(
-      table.userId,
-      table.threadId,
-    ),
+    uniqueUserThread: unique("unique_user_thread").on(table.userId, table.threadId),
   }),
 );
-
-
