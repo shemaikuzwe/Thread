@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { db } from "@thread/db";
 import { Message } from "src/chat-pb/chat";
 import {
@@ -6,8 +6,10 @@ import {
   files as filesTable,
   lastRead as lastReadTable,
 } from "@thread/db";
+import { ClientProxy } from "@nestjs/microservices";
 @Injectable()
 export class ChatsService {
+  constructor(@Inject("notification-service") private readonly notificationService: ClientProxy) {}
   async saveMessage(message: Message) {
     console.log(message);
     await db.insert(messageTable).values({
@@ -29,6 +31,11 @@ export class ChatsService {
     if (files?.length > 0) {
       await db.insert(filesTable).values(files);
     }
+    this.notificationService.emit("chat-notification", {
+      message: message.message,
+      threadId: message.threadId,
+      userId: message.userId,
+    });
   }
 
   async updateLastRead(message: Message) {
