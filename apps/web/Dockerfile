@@ -1,40 +1,57 @@
-FROM node:20-alpine AS base
-WORKDIR /app
-RUN apk add --no-cache libc6-compat \
-  && corepack enable \
-  && corepack prepare pnpm@9.0.0 --activate
+ARG NODE_VERSION=22
+ARG PNPM_VERSION=10.23.0
+FROM node:${NODE_VERSION}-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
 FROM base AS prepare
+RUN npm install turbo --global
 WORKDIR /app
-COPY . .
-RUN pnpm dlx turbo@2.5.6 prune web --docker
+COPY  . .
+RUN turbo prune web --docker
 
 FROM base AS deps
 WORKDIR /app
-COPY --from=prepare /app/out/json/ ./
+COPY --from=prepare /app/out/json/ .
 COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN pnpm install --frozen-lockfile
+COPY --from=prepare /app/out/json/.npmrc ./.npmrc
+COPY --from=prepare /app/packages/db/prisma ./packages/db/prisma
+RUN apk add --no-cache openssl libc6-compat
+RUN corepack enable \
+    && corepack prepare pnpm@${PNPM_VERSION} --activate
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-FROM base AS build
+FROM base AS builder
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=prepare /app/out/full/ ./
-RUN pnpm --filter web build
+COPY --from=deps /app .
+COPY --from=prepare /app/out/full/ .
+RUN corepack enable \
+    && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-FROM base AS prod-deps
-WORKDIR /app
-COPY --from=prepare /app/out/json/ ./
-COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN pnpm install --prod --frozen-lockfile
+ARG TURBO_TEAM
+ENV TURBO_TEAM=$TURBO_TEAM
+ARG TURBO_TOKEN
+ENV TURBO_TOKEN=$TURBO_TOKEN
 
-FROM node:20-alpine AS runtime
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+
+RUN pnpm build
+
+FROM base AS runner
 WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 ENV NODE_ENV=production
-RUN apk add --no-cache libc6-compat
-COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=build /app/apps/web/.next ./.next
-COPY --from=build /app/apps/web/public ./public
-COPY --from=build /app/apps/web/package.json ./package.json
-COPY --from=build /app/apps/web/next.config.ts ./next.config.ts
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/public ./apps/admin/public
+USER nextjs
 EXPOSE 3000
-CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]
+CMD ["node", "--env-file-if-exists=/app/.env", "apps/admin/server.js"]
