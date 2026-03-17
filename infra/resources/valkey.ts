@@ -17,6 +17,7 @@ export class ThreadValkey extends p.ComponentResource {
       numShards: 1,
       snapshotRetentionLimit: 7,
       aclName: "open-access",
+
     });
     // if we have more than 1 shard we should loop and store them using p.all()
     const url = valkey.clusterEndpoints[0];
@@ -24,7 +25,7 @@ export class ThreadValkey extends p.ComponentResource {
     const { arn } = new aws.ssm.Parameter(
       `${props.name}-valkey-url`,
       {
-        name: `/${props.name}-${stack}/rmq-url`,
+        name: `/${props.name}-${stack}/valkey-url`,
         value: valkeyUrl,
         type: "SecureString",
       },

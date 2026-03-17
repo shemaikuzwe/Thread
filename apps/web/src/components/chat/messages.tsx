@@ -161,9 +161,9 @@ export default function Messages({
                 </div>
 
                 <div className={cn("max-w-full", isOwn ? "order-first" : "")}>
-                  {message.files.length > 0 && (
+                  {message.files && message?.files?.length > 0 && (
                     <div className="mb-2">
-                      {message.files.map((file, index) => (
+                      {message?.files?.map((file, index) => (
                         <div
                           key={index}
                           className="max-w-100 max-h-70 relative"

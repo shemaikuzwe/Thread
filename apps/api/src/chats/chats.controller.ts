@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Param,
   Post,
   Query,
@@ -11,7 +10,6 @@ import { ChatsService } from "./chats.service";
 import {
   Session,
   type UserSession,
-  AllowAnonymous,
 } from "@thallesp/nestjs-better-auth";
 
 @Controller("chats")
@@ -64,15 +62,5 @@ export class ChatsController {
   ) {
     return this.chatsService.getMessages(id, Number(limit), Number(cursor));
   }
-
  
-
-  @AllowAnonymous()
-  @Get("internal/users/:id/threads")
-  userThreads(
-    @Param("id") userId: string,
-    @Headers("x-chat-server-token") token?: string,
-  ) {
-    return this.chatsService.getUserThreadIds(userId, token);
-  }
 }

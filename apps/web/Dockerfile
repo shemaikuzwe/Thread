@@ -15,7 +15,6 @@ WORKDIR /app
 COPY --from=prepare /app/out/json/ .
 COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prepare /app/out/json/.npmrc ./.npmrc
-COPY --from=prepare /app/packages/db/prisma ./packages/db/prisma
 RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable \
     && corepack prepare pnpm@${PNPM_VERSION} --activate
@@ -39,7 +38,6 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_BASE_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
-
 RUN pnpm build
 
 FROM base AS runner
@@ -49,9 +47,9 @@ RUN adduser --system --uid 1001 nextjs
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/public ./apps/admin/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 USER nextjs
 EXPOSE 3000
-CMD ["node", "--env-file-if-exists=/app/.env", "apps/admin/server.js"]
+CMD ["node", "apps/web/server.js"]

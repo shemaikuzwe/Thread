@@ -20,7 +20,7 @@ export class ThreadRds extends p.ComponentResource {
       name,
       {
         allocatedStorage: 10,
-        autoMinorVersionUpgrade:true,
+        autoMinorVersionUpgrade: true,
         maxAllocatedStorage: 40,
         engine: "postgres",
         engineVersion: "16",
@@ -28,6 +28,7 @@ export class ThreadRds extends p.ComponentResource {
         dbName,
         username: user,
         password: dbPassword,
+        skipFinalSnapshot: true,
       },
       { parent: this },
     );

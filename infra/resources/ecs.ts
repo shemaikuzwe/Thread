@@ -25,17 +25,17 @@ export class ThreadEcs extends p.ComponentResource {
     opts?: p.ComponentResourceOptions,
   ) {
     super(`thread-${name}-ecs`, name, {}, opts);
-
-    const lb = new awsx.lb.ApplicationLoadBalancer(`thread-${name}-lb`);
-    this.lbUrl = p.interpolate`http://${lb.loadBalancer.dnsName}`;
+    const loadbalancer = new awsx.lb.ApplicationLoadBalancer(`${name}-lb`, {});
+    this.lbUrl = p.interpolate`http://${loadbalancer.loadBalancer.dnsName}`;
     new awsx.ecs.FargateService(
       `${name}-service`,
       {
         cluster,
+    
         desiredCount: 1,
         taskDefinitionArgs: {
           container: {
-            image: p.interpolate`${imageRepo}:${name}:latest`,
+            image: p.interpolate`${imageRepo}:latest`,
             name,
             cpu: 128,
             memory: 512,
@@ -45,7 +45,7 @@ export class ThreadEcs extends p.ComponentResource {
             portMappings: [
               {
                 containerPort: port,
-                targetGroup: lb.defaultTargetGroup,
+                targetGroup: loadbalancer.defaultTargetGroup,
               },
             ],
           },
@@ -54,5 +54,8 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
+    this.registerOutputs({
+      lbUrl: this.lbUrl,
+    });
   }
 }

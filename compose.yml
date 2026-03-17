@@ -1,10 +1,12 @@
 services:
   postgres:
-    image: postgres:14-alpine
+    image: postgres:16-alpine
     ports:
-      - "5555:5432"
-    env_file:
-      - ./.env
+      - "5431:5432"
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -19,7 +21,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6333:6379"
+      - "6378:6379"
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -31,7 +33,7 @@ services:
       start_period: 10s
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -62,36 +64,36 @@ services:
     env_file:
       - ./apps/api/.env
 
-  chat-service:
-    build:
-      context: .
-      dockerfile: apps/chat-service/Dockerfile
-    ports:
-      - "50051:50051"
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    env_file:
-      - ./apps/chat-service/.env
-
-  notification-service:
-    build:
-      context: .
-      dockerfile: apps/notification/Dockerfile
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    env_file:
-      - ./apps/notification/.env
-
+  # chat-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/chat-service/Dockerfile
+  #   ports:
+  #     - "50051:50051"
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   env_file:
+  #     - ./apps/chat-service/.env
+  #
+  # notification-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/notification/Dockerfile
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   env_file:
+  #     - ./apps/notification/.env
+  #
   ws-server:
     build:
       context: ./apps/ws-server
