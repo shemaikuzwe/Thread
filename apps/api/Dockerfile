@@ -46,12 +46,12 @@ ENV PORT=8000
 ENV HOST=0.0.0.0
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/prod/node_modules ./node_modules
-# COPY --from=builder --chown=nodejs:nodejs /app/packages/db/migrations ./migrations
-# COPY --from=builder --chown=nodejs:nodejs /app/packages/db/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=nodejs:nodejs /app/packages/db/migrations ./migrations
+COPY --from=builder --chown=nodejs:nodejs /app/packages/db/drizzle.config.ts ./drizzle.config.ts
 COPY --chown=nodejs:nodejs apps/api/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 USER nodejs
 EXPOSE 8000
-# ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 CMD ["node", "dist/main.js"]

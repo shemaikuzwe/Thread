@@ -1,6 +1,9 @@
 {
   "name": "@thread/infra",
   "main": "index.ts",
+  "scripts":{
+      "typecheck":"tsc"
+  },
   "dependencies": {
     "@pulumi/aws": "^7.0.0",
     "@pulumi/awsx": "^3.0.0",

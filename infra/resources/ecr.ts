@@ -2,16 +2,16 @@ import { ComponentResource, ComponentResourceOptions, Output } from "@pulumi/pul
 import { ecr } from "@pulumi/aws";
 type Props = {
   name: string;
+  product: string;
 };
 export class ThreadDockerImageRepo extends ComponentResource {
   public readonly imageRepo: Output<string>;
-  constructor(args: Props, opts?: ComponentResourceOptions) {
-    const resourceName = `${args.name}`;
-    super("pkg:index:ThreadEcr ", resourceName, {}, opts);
+  constructor({ name, product }: Props, opts?: ComponentResourceOptions) {
+    super(`pkg:index:${product}-${name}-ecr`, name, {}, opts);
     const imageRepo = new ecr.Repository(
-      args.name,
+      name,
       {
-        name: resourceName,
+        name: `${product}/${name}`,
         imageScanningConfiguration: {
           scanOnPush: false,
         },

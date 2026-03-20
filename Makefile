@@ -6,7 +6,6 @@ TS_OUT=apps/chat-service/src/chat-pb
 PATH := node_modules/.bin:$(PATH)
 NEXT_PUBLIC_BASE_URL=
 NEXT_PUBLIC_WS_URL=
-NEXT_PUBLIC_API_URL=http://localhost:8000/v1
 TURBO_TEAM=
 TURBO_TOKEN=
 

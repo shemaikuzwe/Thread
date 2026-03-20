@@ -1,5 +1,7 @@
-import * as awsx from "@pulumi/awsx";
+import * as aws from "@pulumi/aws";
 import * as p from "@pulumi/pulumi";
+import { ThreadLB } from "./lb";
+import { VPC } from "../types";
 
 interface Secret {
   name: string;
@@ -11,49 +13,126 @@ interface Environment {
 }
 interface Props {
   name: string;
-  cluster: p.Output<string>;
+  product: string;
+  cluster: p.Input<string>;
   port: number;
   publicIp?: boolean;
-  imageRepo: p.Output<string>;
+  imageRepo: p.Input<string>;
+  vpc: VPC;
   secrets?: Secret[];
   environment?: Environment[];
+  taskRoleArn: p.Input<string>;
+  executionRoleArn: p.Input<string>;
 }
 export class ThreadEcs extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
   constructor(
-    { name, cluster, imageRepo, port, publicIp, environment, secrets }: Props,
+    {
+      name,
+      product,
+      cluster,
+      taskRoleArn,
+      imageRepo,
+      port,
+      publicIp,
+      vpc,
+      environment,
+      secrets,
+      executionRoleArn,
+    }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
-    super(`thread-${name}-ecs`, name, {}, opts);
-    const loadbalancer = new awsx.lb.ApplicationLoadBalancer(`${name}-lb`, {});
-    this.lbUrl = p.interpolate`http://${loadbalancer.loadBalancer.dnsName}`;
-    new awsx.ecs.FargateService(
-      `${name}-service`,
+    super(`pkg:index:${product}-${name}-ecs`, name, {}, opts);
+    const region = aws.getRegion().then((r) => r.region);
+    const loadBalancer = new ThreadLB({
+      name: name,
+      product: product,
+      port: port,
+      subnets: vpc.publicSubnets,
+      type: "application",
+      vpcId: vpc.id,
+      cidrBlock: vpc.cidrBlock,
+    });
+    const logGroup = new aws.cloudwatch.LogGroup(`${product}-${name}-ecs`, {
+      name: `${product}-${name}-ecs`,
+      retentionInDays: 7,
+    });
+
+    this.lbUrl = loadBalancer.lbUrl;
+    const ecsServiceSg = new aws.ec2.SecurityGroup(`${name}-ecs-sg`, {
+      vpcId: vpc.id,
+      ingress: [
+        {
+          fromPort: port,
+          toPort: port,
+          protocol: "tcp",
+          securityGroups: [loadBalancer.lbSg],
+        },
+      ],
+      egress: [{ fromPort: 0, toPort: 0, protocol: "-1", cidrBlocks: ["0.0.0.0/0"] }],
+    });
+
+    const taskDefinition = new aws.ecs.TaskDefinition(
+      `${product}-${name}-ecs-taskDefinition`,
       {
-        cluster,
-    
-        desiredCount: 1,
-        taskDefinitionArgs: {
-          container: {
+        cpu: "256",
+        memory: "512",
+        networkMode: "awsvpc",
+        requiresCompatibilities: ["FARGATE"],
+        family: name,
+        taskRoleArn: taskRoleArn,
+        executionRoleArn: executionRoleArn,
+        containerDefinitions: p.jsonStringify([
+          {
+            name: name,
             image: p.interpolate`${imageRepo}:latest`,
-            name,
-            cpu: 128,
+            cpu: 256,
             memory: 512,
             essential: true,
-            secrets,
             environment,
+            secrets,
+            logConfiguration: {
+              logDriver: "awslogs",
+              options: {
+                "awslogs-group": logGroup.name,
+                "awslogs-region": region,
+                "awslogs-stream-prefix": "ecs",
+              },
+            },
             portMappings: [
               {
                 containerPort: port,
-                targetGroup: loadbalancer.defaultTargetGroup,
+                hostPort: port,
               },
             ],
           },
-        },
-        assignPublicIp: publicIp ?? false,
+        ]),
       },
       { parent: this },
     );
+    new aws.ecs.Service(
+      `${product}-${name}-ecs-service`,
+      {
+        cluster: cluster,
+        taskDefinition: taskDefinition.arn,
+        desiredCount: 1,
+        launchType: "FARGATE",
+        networkConfiguration: {
+          assignPublicIp: publicIp ?? false,
+          securityGroups: [ecsServiceSg.id],
+          subnets: publicIp ? vpc.publicSubnets : vpc.privateSubnets,
+        },
+        loadBalancers: [
+          {
+            targetGroupArn: loadBalancer.targetGroup.arn,
+            containerPort: port,
+            containerName: name,
+          },
+        ],
+      },
+      { parent: this },
+    );
+
     this.registerOutputs({
       lbUrl: this.lbUrl,
     });
