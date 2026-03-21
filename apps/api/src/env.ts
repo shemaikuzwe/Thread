@@ -8,6 +8,8 @@ const envSchema = z.object({
   REDIS_URL: z.url(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string(),
   BETTER_AUTH_URL:z.url()
 });
 

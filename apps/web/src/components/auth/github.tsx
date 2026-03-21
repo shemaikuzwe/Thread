@@ -5,7 +5,7 @@ export default function Github() {
   const handleGithubLogin = async () => {
     await signIn.social({
       provider: "github",
-      callbackURL: "/chat",
+      callbackURL: `${window.location.origin}/chat`, //prevents server redirection
     });
   };
   return (
