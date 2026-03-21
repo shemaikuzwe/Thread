@@ -69,8 +69,6 @@ export class ThreadRmq extends p.ComponentResource {
       },
       { parent: this },
     );
-    rmqUrl.apply((endpoint) => console.log(endpoint));
-    consoleUrl.apply((endpoint) => console.log("console url", endpoint));
     this.rmqSsmArn = arn;
     this.registerOutputs({
       rmqUrlArn: this.rmqSsmArn,

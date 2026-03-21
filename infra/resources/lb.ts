@@ -9,6 +9,7 @@ type Props = {
   subnets: p.Input<string>[];
   vpcId: p.Input<string>;
   cidrBlock: string;
+  healthCheckPath?: string;
 };
 export class ThreadLB extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
@@ -16,7 +17,7 @@ export class ThreadLB extends p.ComponentResource {
   public readonly lbSg: p.Output<string>;
 
   constructor(
-    { name, product, type, internal = false, subnets, port, vpcId, cidrBlock }: Props,
+    { name, product, type, internal = false, subnets, port, vpcId, cidrBlock, healthCheckPath = "/health/ready" }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-${name}-lb`, name, {}, opts);
@@ -56,6 +57,17 @@ export class ThreadLB extends p.ComponentResource {
         protocol: "HTTP",
         vpcId,
         targetType: "ip",
+        healthCheck: {
+          enabled: true,
+          path: healthCheckPath,
+          protocol: "HTTP",
+          port: port.toString(),
+          healthyThreshold: 3,
+          unhealthyThreshold: 3,
+          timeout: 5,
+          interval: 30,
+          matcher: "200",
+        },
       },
       { parent: this },
     );

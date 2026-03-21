@@ -1,5 +1,6 @@
 import * as p from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import * as random from "@pulumi/random";
 import { ThreadRmq } from "../resources/rmq";
 import { ThreadRds } from "../resources/rds";
 import { ThreadEcs } from "../resources/ecs";
@@ -58,6 +59,15 @@ export class ThreadBackend extends p.ComponentResource {
       },
       { parent: this },
     );
+    const { arn: betterAuthSecretArn } = new aws.ssm.Parameter(
+      `${product}-better_auth_secret`,
+      {
+        name: `/${product}-/better_auth_secret`,
+        value: "example",
+        type: "SecureString",
+      },
+      { parent: this },
+    );
 
     const { rdsSsmArn } = new ThreadRds(
       { name: `${product}-rds`, product: product, dbName: product, vpc },
@@ -72,7 +82,14 @@ export class ThreadBackend extends p.ComponentResource {
       { parent: this },
     );
     const API_PORT = 8000;
-    const { imageRepo } = new ThreadDockerImageRepo({ name: "api", product }, { parent: this });
+    const { imageRepo: apiImageRepo } = new ThreadDockerImageRepo(
+      { name: "api", product },
+      { parent: this },
+    );
+    const { imageRepo: wsServerImageRepo } = new ThreadDockerImageRepo(
+      { name: "ws-server", product },
+      { parent: this },
+    );
 
     const { lbUrl: apiLbUrl } = new ThreadEcs(
       {
@@ -84,7 +101,7 @@ export class ThreadBackend extends p.ComponentResource {
         taskRoleArn,
         executionRoleArn,
         vpc,
-        imageRepo: imageRepo,
+        imageRepo: apiImageRepo,
         secrets: [
           {
             name: "DATABASE_URL",
@@ -103,6 +120,10 @@ export class ThreadBackend extends p.ComponentResource {
             valueFrom: apiUrlArn,
           },
           {
+            name: "BETTER_AUTH_SECRET",
+            valueFrom: betterAuthSecretArn,
+          },
+          {
             name: "CLIENT_APP_URL",
             valueFrom: clientUrlArn,
           },
@@ -115,6 +136,31 @@ export class ThreadBackend extends p.ComponentResource {
           {
             name: "PORT",
             value: API_PORT.toString(),
+          },
+        ],
+      },
+      { parent: this },
+    );
+
+    const { lbUrl: wsServerUrl } = new ThreadEcs(
+      {
+        name: "ws-server",
+        product,
+        publicIp: true,
+        port: 8001,
+        cluster: cluster,
+        taskRoleArn,
+        executionRoleArn,
+        vpc,
+        imageRepo: wsServerImageRepo,
+        secrets: [
+          {
+            name: "REDIS_URL",
+            valueFrom: valkeySsmArn,
+          },
+          {
+            name: "CLIENT_APP_URL",
+            valueFrom: clientUrlArn,
           },
         ],
       },

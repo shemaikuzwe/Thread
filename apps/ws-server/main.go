@@ -38,7 +38,19 @@ func main() {
 		ws.ServeWs(hub, c)
 	})
 
-	router.GET("/health", func(c *gin.Context) {
+	router.GET("/health/live", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
+	router.GET("/health/ready", func(c *gin.Context) {
+		err := redis.Client.Ping(c.Request.Context()).Err()
+		if err != nil {
+			c.JSON(503, gin.H{
+				"status": "unhealthy",
+				"redis":  err.Error(),
+			})
+			return
+		}
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 

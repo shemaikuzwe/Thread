@@ -21,8 +21,11 @@ interface Props {
   vpc: VPC;
   secrets?: Secret[];
   environment?: Environment[];
+  type?: "application" | "network";
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
+  healthCheckLivePath?: string;
+  healthCheckReadyPath?: string;
 }
 export class ThreadEcs extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
@@ -34,11 +37,14 @@ export class ThreadEcs extends p.ComponentResource {
       taskRoleArn,
       imageRepo,
       port,
+      type = "application",
       publicIp,
       vpc,
       environment,
       secrets,
       executionRoleArn,
+      healthCheckLivePath = "/health/live",
+      healthCheckReadyPath = "/health/ready",
     }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
@@ -49,9 +55,10 @@ export class ThreadEcs extends p.ComponentResource {
       product: product,
       port: port,
       subnets: vpc.publicSubnets,
-      type: "application",
+      type,
       vpcId: vpc.id,
       cidrBlock: vpc.cidrBlock,
+      healthCheckPath: healthCheckReadyPath,
     });
     const logGroup = new aws.cloudwatch.LogGroup(`${product}-${name}-ecs`, {
       name: `${product}-${name}-ecs`,
@@ -91,6 +98,16 @@ export class ThreadEcs extends p.ComponentResource {
             essential: true,
             environment,
             secrets,
+            healthCheck: {
+              command: [
+                "CMD-SHELL",
+                `wget -qO- http://localhost:${port}${healthCheckLivePath} || exit 1`,
+              ],
+              interval: 30,
+              timeout: 5,
+              retries: 3,
+              startPeriod: 60,
+            },
             logConfiguration: {
               logDriver: "awslogs",
               options: {

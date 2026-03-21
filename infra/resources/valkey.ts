@@ -60,7 +60,6 @@ export class ThreadValkey extends p.ComponentResource {
       },
       { parent: this },
     );
-    valkeyUrl.apply((u) => console.log(u));
     this.valkeySsmArn = arn;
     this.registerOutputs({
       valkeySsmArn: this.valkeySsmArn,

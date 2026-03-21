@@ -45,6 +45,8 @@ export class ThreadFrontend extends p.ComponentResource {
             value: apiUrl,
           },
         ],
+        healthCheckLivePath: "/api/health/live",
+        healthCheckReadyPath: "/api/health/ready",
         secrets:[{
           name:"NEXT_PUBLIC_WS_URL",
           valueFrom:wsServerUrlArn

@@ -4,8 +4,9 @@ import { MicroserviceOptions, Transport } from "@nestjs/microservices";
 import { env } from "src/lib/env";
 
 async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [env.RABBITMQ_URL],
@@ -16,7 +17,9 @@ async function bootstrap() {
     },
   });
 
-  await app.listen();
+  await app.startAllMicroservices();
+  const port = Number(process.env.HEALTH_PORT || 8003);
+  await app.listen(port);
 }
 
 bootstrap();

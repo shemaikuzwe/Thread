@@ -48,7 +48,7 @@ export class ThreadRds extends p.ComponentResource {
       },
       { parent: this },
     );
-    const databaseUrl = p.interpolate`postgresql://${user}:${dbPassword}@${rds.endpoint}/${dbName}`;
+    const databaseUrl = p.interpolate`postgresql://${user}:${dbPassword}@${rds.endpoint}/${dbName}?sslmode=require`;
     const { arn } = new aws.ssm.Parameter(
       `${product}-db-url`,
       {
@@ -59,7 +59,6 @@ export class ThreadRds extends p.ComponentResource {
       { parent: this },
     );
     this.rdsSsmArn = arn;
-    databaseUrl.apply((url) => console.log(url));
     this.registerOutputs({
       rdsSsmArn: this.rdsSsmArn,
     });
