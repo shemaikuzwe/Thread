@@ -99,16 +99,16 @@ export class ThreadEcs extends p.ComponentResource {
             essential: true,
             environment,
             secrets,
-            healthCheck: {
-              command: [
-                "CMD-SHELL",
-                `wget -qO- http://localhost:${port}${healthCheckLivePath} || exit 1`,
-              ],
-              interval: 30,
-              timeout: 5,
-              retries: 3,
-              startPeriod: 60,
-            },
+            // healthCheck: {
+            //   command: [
+            //     "CMD-SHELL",
+            //     `wget -qO- http://localhost:${port}${healthCheckLivePath} || exit 1`,
+            //   ],
+            //   interval: 30,
+            //   timeout: 5,
+            //   retries: 3,
+            //   startPeriod: 60,
+            // },
             logConfiguration: {
               logDriver: "awslogs",
               options: {

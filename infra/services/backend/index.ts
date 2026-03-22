@@ -1,5 +1,4 @@
 import * as p from "@pulumi/pulumi";
-import * as random from "@pulumi/random";
 import { ThreadSsmParameter } from "../../resources/ssm";
 import { ThreadRmq } from "../../resources/rmq";
 import { ThreadRds } from "../../resources/rds";
@@ -27,17 +26,14 @@ export class ThreadBackend extends p.ComponentResource {
     super(`pkg:index:${product}-${name}`, name, {}, opts);
 
     // Shared SSM parameters
-   
+    const { arn: apiUrlArn } = new ThreadSsmParameter(
+      { name: "api-url", product, value: "http://localhost:8000" },
+      { parent: this },
+    );
     const { arn: clientUrlArn } = new ThreadSsmParameter(
       { name: "client-url", product, value: "http://localhost:3000" },
       { parent: this },
     );
-    const randomSecret = new random.RandomUuid4("better_auth_secret").result;
-    const { arn: betterAuthSecretArn } = new ThreadSsmParameter(
-      { name: "better_auth_secret", product, value: randomSecret, isSecret: true },
-      { parent: this },
-    );
-
     // Shared infrastructure
     const { rdsSsmArn } = new ThreadRds(
       { name: `${product}-rds`, product, dbName: product, vpc },
@@ -54,7 +50,7 @@ export class ThreadBackend extends p.ComponentResource {
 
     // Services
     new ThreadApi(
-      { ...common, rdsSsmArn, betterAuthSecretArn, clientUrlArn, valkeySsmArn },
+      { ...common, rdsSsmArn, apiUrlArn, clientUrlArn, valkeySsmArn },
       { parent: this },
     );
 
@@ -68,7 +64,7 @@ export class ThreadBackend extends p.ComponentResource {
         ...common,
         valkeySsmArn,
         clientUrlArn,
-        betterAuthSecretArn,
+        apiUrlArn,
         chatServiceLbUrl: chatService.lbUrl,
       },
       { parent: this },

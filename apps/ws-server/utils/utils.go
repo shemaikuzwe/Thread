@@ -3,6 +3,7 @@ package utils
 import (
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/joho/godotenv"
 	"github.com/shemaIkuzwe/thread/internal/chat-pb"
@@ -28,6 +29,12 @@ func InitChatService() {
 	if url == "" {
 		log.Fatal("MISSING CHAT_SERVICE_URL")
 	}
+	parsedUrl,err:= regexp.Compile(`^[a-zA-Z+\-.]+://`)
+	if err != nil {
+		log.Println("failed to parse url",err)
+		return
+	}
+	url=parsedUrl.ReplaceAllString(url, "")
 	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to chat service: %v", err)

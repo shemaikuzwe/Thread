@@ -45,6 +45,7 @@ ENV NODE_ENV=production
 ENV PORT=4000
 ENV HOST=0.0.0.0
 COPY --from=builder --chown=nodejs:nodejs /app/apps/chat-service/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/apps/chat-service/chat.proto ./chat.proto
 COPY --from=builder --chown=nodejs:nodejs /app/prod/node_modules ./node_modules
 USER nodejs
 EXPOSE 4000

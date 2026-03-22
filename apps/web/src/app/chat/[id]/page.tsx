@@ -1,28 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, use } from "react";
-import { Button } from "@/components/ui/button";
-import type { ChatWithUsers, Message, MessageStatus, UploadFile } from "@/lib/types";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/axios";
-import ChatHeader from "@/components/chat/chat-header";
 import { ArrowUp, Loader2Icon, Mic, Paperclip } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import AudioInput from "@/components/chat/audio-input";
+import ChatHeader from "@/components/chat/chat-header";
+import ChatsList from "@/components/chat/chats-list";
+import { FileCard } from "@/components/chat/file-card";
 import JoinChat from "@/components/chat/join-chat";
-import { useScroll } from "@/hooks/use-scroll";
 import Messages from "@/components/chat/messages";
 import ScrollAnchor from "@/components/chat/scroll-anchor";
-import { useMessages, useOptimisticUnRead, type UnReadMessage } from "@/hooks/use-messages";
+import { Button } from "@/components/ui/button";
 import { ChatMessagesSkeleton } from "@/components/ui/chat-skeletons";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsTyping } from "@/hooks";
-import { FileCard } from "@/components/chat/file-card";
-import { useUploadThing } from "@/lib/utils";
-import { toast } from "sonner";
-import ChatsList from "@/components/chat/chats-list";
+import { useMessages, useOptimisticUnRead, type UnReadMessage } from "@/hooks/use-messages";
 import { useIsMobile } from "@/hooks/use-mobile";
-import AudioInput from "@/components/chat/audio-input";
-import { useSession } from "@/lib/auth-client";
+import { useScroll } from "@/hooks/use-scroll";
 import { useWebsocket } from "@/hooks/websocket-provider";
+import { useSession } from "@/lib/auth-client";
+import { fetcher } from "@/lib/fetcher";
+import type { ChatWithUsers, Message, MessageStatus, UploadFile } from "@/lib/types";
+import { useUploadThing } from "@/lib/utils";
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -50,9 +50,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const { data: chat, isLoading: loading } = useQuery<ChatWithUsers>({
     queryKey: ["chat-header", id],
     queryFn: async () => {
-      const res = await api.get(`/chats/${id}`);
-      if (res.status !== 200) throw new Error("Failed to fetch chat");
-      return res.data;
+      const res = await fetcher(`/chats/${id}`, { method: "GET" });
+      if (!res.ok) throw new Error("Failed to fetch chat");
+      return (await res.json()) as ChatWithUsers;
     },
   });
   const messagesRef = useRef(messages);

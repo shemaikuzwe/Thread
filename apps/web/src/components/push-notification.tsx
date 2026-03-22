@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { useSubscriptions } from "@/hooks/use-sub";
-import { Switch } from "./ui/switch";
+import { fetcher } from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState } from "react";
-import { api } from "@/lib/axios";
+import { Switch } from "./ui/switch";
 
 export function PushNotificationManager() {
   const { isSupported, subscription, subscribeToPush, unsubscribeFromPush, loading } =
@@ -11,8 +11,8 @@ export function PushNotificationManager() {
   const [message, setMessage] = useState("");
   async function sendTestNotification() {
     if (subscription) {
-      const res = await api.post("/users/subscription/test");
-      if (res.status !== 200) {
+      const res = await fetcher("/users/subscription/test", { method: "POST" });
+      if (!res.ok) {
         console.log("failed to send test notification");
       }
       setMessage("");

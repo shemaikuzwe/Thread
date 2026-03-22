@@ -1,4 +1,8 @@
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
+import { useSession, signOut } from "@/lib/auth-client";
+import { AvatarImage } from "./avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,13 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
-import { AvatarImage } from "./avatar";
-import Link from "next/link";
-const defaultAvatar = "/default.png";
-import { api } from "@/lib/axios";
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "@/lib/auth-client";
 import ThemeToggle from "../theme-toggle";
+
+const defaultAvatar = "/default.png";
 
 export default function User() {
   const session = useSession();

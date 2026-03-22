@@ -4,12 +4,38 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/MicahParks/keyfunc/v3"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/shemaIkuzwe/thread/internal/chat-pb"
 	"github.com/shemaIkuzwe/thread/internal/redis"
 	"github.com/shemaIkuzwe/thread/utils"
 )
+
+var jwks keyfunc.Keyfunc
+
+func getJWKS() (keyfunc.Keyfunc, error) {
+	if jwks != nil {
+		return jwks, nil
+	}
+
+	apiUrl := os.Getenv("API_URL")
+	if apiUrl == "" {
+		return nil, fmt.Errorf("missing API_URL")
+	}
+	jwksURL := fmt.Sprintf("%s/v1/auth/jwks", apiUrl)
+	k, err := keyfunc.NewDefault([]string{jwksURL})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create JWKS from resource at the given URL: %w", err)
+	}
+
+	jwks = k
+	return jwks, nil
+}
 
 func getUserThreads(userID string) ([]string, error) {
 	key := fmt.Sprintf("chats:%s", userID)
@@ -67,4 +93,48 @@ func updateLastRead(message Message) error {
 	}
 	log.Println(res.Message)
 	return err
+}
+
+type authPayload struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+	jwt.RegisteredClaims
+}
+
+func authenticateRequest(r *http.Request) (*authPayload, error) {
+	tokenString, err := getToken(r)
+	if err != nil || tokenString == "" {
+		return nil, err
+	}
+
+	k, err := getJWKS()
+	if err != nil {
+		return nil, fmt.Errorf("JWKS error: %v", err)
+	}
+
+	claims := &authPayload{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, k.Keyfunc)
+
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("invalid token: token is unverifiable: %v", err)
+	}
+
+	if claims.Subject == "" && claims.ID == "" {
+		return nil, fmt.Errorf("missing subject")
+	}
+	if claims.ID == "" {
+		claims.ID = claims.Subject
+	}
+
+	return claims, nil
+}
+
+func getToken(r *http.Request) (string, error) {
+	token := strings.TrimSpace(r.URL.Query().Get("ws_token"))
+	if token == "" {
+		return "", fmt.Errorf("missing ws_token")
+	}
+	return token, nil
 }

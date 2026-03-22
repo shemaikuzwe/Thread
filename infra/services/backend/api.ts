@@ -1,4 +1,5 @@
 import * as p from "@pulumi/pulumi";
+import * as random from "@pulumi/random";
 import { ThreadSsmParameter } from "../../resources/ssm";
 import { ThreadDockerImageRepo } from "../../resources/ecr";
 import { ThreadEcs } from "../../resources/ecs";
@@ -11,8 +12,8 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  apiUrlArn: p.Input<string>;
   rdsSsmArn: p.Input<string>;
-  betterAuthSecretArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
   valkeySsmArn: p.Input<string>;
 };
@@ -25,8 +26,10 @@ export class ThreadApi extends p.ComponentResource {
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-api`, "api", {}, opts);
-    const { arn: apiUrlArn } = new ThreadSsmParameter(
-      { name: "api-url", product, value: "http://localhost:8000" },
+
+    const randomSecret = new random.RandomUuid4("better_auth_secret").result;
+    const { arn: betterAuthSecretArn } = new ThreadSsmParameter(
+      { name: "better_auth_secret", product, value: randomSecret, isSecret: true },
       { parent: this },
     );
     const { arn: googleClientIdArn } = new ThreadSsmParameter(
@@ -67,8 +70,8 @@ export class ThreadApi extends p.ComponentResource {
           { name: "GOOGLE_CLIENT_SECRET", valueFrom: googleClientSecretArn },
           { name: "GITHUB_CLIENT_ID", valueFrom: githubClientIdArn },
           { name: "GITHUB_CLIENT_SECRET", valueFrom: githubClientSecretArn },
-          { name: "API_BASE_URL", valueFrom: apiUrlArn },
-          { name: "BETTER_AUTH_SECRET", valueFrom: props.betterAuthSecretArn },
+          { name: "API_BASE_URL", valueFrom: props.apiUrlArn },
+          { name: "BETTER_AUTH_SECRET", valueFrom: betterAuthSecretArn },
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
           { name: "REDIS_URL", valueFrom: props.valkeySsmArn },
         ],

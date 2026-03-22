@@ -1,19 +1,20 @@
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-import { AvatarImage } from "./avatar";
-const defaultAvatar = "/default.png";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/axios";
+import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 import { User } from "@/lib/auth-client";
+import { fetcher } from "@/lib/fetcher";
+import { AvatarImage } from "./avatar";
+
+const defaultAvatar = "/default.png";
 
 export default function MessageUser({ userId }: { userId: string }) {
   const { data: user, isLoading } = useQuery<User>({
     queryKey: [userId],
     queryFn: async () => {
-      const res = await api.get(`/users/${userId}`);
-      if (res.status !== 200) {
+      const res = await fetcher(`/users/${userId}`, { method: "GET" });
+      if (!res.ok) {
         throw new Error("Something went wrong");
       }
-      return res.data;
+      return await res.json();
     },
   });
   return (

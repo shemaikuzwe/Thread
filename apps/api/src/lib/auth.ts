@@ -3,14 +3,14 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt } from "better-auth/plugins/jwt";
 import { env } from "src/env";
-import { account, user, jwks, verification, session } from "@thread/db";
+import { account, user, verification, session, jwks } from "@thread/db";
 
 const authSchema = {
   account,
   user,
-  jwks,
   verification,
   session,
+  jwks,
 };
 
 const auth = betterAuth({
@@ -24,14 +24,7 @@ const auth = betterAuth({
   plugins: [
     jwt({
       jwt: {
-        issuer: env.API_BASE_URL,
-        audience: env.API_BASE_URL,
         expirationTime: "5m",
-      },
-      jwks: {
-        keyPairConfig: {
-          alg: "RS256",
-        },
       },
     }),
   ],

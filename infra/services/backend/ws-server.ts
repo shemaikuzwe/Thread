@@ -12,7 +12,7 @@ type Props = {
   vpc: VPC;
   valkeySsmArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
-  betterAuthSecretArn: p.Input<string>;
+  apiUrlArn: p.Input<string>;
   chatServiceLbUrl: p.Input<string>;
 };
 
@@ -44,7 +44,7 @@ export class ThreadWsServer extends p.ComponentResource {
         secrets: [
           { name: "REDIS_URL", valueFrom: props.valkeySsmArn },
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
-          { name: "BETTER_AUTH_SECRET", valueFrom: props.betterAuthSecretArn },
+          { name: "API_URL", valueFrom: props.apiUrlArn },
         ],
         environment: [
           { name: "CHAT_SERVICE_URL", value: props.chatServiceLbUrl },
