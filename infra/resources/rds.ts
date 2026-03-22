@@ -1,7 +1,8 @@
 import * as p from "@pulumi/pulumi";
-import { nanoid } from "nanoid";
+import * as random from "@pulumi/random";
 import * as aws from "@pulumi/aws";
 import { VPC } from "../types";
+import { ThreadSsmParameter } from "./ssm";
 interface Props {
   name: string;
   product: string;
@@ -13,7 +14,10 @@ export class ThreadRds extends p.ComponentResource {
   constructor({ dbName, name, product, vpc }: Props, opts?: p.ComponentResourceOptions) {
     super(`pkg:index:${product}-${name}-lb`, name, {}, opts);
     const user = `${product}User`;
-    const dbPassword = nanoid(12);
+    const dbPassword = new random.RandomPassword("db-password", {
+      length: 12,
+      special: false,
+    }).result;
     const rdsSecurityGroup = new aws.ec2.SecurityGroup(name, {
       name: `${name}-sg`,
       vpcId: vpc.id,
@@ -49,12 +53,12 @@ export class ThreadRds extends p.ComponentResource {
       { parent: this },
     );
     const databaseUrl = p.interpolate`postgresql://${user}:${dbPassword}@${rds.endpoint}/${dbName}?sslmode=require`;
-    const { arn } = new aws.ssm.Parameter(
-      `${product}-db-url`,
+    const { arn } = new ThreadSsmParameter(
       {
-        name: `/${product}/db-url`,
+        name: "rds-url",
+        product,
         value: databaseUrl,
-        type: "SecureString",
+        isSecret: true,
       },
       { parent: this },
     );

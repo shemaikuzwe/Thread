@@ -267,11 +267,10 @@ var jwksCache = struct {
 var wsAuthHTTPClient = &http.Client{Timeout: 10 * time.Second}
 
 func authenticateRequest(r *http.Request) (*authPayload, error) {
-	tokenString, err := getToken(r)
-	if err != nil || tokenString == "" {
-		return nil, fmt.Errorf("ws_token is required")
+	tokenString := os.Getenv("BETTER_AUTH_SECRET")
+	if tokenString == "" {
+		return nil, fmt.Errorf("BETTER_AUTH_SECRET is required")
 	}
-
 	options := []jwt.ParserOption{
 		jwt.WithValidMethods([]string{"RS256", "PS256"}),
 		jwt.WithLeeway(time.Duration(clockSkewSeconds()) * time.Second),
@@ -307,14 +306,6 @@ func jwtKeyFunc(token *jwt.Token) (any, error) {
 	}
 	alg, _ := token.Header["alg"].(string)
 	return getPublicKey(kid, alg)
-}
-
-func getToken(r *http.Request) (string, error) {
-	token := strings.TrimSpace(r.URL.Query().Get("ws_token"))
-	if token == "" {
-		return "", fmt.Errorf("missing ws_token")
-	}
-	return token, nil
 }
 
 func clockSkewSeconds() int64 {

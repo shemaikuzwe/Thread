@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -25,11 +24,11 @@ type ChatServiceClient struct {
 var ChatService *ChatServiceClient
 
 func InitChatService() {
-	port := os.Getenv("CHAT_SERVICE_PORT")
-	if port == "" {
-		log.Fatal("MISSING CHAT_SERVICE_PORT")
+	url := os.Getenv("CHAT_SERVICE_URL")
+	if url == "" {
+		log.Fatal("MISSING CHAT_SERVICE_URL")
 	}
-	conn, err := grpc.NewClient(fmt.Sprintf(":%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to chat service: %v", err)
 	}

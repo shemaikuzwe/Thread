@@ -8,7 +8,7 @@ FROM base AS prepare
 RUN  npm install turbo --global
 WORKDIR /app
 COPY . .
-RUN turbo prune api --docker
+RUN turbo prune chat-service --docker
 
 FROM base AS deps
 WORKDIR /app

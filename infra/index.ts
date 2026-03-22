@@ -25,7 +25,7 @@ function main() {
     },
   });
 
-  const taskRole= new aws.iam.Role(`${product}-task-role`, {
+  const taskRole = new aws.iam.Role(`${product}-task-role`, {
     assumeRolePolicy: {
       Version: "2012-10-17",
       Statement: [
@@ -75,7 +75,7 @@ function main() {
     roles: [executionRole.id],
   });
 
-  const backend = new ThreadBackend({
+  new ThreadBackend({
     name: `backend`,
     product,
     vpc: {
@@ -93,7 +93,6 @@ function main() {
     name: `frontend`,
     product,
     cluster: cluster.arn,
-    apiUrl: backend.apiUrl,
     vpc: {
       id: vpc.vpcId,
       cidrBlock: cidrBlock,

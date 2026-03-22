@@ -1,7 +1,8 @@
 import * as p from "@pulumi/pulumi";
-import { nanoid } from "nanoid";
+import * as random from "@pulumi/random";
 import * as aws from "@pulumi/aws";
 import { VPC } from "../types";
+import { ThreadSsmParameter } from "./ssm";
 type Props = {
   product: string;
   name: string;
@@ -13,7 +14,10 @@ export class ThreadRmq extends p.ComponentResource {
     super(`pkg:index:${product}-${name}-lb`, name, {}, opts);
     const stack = p.getStack();
     const user = `${product}${stack}`;
-    const rmqPassword = nanoid(12);
+    const rmqPassword = new random.RandomPassword("rmq-password", {
+      length: 12,
+      special: false,
+    }).result;
     const rmqSg = new aws.ec2.SecurityGroup(
       name,
       {
@@ -45,27 +49,27 @@ export class ThreadRmq extends p.ComponentResource {
             password: rmqPassword,
           },
         ],
-        hostInstanceType: "mq.t3.micro",
+        hostInstanceType: "mq.m7g.medium",
       },
       { parent: this },
     );
     const rmqUrl = rmq.instances[0].endpoints[0];
     const consoleUrl = rmq.instances[0].consoleUrl;
-    const { arn } = new aws.ssm.Parameter(
-      `${product}-rmq-url`,
+    const { arn } = new ThreadSsmParameter(
       {
-        name: `/${product}-${stack}/rmq-url`,
+        name: "mq-url",
+        product,
         value: rmqUrl,
-        type: "SecureString",
+        isSecret: true,
       },
       { parent: this },
     );
-    new aws.ssm.Parameter(
-      `${product}-rmq-console`,
+    new ThreadSsmParameter(
       {
-        name: `/${product}/rmq-console`,
+        name: "rmq-console",
+        product,
         value: consoleUrl,
-        type: "SecureString",
+        isSecret: true,
       },
       { parent: this },
     );

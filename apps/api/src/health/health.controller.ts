@@ -1,8 +1,10 @@
 import { Controller, Get } from "@nestjs/common";
 import { HealthCheck, HealthCheckService, MemoryHealthIndicator } from "@nestjs/terminus";
 import { DrizzleHealthIndicator } from "./drizzle.health";
+import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
 
 @Controller("health")
+@AllowAnonymous()
 export class HealthController {
   constructor(
     private health: HealthCheckService,

@@ -18,14 +18,14 @@ const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.API_BASE_URL,
   basePath: "/v1/auth",
   trustedOrigins: [env.CLIENT_APP_URL],
   plugins: [
     jwt({
       jwt: {
-        issuer: env.BETTER_AUTH_URL,
-        audience: env.BETTER_AUTH_URL,
+        issuer: env.API_BASE_URL,
+        audience: env.API_BASE_URL,
         expirationTime: "5m",
       },
       jwks: {

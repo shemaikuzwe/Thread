@@ -17,7 +17,6 @@ services:
       retries: 5
       start_period: 10s
 
-
   redis:
     image: redis:7-alpine
     ports:
@@ -50,9 +49,7 @@ services:
       start_period: 10s
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: thread-api
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -64,42 +61,38 @@ services:
     env_file:
       - ./apps/api/.env
 
-  # chat-service:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/chat-service/Dockerfile
-  #   ports:
-  #     - "50051:50051"
-  #   restart: unless-stopped
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   env_file:
-  #     - ./apps/chat-service/.env
-  #
-  # notification-service:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/notification/Dockerfile
-  #   restart: unless-stopped
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   env_file:
-  #     - ./apps/notification/.env
-  #
-  ws-server:
-    build:
-      context: ./apps/ws-server
-      dockerfile: Dockerfile
+  chat-service:
+    image: thread-chat-service
     ports:
-      - "8001:8001"
+      - "8003:8000"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./apps/chat-service/.env
+
+  notification-service:
+    image: thread-notification
+    ports:
+      - "8002:8000"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./apps/notification/.env
+
+  ws-server:
+    image: thread-ws-server
+    ports:
+      - "8001:8000"
     restart: unless-stopped
     depends_on:
       postgres:
@@ -110,9 +103,7 @@ services:
       - ./apps/ws-server/.env
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+    image: thread-web
     ports:
       - "3000:3000"
     restart: unless-stopped

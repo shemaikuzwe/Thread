@@ -17,7 +17,17 @@ export class ThreadLB extends p.ComponentResource {
   public readonly lbSg: p.Output<string>;
 
   constructor(
-    { name, product, type, internal = false, subnets, port, vpcId, cidrBlock, healthCheckPath = "/health/ready" }: Props,
+    {
+      name,
+      product,
+      type,
+      internal = false,
+      subnets,
+      port,
+      vpcId,
+      cidrBlock,
+      healthCheckPath = "/health/ready",
+    }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-${name}-lb`, name, {}, opts);
@@ -54,7 +64,7 @@ export class ThreadLB extends p.ComponentResource {
       `${name}-targetgroup`,
       {
         port,
-        protocol: "HTTP",
+        protocol: type == "application" ? "HTTP" : "TCP",
         vpcId,
         targetType: "ip",
         healthCheck: {
@@ -76,7 +86,7 @@ export class ThreadLB extends p.ComponentResource {
       {
         loadBalancerArn: lb.arn,
         port: 80,
-        protocol: "HTTP",
+        protocol: type == "application" ? "HTTP" : "TCP",
         defaultActions: [
           {
             type: "forward",
@@ -87,7 +97,7 @@ export class ThreadLB extends p.ComponentResource {
       { parent: this },
     );
 
-    this.lbUrl = p.interpolate`http://${lb.dnsName}`;
+    this.lbUrl = p.interpolate`${type == "application" ? "http" : "tcp"}://${lb.dnsName}`;
     this.targetGroup = targetGroup;
     this.registerOutputs({
       lbUrl: this.lbUrl,

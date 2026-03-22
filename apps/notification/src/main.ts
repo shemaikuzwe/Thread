@@ -18,8 +18,7 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  const port = Number(process.env.HEALTH_PORT || 8003);
-  await app.listen(port);
+  await app.listen(env.PORT);
 }
 
 bootstrap();

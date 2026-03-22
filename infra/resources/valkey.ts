@@ -1,6 +1,7 @@
 import * as p from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { VPC } from "../types";
+import { ThreadSsmParameter } from "./ssm";
 type Props = {
   name: string;
   product: string;
@@ -51,12 +52,12 @@ export class ThreadValkey extends p.ComponentResource {
     // if we have more than 1 shard we should loop and store them using p.all()
     const url = valkey.clusterEndpoints[0];
     const valkeyUrl = p.interpolate`rediss://${url.address}:${url.port}`;
-    const { arn } = new aws.ssm.Parameter(
-      `${product}-valkey-url`,
+    const { arn } = new ThreadSsmParameter(
       {
-        name: `/${product}-${stack}/valkey-url`,
+        name: "valkey-url",
+        product,
         value: valkeyUrl,
-        type: "SecureString",
+        isSecret: true,
       },
       { parent: this },
     );
