@@ -33,5 +33,5 @@ jobs:
           command: preview
           stack-name: ${{ vars.ORG_NAME }}/thread
           comment-on-pr: true
-          work_dir: infra
+          work-dir: infra
           github-token: ${{ secrets.GITHUB_TOKEN }}
