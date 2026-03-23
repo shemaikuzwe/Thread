@@ -28,7 +28,7 @@ jobs:
       - uses: pulumi/actions@v6
         with:
           command: preview
-          stack-name: ${{ vars.ORG_NAME }}/thread
+          stack-name: ${{ vars.ORG_NAME }}/dev
           comment-on-pr: true
           work-dir: infra
           github-token: ${{ secrets.GITHUB_TOKEN }}
