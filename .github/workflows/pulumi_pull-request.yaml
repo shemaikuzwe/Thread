@@ -18,9 +18,6 @@ jobs:
           node-version: "24"
       - uses: pnpm/action-setup@v4
       - name: Debug OIDC claims
-        permissions:
-          id-token: write
-          contents: read
         run: |
           token=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=urn:pulumi:org:shemaikuzwe-org" \
