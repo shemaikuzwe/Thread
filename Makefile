@@ -4,6 +4,10 @@ PROTO_DIR=apps/chat-service
 GO_OUT=apps/ws-server/internal
 TS_OUT=apps/chat-service/src/chat-pb
 PATH := node_modules/.bin:$(PATH)
+BUILD_TAG := $(if $(BUILD_TAG),$(BUILD_TAG),latest)
+AWS_ACCOUNT_ID := 629049518246
+AWS_REGION := us-east-1
+AWS_ECR_DOMAIN := $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_DEFAULT_REGION).amazonaws.com/$(STACK_NAME)
 
 generate-go:
 	mkdir -p $(GO_OUT)
@@ -22,12 +26,12 @@ generate-ts:
 generate: generate-go generate-ts
 
 build-api:
-	docker build -f apps/api/Dockerfile . -t thread-api \
+	docker build -f apps/api/Dockerfile . -t $(AWS_ECR_DOMAIN)/api \
 		--build-arg TURBO_TEAM=$(TURBO_TEAM) \
 		--build-arg TURBO_TOKEN=$(TURBO_TOKEN)
 
 build-web:
-	docker build -f apps/web/Dockerfile . -t thread-web \
+	docker build -f apps/web/Dockerfile . -t $(AWS_ECR_DOMAIN)/web \
 		--build-arg TURBO_TEAM=$(TURBO_TEAM) \
 		--build-arg TURBO_TOKEN=$(TURBO_TOKEN) \
 		--build-arg NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) \
@@ -35,13 +39,23 @@ build-web:
 		--build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY=$(NEXT_PUBLIC_VAPID_PUBLIC_KEY) 
 
 build-chat-service:
-	docker build -f apps/chat-service/Dockerfile . -t thread-chat-service
+	docker build -f apps/chat-service/Dockerfile . -t $(AWS_ECR_DOMAIN)/chat-service \
+		--build-arg TURBO_TEAM=$(TURBO_TEAM) \
+		--build-arg TURBO_TOKEN=$(TURBO_TOKEN)
 
 build-notification:
-	docker build -f apps/notification/Dockerfile . -t thread-notification
+	docker build -f apps/notification/Dockerfile . -t $(AWS_ECR_DOMAIN)/notification \
+		--build-arg TURBO_TEAM=$(TURBO_TEAM) \
+		--build-arg TURBO_TOKEN=$(TURBO_TOKEN) \
+    
 
 build-ws-server:
-	docker build -f apps/ws-server/Dockerfile ./apps/ws-server -t thread-ws-server
+	docker build -f apps/ws-server/Dockerfile ./apps/ws-server -t $(AWS_ECR_DOMAIN)/ws-server 
 
 build-all: build-api build-web build-chat-service build-notification build-ws-server
 	
+build-image-login:
+	aws ecr get-login-password --region $(AWS_DEFAULT_REGION) | docker login \
+		--username AWS \
+		--password-stdin \
+		$(AWS_ECR_DOMAIN)
