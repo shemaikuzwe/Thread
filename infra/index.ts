@@ -75,7 +75,7 @@ function main() {
     roles: [executionRole.id],
   });
 
-  new ThreadBackend({
+  const backend = new ThreadBackend({
     name: `backend`,
     product,
     vpc: {
@@ -89,7 +89,7 @@ function main() {
     executionRoleArn: executionRole.arn,
   });
 
-  new ThreadFrontend({
+  const frontend = new ThreadFrontend({
     name: `frontend`,
     product,
     cluster: cluster.arn,
@@ -101,6 +101,24 @@ function main() {
     },
     taskRoleArn: taskRole.arn,
     executionRoleArn: executionRole.arn,
+  });
+
+  p.export("stack", stack);
+  p.export("product", product);
+  p.export("ecsClusterName", cluster.name);
+  p.export("ecsServiceNames", {
+    api: backend.api.serviceName,
+    chatService: backend.chatService.serviceName,
+    wsServer: backend.wsServer.serviceName,
+    notification: backend.notificationService.serviceName,
+    web: frontend.serviceName,
+  });
+  p.export("ecrRepoUrls", {
+    api: backend.api.imageRepoUrl,
+    chatService: backend.chatService.imageRepoUrl,
+    wsServer: backend.wsServer.imageRepoUrl,
+    notification: backend.notificationService.imageRepoUrl,
+    web: frontend.imageRepoUrl,
   });
 }
 
