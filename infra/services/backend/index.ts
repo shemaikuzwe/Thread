@@ -19,10 +19,6 @@ type Props = {
 };
 
 export class ThreadBackend extends p.ComponentResource {
-  public readonly api: ThreadApi;
-  public readonly chatService: ThreadChatService;
-  public readonly wsServer: ThreadWsServer;
-  public readonly notificationService: ThreadNotificationService;
   constructor(
     { cluster, taskRoleArn, executionRoleArn, name, product, vpc }: Props,
     opts?: p.ComponentResourceOptions,
@@ -53,31 +49,30 @@ export class ThreadBackend extends p.ComponentResource {
     const common = { product, port: PORT, cluster, taskRoleArn, executionRoleArn, vpc };
 
     // Services
-    this.api = new ThreadApi(
+    new ThreadApi(
       { ...common, rdsSsmArn, apiUrlArn, clientUrlArn, valkeySsmArn },
       { parent: this },
     );
 
-    this.chatService = new ThreadChatService(
+    const chatService = new ThreadChatService(
       { ...common, rdsSsmArn, clientUrlArn, rmqSsmArn },
       { parent: this },
     );
 
-    this.wsServer = new ThreadWsServer(
+    new ThreadWsServer(
       {
         ...common,
         valkeySsmArn,
         clientUrlArn,
         apiUrlArn,
-        chatServiceLbUrl: this.chatService.lbUrl,
+        chatServiceLbUrl: chatService.lbUrl,
       },
       { parent: this },
     );
 
-    this.notificationService = new ThreadNotificationService(
+    new ThreadNotificationService(
       { ...common, rdsSsmArn, rmqSsmArn, clientUrlArn },
       { parent: this },
     );
-
   }
 }

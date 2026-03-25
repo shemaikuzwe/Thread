@@ -29,7 +29,6 @@ interface Props {
 }
 export class ThreadEcs extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
-  public readonly serviceName: p.Output<string>;
   constructor(
     {
       name,
@@ -129,7 +128,7 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
-    const ecsService = new aws.ecs.Service(
+    new aws.ecs.Service(
       `${product}-${name}-ecs-service`,
       {
         cluster: cluster,
@@ -152,10 +151,8 @@ export class ThreadEcs extends p.ComponentResource {
       { parent: this },
     );
 
-    this.serviceName = ecsService.name;
     this.registerOutputs({
       lbUrl: this.lbUrl,
-      serviceName: this.serviceName,
     });
   }
 }

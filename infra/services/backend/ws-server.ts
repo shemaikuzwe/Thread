@@ -18,8 +18,6 @@ type Props = {
 
 export class ThreadWsServer extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
-  public readonly serviceName: p.Output<string>;
-  public readonly imageRepoUrl: p.Output<string>;
 
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
@@ -32,7 +30,7 @@ export class ThreadWsServer extends p.ComponentResource {
       { parent: this },
     );
 
-    const ecs = new ThreadEcs(
+    const { lbUrl } = new ThreadEcs(
       {
         name: "ws-server",
         product,
@@ -57,13 +55,7 @@ export class ThreadWsServer extends p.ComponentResource {
       { parent: this },
     );
 
-    this.lbUrl = ecs.lbUrl;
-    this.serviceName = ecs.serviceName;
-    this.imageRepoUrl = imageRepo;
-    this.registerOutputs({
-      lbUrl: this.lbUrl,
-      serviceName: this.serviceName,
-      imageRepoUrl: this.imageRepoUrl,
-    });
+    this.lbUrl = lbUrl;
+    this.registerOutputs({ lbUrl: this.lbUrl });
   }
 }
