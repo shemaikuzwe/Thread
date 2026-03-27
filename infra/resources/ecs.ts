@@ -18,6 +18,7 @@ interface Props {
   port: number;
   publicIp?: boolean;
   imageRepo: p.Input<string>;
+  imageTag?: p.Input<string>;
   vpc: VPC;
   secrets?: Secret[];
   environment?: Environment[];
@@ -29,6 +30,7 @@ interface Props {
 }
 export class ThreadEcs extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
+  public readonly serviceName: p.Output<string>;
   constructor(
     {
       name,
@@ -36,6 +38,7 @@ export class ThreadEcs extends p.ComponentResource {
       cluster,
       taskRoleArn,
       imageRepo,
+      imageTag = "latest",
       port,
       type = "application",
       publicIp,
@@ -93,7 +96,7 @@ export class ThreadEcs extends p.ComponentResource {
         containerDefinitions: p.jsonStringify([
           {
             name: name,
-            image: p.interpolate`${imageRepo}:latest`,
+            image: p.interpolate`${imageRepo}:${imageTag}`,
             cpu: 256,
             memory: 512,
             essential: true,
@@ -128,7 +131,7 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
-    new aws.ecs.Service(
+    const service=new aws.ecs.Service(
       `${product}-${name}-ecs-service`,
       {
         cluster: cluster,
@@ -150,9 +153,10 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
-
+     this.serviceName=service.name;
     this.registerOutputs({
       lbUrl: this.lbUrl,
+      serviceName: this.serviceName,
     });
   }
 }

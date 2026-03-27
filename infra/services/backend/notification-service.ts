@@ -17,6 +17,7 @@ type Props = {
 };
 
 export class ThreadNotificationService extends p.ComponentResource {
+    public readonly notificationServiceName: p.Output<string>;
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
     opts?: p.ComponentResourceOptions,
@@ -35,7 +36,7 @@ export class ThreadNotificationService extends p.ComponentResource {
       { parent: this },
     );
 
-    new ThreadEcs(
+   const { serviceName } = new ThreadEcs(
       {
         name: "notification",
         product,
@@ -57,5 +58,7 @@ export class ThreadNotificationService extends p.ComponentResource {
       },
       { parent: this },
     );
+    this.notificationServiceName = serviceName;
+    this.registerOutputs({ notificationServiceName: this.notificationServiceName });
   }
 }

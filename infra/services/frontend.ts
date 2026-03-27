@@ -11,6 +11,7 @@ interface Props {
   vpc: VPC;
 }
 export class ThreadFrontend extends p.ComponentResource {
+  public readonly webServiceName: p.Output<string>;
   constructor(
     { name, product, cluster, taskRoleArn, executionRoleArn, vpc }: Props,
     opts?: p.ComponentResourceOptions,
@@ -18,7 +19,7 @@ export class ThreadFrontend extends p.ComponentResource {
     super(`pkg:index:${product}-${name}`, name, {}, opts);
 
     const { imageRepo } = new ThreadDockerImageRepo({ name: "web", product });
-    new ThreadEcs(
+   const {serviceName}=   new ThreadEcs(
       {
         name: "web",
         product,
@@ -34,5 +35,7 @@ export class ThreadFrontend extends p.ComponentResource {
       },
       { parent: this },
     );
+    this.webServiceName = serviceName;
+    this.registerOutputs({ webServiceName: this.webServiceName });
   }
 }
