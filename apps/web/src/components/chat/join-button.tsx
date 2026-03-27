@@ -1,6 +1,6 @@
-import { Button } from "../ui/button";
-import { api } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
+import { Button } from "../ui/button";
 
 export default function JoinButton({
   id,
@@ -12,8 +12,8 @@ export default function JoinButton({
   const queryClient = useQueryClient();
   const handleJoin = async () => {
     try {
-      const res = await api.get(`/chats/${id}/join`);
-      if (!res.data) {
+      const res = await fetcher(`/chats/${id}/join`, { method: "GET" });
+      if (!res.ok) {
         throw new Error("Failed to join chat");
       }
       queryClient.invalidateQueries({ queryKey: ["chat-header", id] });

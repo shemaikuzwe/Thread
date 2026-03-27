@@ -1,17 +1,22 @@
-import { api } from "./axios";
+import { fetcher } from "./fetcher";
 
 export async function subscribeUser(sub: PushSubscription) {
-  const res = await api.post("/users/subscription", { sub });
-  console.log(res);
-  if (res.status !== 200) {
+  const res = await fetcher("/users/subscription", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sub }),
+  });
+  if (!res.ok) {
     return { success: false };
   }
   return { success: true };
 }
 
 export async function unsubscribeUser(sub: PushSubscription) {
-  const res = await api.delete(`/users/subscription/${encodeURIComponent(sub.endpoint)}`);
-  if (res.status !== 200) {
+  const res = await fetcher(`/users/subscription/${encodeURIComponent(sub.endpoint)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
     return { success: false };
   }
   return { success: true };

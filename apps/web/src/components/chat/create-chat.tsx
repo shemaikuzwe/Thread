@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { createChatSchema, type CreateChatData } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
-import { api } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "../ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { fetcher } from "@/lib/fetcher";
+import { createChatSchema, type CreateChatData } from "@/lib/schema";
 import { cn } from "@/lib/utils";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
+import { Textarea } from "../ui/textarea";
 
 export function CreateThread({ className, onClose }: { onClose: () => void; className?: string }) {
   const form = useForm<CreateChatData>({
@@ -17,9 +17,14 @@ export function CreateThread({ className, onClose }: { onClose: () => void; clas
 
   const handleSubmit = async (data: CreateChatData) => {
     try {
-      const res = await api.post("/chats", data);
-      if (res.status !== 201) {
-        throw new Error(res.data.message || "Failed to create chat");
+      const res = await fetcher("/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body?.message || "Failed to create chat");
       }
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       onClose();

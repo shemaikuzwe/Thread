@@ -6,11 +6,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   CLIENT_APP_URL: z.url(),
   REDIS_URL: z.url(),
-  VAPID_PUBLIC_KEY: z.string(),
-  VAPID_PRIVATE_KEY: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
-  BETTER_AUTH_URL:z.url()
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string(),
+  API_BASE_URL:z.url()
 });
 
 export const env = envSchema.parse(process.env);

@@ -5,6 +5,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url(),
   REDIS_URL: z.url(),
   CLIENT_APP_URL: z.url(),
+  PORT: z.coerce.number(),
 });
 
 export const env = envSchema.parse(process.env);

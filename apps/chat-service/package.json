@@ -13,6 +13,7 @@
     "fmt:check": "oxfmt --check src"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.11.0",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "@nestjs/common": "^11.1.6",
@@ -20,6 +21,7 @@
     "@nestjs/core": "^11.1.6",
     "@nestjs/microservices": "^11.1.16",
     "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/terminus": "^11.1.1",
     "@swc/cli": "^0.8.0",
     "@swc/core": "^1.15.11",
     "@thread/db": "workspace:*",
@@ -28,10 +30,12 @@
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "1.0.0-beta.15-859cf75",
     "jsonwebtoken": "^9.0.2",
+    "amqplib": "^0.10.9",
+    "amqp-connection-manager": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "zod": "^4.1.11",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",

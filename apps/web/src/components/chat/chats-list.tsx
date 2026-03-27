@@ -1,12 +1,12 @@
-import EmptyChatsList from "@/components/chat/empty-chats-list";
-import { api } from "@/lib/axios";
-import type { ChatWithUsers } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import ChatListItem from "./chats-list-item";
+import { useQuery } from "@tanstack/react-query";
+import EmptyChatsList from "@/components/chat/empty-chats-list";
 import { ChatListSkeleton } from "@/components/ui/chat-skeletons";
-import NewChat from "./new-chat";
 import SearchInput from "@/components/ui/search-input";
+import { fetcher } from "@/lib/fetcher";
+import type { ChatWithUsers } from "@/lib/types";
+import ChatListItem from "./chats-list-item";
+import NewChat from "./new-chat";
 
 type UnreadResponse = {
   lastRead: string;
@@ -19,22 +19,22 @@ export default function ChatsList() {
   const { data: chats, isLoading } = useQuery<ChatWithUsers[]>({
     queryKey: ["chats"],
     queryFn: async () => {
-      const res = await api.get(`/chats`);
-      if (res.status !== 200) {
+      const res = await fetcher(`/chats`, { method: "GET" });
+      if (!res.ok) {
         throw new Error("Failed to fetch chats");
       }
-      return res.data;
+      return await res.json();
     },
   });
 
   const { data: unReadChats } = useQuery<UnreadResponse[]>({
     queryKey: ["un_read"],
     queryFn: async () => {
-      const res = await api.get("/chats/unread");
-      if (res.status !== 200) {
+      const res = await fetcher("/chats/unread", { method: "GET" });
+      if (!res.ok) {
         throw new Error("failed to fetch unread message");
       }
-      return res.data;
+      return await res.json();
     },
   });
 
@@ -44,9 +44,8 @@ export default function ChatsList() {
         (chat) =>
           chat?.name?.toLowerCase().includes(search.toLowerCase()) ||
           (chat.type === "dm" &&
-            chat.users.filter((user) =>
-              user.name.toLowerCase().includes(search.toLowerCase()),
-            ).length > 0),
+            chat.users.filter((user) => user.name.toLowerCase().includes(search.toLowerCase()))
+              .length > 0),
       )
     : chats;
 

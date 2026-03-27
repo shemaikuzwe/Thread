@@ -1,3 +1,7 @@
+import { startTransition, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, PenBoxIcon, UserPlus, Users } from "lucide-react";
 import { CreateThread } from "@/components/chat/create-chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -6,11 +10,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchInput from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/lib/axios";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, PenBoxIcon, UserPlus, Users } from "lucide-react";
-import { startTransition, useState } from "react";
-import { useRouter } from "next/navigation";
+import { fetcher } from "@/lib/fetcher";
 
 type Result = {
   id: string;
@@ -36,18 +36,22 @@ export default function NewChat({ children }: { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data, isLoading } = useQuery<Result[]>({
+  const { data, isLoading } = useQuery<Result[] | null>({
     queryKey: ["new-chat", search],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) {
         params.set("search", search);
       }
-      const res = await api.get(`/chats?${params.toString()}`);
-      if (!res.data) {
+      const res = await fetcher(`/chats?${params.toString()}`, { method: "GET" });
+      if (!res.ok) {
+        throw new Error("Failed to fetch chats");
+      }
+      const data = await res.json()
+      if (!data) {
         return null;
       }
-      return res.data;
+      return data;
     },
     enabled: !!search,
   });
@@ -134,9 +138,14 @@ function SearchItem({
     }
 
     startTransition(async () => {
-      const res = await api.post("/chats/dm", { userId: item.id });
-      if (!res.data) throw new Error("something went wrong");
-      const id = res.data.id;
+      const res = await fetcher("/chats/dm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: item.id }),
+      });
+      if (!res.ok) throw new Error("something went wrong");
+      const data = await res.json()
+      const id = data.id;
       router.push(`/chat/${id}`);
       setOpen(false);
       setSearch("");

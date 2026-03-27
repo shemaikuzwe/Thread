@@ -5,7 +5,7 @@ export default function Google() {
   const handleGoogleLogin = async () => {
     await signIn.social({
       provider: "google",
-      callbackURL: "/chat",
+      callbackURL: `${window.location.origin}/chat`, //prevents server redirection
     });
   };
   return (

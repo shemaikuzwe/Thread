@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/joho/godotenv"
 	"github.com/shemaIkuzwe/thread/internal/chat-pb"
@@ -25,11 +25,17 @@ type ChatServiceClient struct {
 var ChatService *ChatServiceClient
 
 func InitChatService() {
-	port := os.Getenv("CHAT_SERVICE_PORT")
-	if port == "" {
-		log.Fatal("MISSING CHAT_SERVICE_PORT")
+	url := os.Getenv("CHAT_SERVICE_URL")
+	if url == "" {
+		log.Fatal("MISSING CHAT_SERVICE_URL")
 	}
-	conn, err := grpc.NewClient(fmt.Sprintf(":%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	parsedUrl,err:= regexp.Compile(`^[a-zA-Z+\-.]+://`)
+	if err != nil {
+		log.Println("failed to parse url",err)
+		return
+	}
+	url=parsedUrl.ReplaceAllString(url, "")
+	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to chat service: %v", err)
 	}

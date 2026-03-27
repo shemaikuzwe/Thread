@@ -1,10 +1,12 @@
 services:
   postgres:
-    image: postgres:14-alpine
+    image: postgres:16-alpine
     ports:
-      - "5555:5432"
-    env_file:
-      - ./.env
+      - "5431:5432"
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -15,11 +17,10 @@ services:
       retries: 5
       start_period: 10s
 
-
   redis:
     image: redis:7-alpine
     ports:
-      - "6333:6379"
+      - "6378:6379"
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -31,7 +32,7 @@ services:
       start_period: 10s
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -48,9 +49,7 @@ services:
       start_period: 10s
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: thread-api
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -63,11 +62,9 @@ services:
       - ./apps/api/.env
 
   chat-service:
-    build:
-      context: .
-      dockerfile: apps/chat-service/Dockerfile
+    image: thread-chat-service
     ports:
-      - "50051:50051"
+      - "8003:8000"
     restart: unless-stopped
     depends_on:
       postgres:
@@ -80,9 +77,9 @@ services:
       - ./apps/chat-service/.env
 
   notification-service:
-    build:
-      context: .
-      dockerfile: apps/notification/Dockerfile
+    image: thread-notification
+    ports:
+      - "8002:8000"
     restart: unless-stopped
     depends_on:
       postgres:
@@ -93,11 +90,9 @@ services:
       - ./apps/notification/.env
 
   ws-server:
-    build:
-      context: ./apps/ws-server
-      dockerfile: Dockerfile
+    image: thread-ws-server
     ports:
-      - "8001:8001"
+      - "8001:8000"
     restart: unless-stopped
     depends_on:
       postgres:
@@ -108,9 +103,7 @@ services:
       - ./apps/ws-server/.env
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+    image: thread-web
     ports:
       - "3000:3000"
     restart: unless-stopped

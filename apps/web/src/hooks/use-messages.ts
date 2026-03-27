@@ -1,7 +1,7 @@
-import { api } from "@/lib/axios";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
 import type { Online, Message, MessageStatus } from "@/lib/types";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useState, useRef, useMemo } from "react";
 
 export type MessagesRes = {
   messages: Message[];
@@ -18,9 +18,11 @@ export const useMessages = (id: string, limit: number = 15) => {
       if (pageParam) {
         params.set("cursor", pageParam.toString());
       }
-      const res = await api.get(`/chats/${id}/messages?${params.toString()}`);
-      if (res.status !== 200) throw new Error("Failed to fetch messages");
-      return res.data;
+      const res = await fetcher(`/chats/${id}/messages?${params.toString()}`, {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Failed to fetch messages");
+      return await res.json()
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,

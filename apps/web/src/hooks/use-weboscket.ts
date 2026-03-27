@@ -1,34 +1,32 @@
 import { useCallback, useEffect } from "react";
-import type { ChatWithUsers, Message } from "@/lib/types";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
-import { useSession } from "@/lib/auth-client";
-import { api } from "@/lib/axios";
+import { token, useSession } from "@/lib/auth-client";
+import type { ChatWithUsers, Message } from "@/lib/types";
 import { useWebSocket } from "./ws/websocket";
 import { type MessagesRes, type UnReadMessage } from "./use-messages";
-
 export function useWebsocket() {
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
   const queryClient = useQueryClient();
   const session = useSession();
 
-  const resolveWebsocketUrl = useCallback(async () => {
+  const websocketUrl = useCallback(async () => {
     if (!wsUrl) {
       throw new Error("websocket url is not configured");
     }
-    const { data } = await api.get<{ token: string }>("/auth/token");
-    if (!data?.token) {
-      throw new Error("missing auth token");
+    const { data, error } = await token();
+    if (error) {
+      throw new Error("failed to fetch auth token");
     }
     const params = new URLSearchParams();
     params.append("ws_token", data.token);
-    return `${wsUrl}/ws?${params.toString()}`;
+    return `${wsUrl}/v1/ws?${params.toString()}`;
   }, [wsUrl]);
 
   const {
     sendJsonMessage,
     lastJsonMessage: message,
     readyState,
-  } = useWebSocket<Message>(resolveWebsocketUrl, {
+  } = useWebSocket<Message>(websocketUrl, {
     share: true,
     retryOnError: false,
     reconnectAttempts: 8,
@@ -53,9 +51,7 @@ export function useWebsocket() {
     if (message.type === "MESSAGE") {
       queryClient.setQueryData(
         ["chat", message.threadId],
-        (
-          oldData: InfiniteData<MessagesRes> | undefined,
-        ): InfiniteData<MessagesRes> | undefined => {
+        (oldData: InfiniteData<MessagesRes> | undefined): InfiniteData<MessagesRes> | undefined => {
           if (!oldData) return undefined;
 
           const exists = oldData.pages.some((page) =>

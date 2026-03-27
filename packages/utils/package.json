@@ -1,0 +1,33 @@
+{
+  "name": "@thread/utils",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "require": "./dist/src/index.js",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint src --fix",
+    "fmt": "oxfmt src",
+    "fmt:check": "oxfmt --check src"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.821.0",
+    "file-type": "^20.5.0",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "typescript": "~5.8.3"
+  }
+}

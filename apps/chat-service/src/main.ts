@@ -3,10 +3,12 @@ import { AppModule } from "./app.module";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
 import { join } from "path";
 import { env } from "src/lib/env";
-async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
-    transport: Transport.GRPC,
 
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
     options: {
       url: env.SERVICE_URL,
       package: "chat",
@@ -14,7 +16,8 @@ async function bootstrap() {
     },
   });
 
-  await app.listen();
+  await app.startAllMicroservices();
+  await app.listen(env.PORT);
 }
 
 bootstrap();

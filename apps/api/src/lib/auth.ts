@@ -3,14 +3,14 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt } from "better-auth/plugins/jwt";
 import { env } from "src/env";
-import { account, user, jwks, verification, session } from "@thread/db";
+import { account, user, verification, session, jwks } from "@thread/db";
 
 const authSchema = {
   account,
   user,
-  jwks,
   verification,
   session,
+  jwks,
 };
 
 const auth = betterAuth({
@@ -18,20 +18,13 @@ const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.API_BASE_URL,
   basePath: "/v1/auth",
   trustedOrigins: [env.CLIENT_APP_URL],
   plugins: [
     jwt({
       jwt: {
-        issuer: env.BETTER_AUTH_URL,
-        audience: env.BETTER_AUTH_URL,
         expirationTime: "5m",
-      },
-      jwks: {
-        keyPairConfig: {
-          alg: "RS256",
-        },
       },
     }),
   ],
@@ -44,7 +37,10 @@ const auth = betterAuth({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
-
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+    },
   },
 });
 const signOut = async () => await auth.api.signOut();

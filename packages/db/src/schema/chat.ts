@@ -42,9 +42,7 @@ export const threadUsers = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.threadId, table.userId] }),
-  }),
+  (table) => [primaryKey({ columns: [table.threadId, table.userId] })],
 );
 
 export const messages = pgTable("messages", {
@@ -106,7 +104,5 @@ export const lastRead = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    uniqueUserThread: unique("unique_user_thread").on(table.userId, table.threadId),
-  }),
+  (table) => [unique("unique_user_thread").on(table.userId, table.threadId)],
 );
