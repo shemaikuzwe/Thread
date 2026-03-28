@@ -17,7 +17,7 @@ type Props = {
 
 export class ThreadChatService extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
-  public readonly chatServiceName: p.Output<string>;
+  
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
     opts?: p.ComponentResourceOptions,
@@ -29,7 +29,7 @@ export class ThreadChatService extends p.ComponentResource {
       { parent: this },
     );
 
-    const { lbUrl,serviceName } = new ThreadEcs(
+    const { lbUrl } = new ThreadEcs(
       {
         name: "chat-service",
         product,
@@ -51,8 +51,8 @@ export class ThreadChatService extends p.ComponentResource {
       },
       { parent: this },
     );
-    this.chatServiceName = serviceName;
+
     this.lbUrl = lbUrl;
-    this.registerOutputs({ lbUrl: this.lbUrl, chatServiceName: this.chatServiceName });
+    this.registerOutputs({ lbUrl: this.lbUrl });
   }
 }

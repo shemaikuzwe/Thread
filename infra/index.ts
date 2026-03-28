@@ -6,7 +6,7 @@ import { ThreadVpc } from "./resources/vpc";
 
 const stack = p.getStack();
 const product = `thread${stack}`;
-const { arn: clusterArn, name } = new aws.ecs.Cluster(`${product}-cluster`);
+const { arn: clusterArn, } = new aws.ecs.Cluster(`${product}-cluster`);
 const cidrBlock = "10.0.0.0/16";
 const azs = aws.getAvailabilityZones({ state: "available" });
 const vpc = new ThreadVpc(`${product}-vpc`, {
@@ -75,7 +75,7 @@ new aws.iam.PolicyAttachment(`${product}-task-role-policyAttachment`, {
   roles: [executionRole.id],
 });
 
-const backend = new ThreadBackend({
+ new ThreadBackend({
   name: `backend`,
   product,
   vpc: {
@@ -89,7 +89,7 @@ const backend = new ThreadBackend({
   executionRoleArn: executionRole.arn,
 });
 
-const frontend = new ThreadFrontend({
+ new ThreadFrontend({
   name: `frontend`,
   product,
   cluster: clusterArn,
@@ -102,9 +102,3 @@ const frontend = new ThreadFrontend({
   taskRoleArn: taskRole.arn,
   executionRoleArn: executionRole.arn,
 });
-export const clusterName = name;
-export const webService = frontend.webServiceName;
-export const apiService = backend.apiServiceName;
-export const chatService = backend.chatServiceName;
-export const wsServerService = backend.wsServerServiceName;
-export const notificationService = backend.notificationServiceName;

@@ -20,7 +20,7 @@ type Props = {
 
 export class ThreadApi extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
-  public readonly apiServiceName: p.Output<string>;
+
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
     opts?: p.ComponentResourceOptions,
@@ -51,7 +51,7 @@ export class ThreadApi extends p.ComponentResource {
     );
     const { imageRepo } = new ThreadDockerImageRepo({ name: "api", product }, { parent: this });
 
-    const { lbUrl, serviceName } = new ThreadEcs(
+    const { lbUrl } = new ThreadEcs(
       {
         name: "api",
         product,
@@ -79,8 +79,8 @@ export class ThreadApi extends p.ComponentResource {
       },
       { parent: this },
     );
-    this.apiServiceName = serviceName;
+
     this.lbUrl = lbUrl;
-    this.registerOutputs({ lbUrl: this.lbUrl, apiServiceName: this.apiServiceName });
+    this.registerOutputs({ lbUrl: this.lbUrl });
   }
 }

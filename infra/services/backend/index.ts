@@ -19,10 +19,7 @@ type Props = {
 };
 
 export class ThreadBackend extends p.ComponentResource {
-  public readonly apiServiceName: p.Output<string>;
-  public readonly chatServiceName: p.Output<string>;
-  public readonly wsServerServiceName: p.Output<string>;
-  public readonly notificationServiceName: p.Output<string>;
+    
   constructor(
     { cluster, taskRoleArn, executionRoleArn, name, product, vpc }: Props,
     opts?: p.ComponentResourceOptions,
@@ -53,7 +50,7 @@ export class ThreadBackend extends p.ComponentResource {
     const common = { product, port: PORT, cluster, taskRoleArn, executionRoleArn, vpc };
 
     // Services
-   const api= new ThreadApi(
+    new ThreadApi(
       { ...common, rdsSsmArn, apiUrlArn, clientUrlArn, valkeySsmArn },
       { parent: this },
     );
@@ -63,7 +60,7 @@ export class ThreadBackend extends p.ComponentResource {
       { parent: this },
     );
 
-    const wsServer = new ThreadWsServer(
+    new ThreadWsServer(
       {
         ...common,
         valkeySsmArn,
@@ -74,20 +71,9 @@ export class ThreadBackend extends p.ComponentResource {
       { parent: this },
     );
 
-   const notificationService = new ThreadNotificationService(
+    new ThreadNotificationService(
       { ...common, rdsSsmArn, rmqSsmArn, clientUrlArn },
       { parent: this },
     );
-   this.apiServiceName = api.apiServiceName;
-   this.chatServiceName = chatService.chatServiceName;
-   this.wsServerServiceName = wsServer.wsServerServiceName;
-   this.notificationServiceName = notificationService.notificationServiceName;
-
-    this.registerOutputs({
-      apiServiceName: this.apiServiceName,
-      chatServiceName: this.chatServiceName,
-      wsServerServiceName: this.wsServerServiceName,
-      notificationServiceName: this.notificationServiceName,
-    });
   }
 }

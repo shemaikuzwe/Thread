@@ -11,7 +11,7 @@ interface Props {
   vpc: VPC;
 }
 export class ThreadFrontend extends p.ComponentResource {
-  public readonly webServiceName: p.Output<string>;
+  
   constructor(
     { name, product, cluster, taskRoleArn, executionRoleArn, vpc }: Props,
     opts?: p.ComponentResourceOptions,
@@ -35,7 +35,5 @@ export class ThreadFrontend extends p.ComponentResource {
       },
       { parent: this },
     );
-    this.webServiceName = serviceName;
-    this.registerOutputs({ webServiceName: this.webServiceName });
   }
 }
