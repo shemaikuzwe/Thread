@@ -17,7 +17,7 @@ type Props = {
 
 export class ThreadChatService extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
-  
+
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
     opts?: p.ComponentResourceOptions,
@@ -45,9 +45,8 @@ export class ThreadChatService extends p.ComponentResource {
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
           { name: "RABBITMQ_URL", valueFrom: props.rmqSsmArn },
         ],
-        environment: [
-          { name: "PORT", value: port.toString() },
-        ],
+        currentService: "SERVICE_URL",
+        // environment: [{ name: "PORT", value: "8001" }],
       },
       { parent: this },
     );

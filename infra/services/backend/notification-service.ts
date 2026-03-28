@@ -54,7 +54,6 @@ export class ThreadNotificationService extends p.ComponentResource {
           { name: "VAPID_PUBLIC_KEY", valueFrom: vapidPublicKeyArn },
           { name: "VAPID_PRIVATE_KEY", valueFrom: vapidPrivateKeyArn },
         ],
-        environment: [{ name: "PORT", value: port.toString() }],
       },
       { parent: this },
     );

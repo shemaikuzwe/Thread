@@ -20,6 +20,7 @@ interface Props {
   imageRepo: p.Input<string>;
   imageTag?: p.Input<string>;
   vpc: VPC;
+  currentService?: string;
   secrets?: Secret[];
   environment?: Environment[];
   type?: "application" | "network";
@@ -44,6 +45,7 @@ export class ThreadEcs extends p.ComponentResource {
       publicIp,
       vpc,
       environment,
+      currentService,
       secrets,
       executionRoleArn,
       healthCheckLivePath = "/health/live",
@@ -82,7 +84,9 @@ export class ThreadEcs extends p.ComponentResource {
       ],
       egress: [{ fromPort: 0, toPort: 0, protocol: "-1", cidrBlocks: ["0.0.0.0/0"] }],
     });
-
+    const env: Environment[] | undefined = currentService
+      ? [{ name: currentService, value: this.lbUrl }, ...(environment ?? [])]
+      : environment;
     const taskDefinition = new aws.ecs.TaskDefinition(
       `${product}-${name}-ecs-taskDefinition`,
       {
@@ -100,7 +104,7 @@ export class ThreadEcs extends p.ComponentResource {
             cpu: 256,
             memory: 512,
             essential: true,
-            environment,
+            environment:env,
             secrets,
             // healthCheck: {
             //   command: [
@@ -131,7 +135,7 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
-    const service=new aws.ecs.Service(
+    const service = new aws.ecs.Service(
       `${product}-${name}-ecs-service`,
       {
         cluster: cluster,
@@ -153,7 +157,7 @@ export class ThreadEcs extends p.ComponentResource {
       },
       { parent: this },
     );
-     this.serviceName=service.name;
+    this.serviceName = service.name;
     this.registerOutputs({
       lbUrl: this.lbUrl,
       serviceName: this.serviceName,
