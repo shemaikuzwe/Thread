@@ -43,8 +43,10 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
+ENV PORT=8000
 COPY --from=builder --chown=nodejs:nodejs /app/apps/notification/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/prod/node_modules ./node_modules
 USER nodejs
+EXPOSE 8000
 
 CMD ["node", "dist/main.js"]

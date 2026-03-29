@@ -10,6 +10,7 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
   rdsSsmArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
   rmqSsmArn: p.Input<string>;
@@ -19,7 +20,7 @@ export class ThreadChatService extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
 
   constructor(
-    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
+    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, imageTag, ...props }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-chat-service`, "chat-service", {}, opts);
@@ -40,6 +41,7 @@ export class ThreadChatService extends p.ComponentResource {
         executionRoleArn,
         vpc,
         imageRepo,
+        imageTag,
         secrets: [
           { name: "DATABASE_URL", valueFrom: props.rdsSsmArn },
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },

@@ -16,12 +16,13 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
 };
 
 export class ThreadBackend extends p.ComponentResource {
     
   constructor(
-    { cluster, taskRoleArn, executionRoleArn, name, product, vpc }: Props,
+    { cluster, taskRoleArn, executionRoleArn, name, product, vpc, imageTag }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-${name}`, name, {}, opts);
@@ -47,7 +48,7 @@ export class ThreadBackend extends p.ComponentResource {
     );
 
     const PORT = 8000;
-    const common = { product, port: PORT, cluster, taskRoleArn, executionRoleArn, vpc };
+    const common = { product, port: PORT, cluster, taskRoleArn, executionRoleArn, vpc, imageTag };
 
     // Services
     new ThreadApi(

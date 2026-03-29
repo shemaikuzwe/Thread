@@ -42,12 +42,12 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=8000
 ENV HOST=0.0.0.0
 COPY --from=builder --chown=nodejs:nodejs /app/apps/chat-service/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/apps/chat-service/chat.proto ./chat.proto
 COPY --from=builder --chown=nodejs:nodejs /app/prod/node_modules ./node_modules
 USER nodejs
-EXPOSE 4000
+EXPOSE 8000
 
 CMD ["node", "dist/main.js"]

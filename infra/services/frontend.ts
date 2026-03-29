@@ -9,11 +9,12 @@ interface Props {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
 }
 export class ThreadFrontend extends p.ComponentResource {
   
   constructor(
-    { name, product, cluster, taskRoleArn, executionRoleArn, vpc }: Props,
+    { name, product, cluster, taskRoleArn, executionRoleArn, vpc, imageTag }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-${name}`, name, {}, opts);
@@ -30,6 +31,7 @@ export class ThreadFrontend extends p.ComponentResource {
         executionRoleArn,
         vpc,
         imageRepo: imageRepo,
+        imageTag,
         healthCheckLivePath: "/api/health/live",
         healthCheckReadyPath: "/api/health/ready",
       },

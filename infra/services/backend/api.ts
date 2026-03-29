@@ -12,6 +12,7 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
   apiUrlArn: p.Input<string>;
   rdsSsmArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
@@ -22,7 +23,7 @@ export class ThreadApi extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
 
   constructor(
-    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
+    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, imageTag, ...props }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-api`, "api", {}, opts);
@@ -64,6 +65,7 @@ export class ThreadApi extends p.ComponentResource {
         healthCheckLivePath: "/v1/health/live",
         healthCheckReadyPath: "/v1/health/ready",
         imageRepo,
+        imageTag,
         secrets: [
           { name: "DATABASE_URL", valueFrom: props.rdsSsmArn },
           { name: "GOOGLE_CLIENT_ID", valueFrom: googleClientIdArn },

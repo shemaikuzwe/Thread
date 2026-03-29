@@ -4,6 +4,9 @@ import { ThreadBackend } from "./services/backend";
 import { ThreadFrontend } from "./services/frontend";
 import { ThreadVpc } from "./resources/vpc";
 
+const config = new p.Config();
+const imageTag = config.get("imageTag") ?? "latest";
+
 const stack = p.getStack();
 const product = `thread${stack}`;
 const { arn: clusterArn, } = new aws.ecs.Cluster(`${product}-cluster`);
@@ -87,6 +90,7 @@ new aws.iam.PolicyAttachment(`${product}-task-role-policyAttachment`, {
   cluster: clusterArn,
   taskRoleArn: taskRole.arn,
   executionRoleArn: executionRole.arn,
+  imageTag,
 });
 
  new ThreadFrontend({
@@ -101,4 +105,5 @@ new aws.iam.PolicyAttachment(`${product}-task-role-policyAttachment`, {
   },
   taskRoleArn: taskRole.arn,
   executionRoleArn: executionRole.arn,
+  imageTag,
 });

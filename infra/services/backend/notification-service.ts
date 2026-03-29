@@ -11,6 +11,7 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
   rdsSsmArn: p.Input<string>;
   rmqSsmArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
@@ -19,7 +20,7 @@ type Props = {
 export class ThreadNotificationService extends p.ComponentResource {
     
   constructor(
-    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
+    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, imageTag, ...props }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-notification`, "notification-service", {}, opts);
@@ -47,6 +48,7 @@ export class ThreadNotificationService extends p.ComponentResource {
         executionRoleArn,
         vpc,
         imageRepo,
+        imageTag,
         secrets: [
           { name: "DATABASE_URL", valueFrom: props.rdsSsmArn },
           { name: "RABBITMQ_URL", valueFrom: props.rmqSsmArn },

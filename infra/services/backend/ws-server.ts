@@ -10,6 +10,7 @@ type Props = {
   taskRoleArn: p.Input<string>;
   executionRoleArn: p.Input<string>;
   vpc: VPC;
+  imageTag?: p.Input<string>;
   valkeySsmArn: p.Input<string>;
   clientUrlArn: p.Input<string>;
   apiUrlArn: p.Input<string>;
@@ -20,7 +21,7 @@ export class ThreadWsServer extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
   
   constructor(
-    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, ...props }: Props,
+    { product, port, cluster, taskRoleArn, executionRoleArn, vpc, imageTag, ...props }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-ws-server`, "ws-server", {}, opts);
@@ -41,6 +42,7 @@ export class ThreadWsServer extends p.ComponentResource {
         executionRoleArn,
         vpc,
         imageRepo,
+        imageTag,
         secrets: [
           { name: "REDIS_URL", valueFrom: props.valkeySsmArn },
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },

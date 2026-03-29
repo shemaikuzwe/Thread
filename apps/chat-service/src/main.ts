@@ -16,6 +16,8 @@ async function bootstrap() {
       protoPath: join(__dirname, "../chat.proto"),
     },
   });
+
+  await app.startAllMicroservices();
 }
 
 bootstrap();
