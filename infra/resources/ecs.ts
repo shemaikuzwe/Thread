@@ -28,6 +28,8 @@ interface Props {
   executionRoleArn: p.Input<string>;
   healthCheckLivePath?: string;
   healthCheckReadyPath?: string;
+  tls?: boolean;
+  tlsCertArn?: p.Input<string>;
 }
 export class ThreadEcs extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
@@ -50,6 +52,8 @@ export class ThreadEcs extends p.ComponentResource {
       executionRoleArn,
       healthCheckLivePath = "/health/live",
       healthCheckReadyPath = "/health/ready",
+      tls = false,
+      tlsCertArn,
     }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
@@ -65,6 +69,8 @@ export class ThreadEcs extends p.ComponentResource {
       vpcId: vpc.id,
       cidrBlock: vpc.cidrBlock,
       healthCheckPath: healthCheckReadyPath,
+      tls,
+      tlsCertArn,
     });
     const logGroup = new aws.cloudwatch.LogGroup(`${product}-${name}-ecs`, {
       name: `${product}-${name}-ecs`,

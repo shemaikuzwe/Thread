@@ -33,7 +33,7 @@ export class ThreadBackend extends p.ComponentResource {
       { parent: this },
     );
     const { arn: clientUrlArn } = new ThreadSsmParameter(
-      { name: "client-url", product, value: "http://localhost:3000" },
+      { name: "client-url", product, value: "https://example.com" },
       { parent: this },
     );
     // Shared infrastructure

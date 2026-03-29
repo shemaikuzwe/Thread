@@ -47,8 +47,7 @@ export class ThreadChatService extends p.ComponentResource {
           { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
           { name: "RABBITMQ_URL", valueFrom: props.rmqSsmArn },
         ],
-        currentService: "SERVICE_URL",
-        // environment: [{ name: "PORT", value: "8001" }],
+        environment: [{ name: "SERVICE_URL", value: p.interpolate`0.0.0.0:${port}` }],
       },
       { parent: this },
     );

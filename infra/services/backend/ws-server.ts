@@ -49,7 +49,7 @@ export class ThreadWsServer extends p.ComponentResource {
           { name: "API_URL", valueFrom: props.apiUrlArn },
         ],
         environment: [
-          { name: "CHAT_SERVICE_URL", value: props.chatServiceLbUrl },
+          { name: "CHAT_SERVICE_URL", value: p.interpolate`${props.chatServiceLbUrl}:8000` },
           { name: "PORT", value: port.toString() },
           { name: "GIN_MODE", value: "release" },
         ],

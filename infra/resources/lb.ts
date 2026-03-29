@@ -10,6 +10,8 @@ type Props = {
   vpcId: p.Input<string>;
   cidrBlock: string;
   healthCheckPath?: string;
+  tls?: boolean;
+  tlsCertArn?: p.Input<string>;
 };
 export class ThreadLB extends p.ComponentResource {
   public readonly lbUrl: p.Output<string>;
@@ -27,10 +29,15 @@ export class ThreadLB extends p.ComponentResource {
       vpcId,
       cidrBlock,
       healthCheckPath = "/health/ready",
+      tls = false,
+      tlsCertArn,
     }: Props,
     opts?: p.ComponentResourceOptions,
   ) {
     super(`pkg:index:${product}-${name}-lb`, name, {}, opts);
+    if (tls && !tlsCertArn) {
+      throw new Error("tlsCertArn is required when tls is true");
+    }
     const albSg = new aws.ec2.SecurityGroup(
       `${name}-alb-sg`,
       {
@@ -42,6 +49,16 @@ export class ThreadLB extends p.ComponentResource {
             protocol: "tcp",
             cidrBlocks: internal ? [cidrBlock] : ["0.0.0.0/0"],
           },
+          ...(tls
+            ? [
+                {
+                  fromPort: 443,
+                  toPort: 443,
+                  protocol: "tcp",
+                  cidrBlocks: internal ? [cidrBlock] : ["0.0.0.0/0"],
+                },
+              ]
+            : []),
         ],
         egress: [{ fromPort: 0, toPort: 0, protocol: "-1", cidrBlocks: ["0.0.0.0/0"] }],
       },
@@ -97,7 +114,26 @@ export class ThreadLB extends p.ComponentResource {
       { parent: this },
     );
 
-    this.lbUrl = p.interpolate`${type == "application" ? "http" : "tcp"}://${lb.dnsName}`;
+    if (tls) {
+      new aws.lb.Listener(
+        `${name}-tls-listener`,
+        {
+          loadBalancerArn: lb.arn,
+          port: 443,
+          protocol: type == "application" ? "HTTPS" : "TLS",
+          certificateArn: tlsCertArn!,
+          defaultActions: [
+            {
+              type: "forward",
+              targetGroupArn: targetGroup.arn,
+            },
+          ],
+        },
+        { parent: this },
+      );
+    }
+
+    this.lbUrl = p.interpolate`${type == "application" ? (tls ? "https" : "http") : (tls ? "tls" : "tcp")}://${lb.dnsName}`;
     this.targetGroup = targetGroup;
     this.registerOutputs({
       lbUrl: this.lbUrl,
