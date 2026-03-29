@@ -3,24 +3,16 @@ import { File } from "buffer";
 import { fileTypeFromBuffer } from "file-type";
 import { customAlphabet } from "nanoid";
 import path from "path";
+import { env } from "./env";
 
 export enum StorageBucket {
   ATTACHMENTS = "attachments",
   PROFILES = "profiles",
   MEDIA = "media",
 }
-
-interface Options {
-  endpoint?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  region?: string;
-}
-
 export interface FileMetaData {
   url: string;
   filename: string;
-  path: string;
   size: number;
   mimeType: string;
 }
@@ -53,21 +45,21 @@ class StorageService implements StorageServiceInterface {
   private nanoid: (size?: number) => string;
   private s3Client: S3Client;
 
-  constructor(options?: Options) {
+  constructor() {
     this.nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
     this.s3Client = new S3Client({
       credentials: {
-        accessKeyId: options?.accessKeyId || process.env.STORAGE_ACCESS_KEY_ID!,
-        secretAccessKey: options?.secretAccessKey || process.env.STORAGE_SECRET_ACCESS_KEY!,
+        accessKeyId: env.STORAGE_ACCESS_KEY_ID,
+        secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
       },
-      region: options?.region || "auto",
-      endpoint: options?.endpoint || process.env.S3_BUCKET,
+      region:env.REGION,
+      endpoint: env.S3_ENDPOINT,
     });
   }
 
   async uploadFile(
     file: string | Buffer | File | ArrayBufferLike,
-    options?: { bucket: StorageBucket; customName?: string; orgId?: string },
+    options?: { bucket: StorageBucket; customName?: string; chatId?: string },
   ): Promise<FileMetaData> {
     try {
       const fileUpload: FileUpload = {};
@@ -118,8 +110,8 @@ class StorageService implements StorageServiceInterface {
         throw new StorageError("Invalid file type", "INVALID_FILE_TYPE");
       }
 
-      const key = options?.orgId
-        ? `${options.orgId}/${options?.bucket}/${fileUpload.filename}`
+      const key = options?.chatId
+        ? `${options.chatId}/${options?.bucket}/${fileUpload.filename}`
         : `${options?.bucket}/${fileUpload.filename}`;
       const url = `${process.env.STORAGE_URL}/${key}`;
 
@@ -128,14 +120,13 @@ class StorageService implements StorageServiceInterface {
           Key: key,
           Body: fileUpload.buffer,
           ContentType: fileUpload.mimeType,
-          Bucket: undefined,
+          Bucket: env.S3_BUCKET,
         }),
       );
 
       return {
         url,
         filename: fileUpload.filename!,
-        path: url,
         size: fileUpload.buffer!.length,
         mimeType: fileUpload.mimeType!,
       };
@@ -154,13 +145,18 @@ class StorageService implements StorageServiceInterface {
     await this.s3Client.send(
       new DeleteObjectCommand({
         Key: key,
-        Bucket: undefined,
+        Bucket: env.S3_BUCKET,
       }),
     );
   }
 }
 
-type ErrorCode = "FILE_NOT_FOUND" | "UPLOAD_FAILED" | "INVALID_FILE_TYPE" | "PERMISSION_DENIED" | "FILE_TOO_LARGE";
+type ErrorCode =
+  | "FILE_NOT_FOUND"
+  | "UPLOAD_FAILED"
+  | "INVALID_FILE_TYPE"
+  | "PERMISSION_DENIED"
+  | "FILE_TOO_LARGE";
 
 export class StorageError extends Error {
   constructor(

@@ -23,7 +23,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.821.0",
     "file-type": "^20.5.0",
-    "nanoid": "^5.1.6"
+    "nanoid": "^5.1.6",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "oxfmt": "^0.26.0",
