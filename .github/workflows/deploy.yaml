@@ -122,6 +122,6 @@ jobs:
         with:
           command: up
           stack-name: ${{ vars.ORG_NAME }}/dev
-          work_dir: infra
+          work-dir: infra
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
