@@ -30,6 +30,12 @@ export class ThreadRmq extends p.ComponentResource {
             protocol: "tcp",
             cidrBlocks: [vpc.cidrBlock],
           },
+          {
+            fromPort: 5671,
+            toPort: 5671,
+            protocol: "tcp",
+            cidrBlocks: [vpc.cidrBlock],
+          },
         ],
       },
       { parent: this },

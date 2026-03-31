@@ -1,6 +1,6 @@
 import { z } from "zod";
 const envSchema = z.object({
-  SERVICE_URL: z.url(),
+  SERVICE_URL: z.string(),
   RABBITMQ_URL: z.url(),
   DATABASE_URL: z.url(),
 });
