@@ -59,7 +59,8 @@ export class ThreadRmq extends p.ComponentResource {
       },
       { parent: this },
     );
-    const rmqUrl = rmq.instances[0].endpoints[0];
+    const rmqEndpoint = rmq.instances[0].endpoints[0];
+    const rmqUrl = p.interpolate`amqps://${user}:${rmqPassword}@${rmqEndpoint}`;
     const consoleUrl = rmq.instances[0].consoleUrl;
     const { arn } = new ThreadSsmParameter(
       {
