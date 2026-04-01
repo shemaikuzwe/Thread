@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt } from "better-auth/plugins/jwt";
 import { env } from "src/env";
 import { account, user, verification, session, jwks } from "@thread/db";
+import { bearer } from "better-auth/plugins";
 
 const authSchema = {
   account,
@@ -29,6 +30,10 @@ const auth = betterAuth({
     //   domain: clientAppUrl.hostname,
     // },
   },
+  account:{
+    //setting cookie fails
+    skipStateCookieCheck: true,
+  },
   baseURL: env.API_BASE_URL,
   basePath: "/v1/auth",
   trustedOrigins: [clientAppUrl.origin],
@@ -38,6 +43,7 @@ const auth = betterAuth({
         expirationTime: "5m",
       },
     }),
+    bearer()
   ],
   emailAndPassword: {
     enabled: true,

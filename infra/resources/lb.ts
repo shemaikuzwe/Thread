@@ -84,17 +84,18 @@ export class ThreadLB extends p.ComponentResource {
         protocol: type == "application" ? "HTTP" : "TCP",
         vpcId,
         targetType: "ip",
-        // healthCheck: {
-        //   enabled: true,
-        //   path: healthCheckPath,
-        //   protocol: "HTTP",
-        //   port: port.toString(),
-        //   healthyThreshold: 3,
-        //   unhealthyThreshold: 3,
-        //   timeout: 5,
-        //   interval: 30,
-        //   matcher: "200",
-        // },
+        healthCheck:
+          type === "network"
+            ? {
+                enabled: true,
+                protocol: "TCP",
+                port: port.toString(),
+                healthyThreshold: 3,
+                unhealthyThreshold: 3,
+                timeout: 10,
+                interval: 30,
+              }
+            : undefined,
       },
       { parent: this },
     );
@@ -133,7 +134,7 @@ export class ThreadLB extends p.ComponentResource {
       );
     }
 
-    this.lbUrl = p.interpolate`${type == "application" ? (tls ? "https" : "http") : (tls ? "tls" : "tcp")}://${lb.dnsName}`;
+    this.lbUrl = p.interpolate`${type == "application" ? (tls ? "https" : "http") : tls ? "tls" : "tcp"}://${lb.dnsName}`;
     this.targetGroup = targetGroup;
     this.registerOutputs({
       lbUrl: this.lbUrl,

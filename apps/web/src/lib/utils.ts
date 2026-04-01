@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { generateReactHelpers, generateUploadButton } from "@uploadthing/react";
 import type { UploadRouter } from "@/app/api/uploadthing/route";
-
+import cookiejs from "js-cookie";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -11,6 +11,12 @@ export const UploadButton = generateUploadButton<UploadRouter>();
 
 export async function sleep(sec: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, 1000 * sec));
+}
+
+export function getToken() {
+  const token = cookiejs.get("token");
+  console.log("token", token);
+  return token;
 }
 export function formatFileSize(sizeInBytes: number) {
   if (sizeInBytes === 0) return "0 Bytes";

@@ -18,7 +18,6 @@ type Props = {
 };
 
 export class ThreadNotificationService extends p.ComponentResource {
-    
   constructor(
     { product, port, cluster, taskRoleArn, executionRoleArn, vpc, imageTag, ...props }: Props,
     opts?: p.ComponentResourceOptions,
@@ -52,10 +51,11 @@ export class ThreadNotificationService extends p.ComponentResource {
         secrets: [
           { name: "DATABASE_URL", valueFrom: props.rdsSsmArn },
           { name: "RABBITMQ_URL", valueFrom: props.rmqSsmArn },
-          { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
+          // { name: "CLIENT_APP_URL", valueFrom: props.clientUrlArn },
           { name: "VAPID_PUBLIC_KEY", valueFrom: vapidPublicKeyArn },
           { name: "VAPID_PRIVATE_KEY", valueFrom: vapidPrivateKeyArn },
         ],
+        environment: [{ name: "CLIENT_APP_URL", value: "https://thread.dev" }],
       },
       { parent: this },
     );

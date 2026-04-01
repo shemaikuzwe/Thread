@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "./lib/auth-client";
-
-
 const publicRoutes = ["/", "/auth/login", "/auth/register"];
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.pathname;
-  const session = await getSession({ fetchOptions: { headers: request.headers } });
+  const token = request.cookies.get("auth.token")?.value ?? null;
+  const session = await getSession({
+    fetchOptions: { headers: { ...request.headers, authorization: `Bearer ${token}` } },
+  });
   const isLoggedIn = !!session?.data?.user;
-
   if (isLoggedIn && publicRoutes.includes(url)) {
     return NextResponse.redirect(new URL("/chat", request.url));
   }
