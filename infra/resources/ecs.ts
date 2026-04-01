@@ -81,12 +81,19 @@ export class ThreadEcs extends p.ComponentResource {
     const ecsServiceSg = new aws.ec2.SecurityGroup(`${name}-ecs-sg`, {
       vpcId: vpc.id,
       ingress: [
-        {
-          fromPort: port,
-          toPort: port,
-          protocol: "tcp",
-          securityGroups: [loadBalancer.lbSg],
-        },
+        type === "network"
+          ? {
+              fromPort: port,
+              toPort: port,
+              protocol: "tcp",
+              cidrBlocks: [vpc.cidrBlock], 
+            }
+          : {
+              fromPort: port,
+              toPort: port,
+              protocol: "tcp",
+              securityGroups: [loadBalancer.lbSg],
+            },
       ],
       egress: [{ fromPort: 0, toPort: 0, protocol: "-1", cidrBlocks: ["0.0.0.0/0"] }],
     });
@@ -110,7 +117,7 @@ export class ThreadEcs extends p.ComponentResource {
             cpu: 256,
             memory: 512,
             essential: true,
-            environment:env,
+            environment: env,
             secrets,
             // healthCheck: {
             //   command: [

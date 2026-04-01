@@ -12,7 +12,7 @@ const authSchema = {
   session,
   jwks,
 };
-
+const clientAppUrl = new URL(env.CLIENT_APP_URL);
 const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -20,14 +20,18 @@ const auth = betterAuth({
   }),
   advanced: {
     useSecureCookies: false,
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: env.CLIENT_APP_URL,
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
     },
+    // crossSubDomainCookies: {
+    //   enabled: true,
+    //   domain: clientAppUrl.hostname,
+    // },
   },
   baseURL: env.API_BASE_URL,
   basePath: "/v1/auth",
-  trustedOrigins: [env.CLIENT_APP_URL],
+  trustedOrigins: [clientAppUrl.origin],
   plugins: [
     jwt({
       jwt: {
