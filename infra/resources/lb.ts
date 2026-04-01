@@ -78,7 +78,7 @@ export class ThreadLB extends p.ComponentResource {
       { parent: this },
     );
     const targetGroup = new aws.lb.TargetGroup(
-      `${name}-targetgroup`,
+      `${name}-tg`,
       {
         port,
         protocol: type == "application" ? "HTTP" : "TCP",
