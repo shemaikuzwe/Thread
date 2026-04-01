@@ -64,7 +64,7 @@ export class ThreadRmq extends p.ComponentResource {
     const consoleUrl = rmq.instances[0].consoleUrl;
     const { arn } = new ThreadSsmParameter(
       {
-        name: "mq-url",
+        name: "rmq-url",
         product,
         value: rmqUrl,
         isSecret: true,

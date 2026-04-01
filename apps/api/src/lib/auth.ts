@@ -18,6 +18,13 @@ const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
+  advanced: {
+    useSecureCookies: false,
+    crossSubDomainCookies: {
+      enabled: true,
+      domain: env.CLIENT_APP_URL,
+    },
+  },
   baseURL: env.API_BASE_URL,
   basePath: "/v1/auth",
   trustedOrigins: [env.CLIENT_APP_URL],
