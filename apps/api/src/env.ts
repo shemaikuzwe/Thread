@@ -10,7 +10,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   GITHUB_CLIENT_ID: z.string(),
   GITHUB_CLIENT_SECRET: z.string(),
-  API_BASE_URL:z.url()
+  API_BASE_URL:z.url().default("http://localhost:8000")
 });
 
 export const env = envSchema.parse(process.env);

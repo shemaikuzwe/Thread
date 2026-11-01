@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api_gateway-configv1
+  namespace: app
+
+data:
+  PORT: 8000
+  REDIS_URL: redis://redis
+  CLIENT_APP_URL: http://thread-web.local

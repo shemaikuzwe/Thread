@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HttpRoute
+metadata:
+  name: api_gateway
+  namespace: app
+spec: 
+  parentRefs:
+    - name: api_gateway
+  hostnames:
+    - thread-api.local
+    
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: api_gateway
+          port: 8000

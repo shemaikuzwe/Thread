@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HttpRoute
+metadata:
+  name: ws-server
+  namespace: app
+spec: 
+  parentRefs:
+    - name: ws-server
+  hostnames:
+    - thread-ws.local
+    
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: ws-server
+          port: 8000
