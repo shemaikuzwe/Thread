@@ -6,7 +6,7 @@ metadata:
 
 data:
   SERVICE_URL: localhost:8000
-  PORT: 8000
-  RABBITMQ_URL: rmq://rmq
-  REDIS_URL: redis://redis
+  PORT: "8000"
+  RABBITMQ_URL: rmq://rmq:5672
+  REDIS_URL: redis://redis:6379
   CLIENT_APP_URL: http://thread-web.local

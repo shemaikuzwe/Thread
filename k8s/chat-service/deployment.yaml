@@ -19,19 +19,16 @@ spec:
     spec:
       containers:
         - name: chat-service
-          image: chat-service
+          image: shemaelie/thread_chat-service:latest
           ports: 
             - containerPort: 8000
           envFrom:
             - configMapRef:
                 name: chat-service-configv1
-          env: 
-            - name: DATABASE_URL
-            - value:
-                valueFrom:
-                  - secretKeyRef:
-                      name: chat-service_db
-                       
+                
+            - secretRef:
+                name: database-url
+                    
           startupProbe:
             httpGet:
               path: /health/live
@@ -55,6 +52,6 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
-            limit:
+            limits:
               cpu: 500m
               memory: 256Mi

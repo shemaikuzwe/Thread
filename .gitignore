@@ -1,5 +1,6 @@
 certificates/
 .env
+.env.prod
 node_modules/
 .pnpm-store/
 .turbo/
@@ -15,3 +16,4 @@ tmp/
 
 # Local env files
 **/.env
+**/.env.prod

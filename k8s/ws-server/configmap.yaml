@@ -5,8 +5,8 @@ metadata:
   namespace: app
 
 data: 
-  PORT: 8000
-  REDIS_URL: redis://redis
-  API_URL: http://api
+  PORT: "8000"
+  REDIS_URL: redis://redis:6379
+  API_URL: http://api:8000
   CLIENT_APP_URL: http://thread-web.local
-  CHAT_SERVICE_URL: tcp://chat-service
+  CHAT_SERVICE_URL: tcp://chat-service:8000

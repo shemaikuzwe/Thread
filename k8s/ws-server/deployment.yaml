@@ -20,10 +20,10 @@ spec:
     spec:
       containers:
         - name: ws-server
-          image: ws-server
+          image: shemaelie/thread_ws-server:latest
           ports:
             - containerPort: 8000
-          envForm:
+          envFrom:
             - configMapRef:
                 name: ws-server-configv1
               
@@ -50,6 +50,6 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
-            limit:
+            limits:
               cpu: 500m
               memory: 256Mi
