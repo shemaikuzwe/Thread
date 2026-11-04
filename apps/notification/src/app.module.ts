@@ -4,10 +4,6 @@ import { PushModule } from "./push/push.module";
 import { HealthModule } from "./health/health.module";
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    PushModule,
-    HealthModule,
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PushModule, HealthModule],
 })
 export class AppModule {}

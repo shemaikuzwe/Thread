@@ -24,7 +24,7 @@ export class ChatsController {
     return { threads: threadIds };
   }
   @GrpcMethod("ChatService")
-  async updateLastRead(data:Message): Promise<Response> {
+  async updateLastRead(data: Message): Promise<Response> {
     await this.chatService.updateLastRead(data);
     return { message: "last read updated successfully", status: 200 };
   }

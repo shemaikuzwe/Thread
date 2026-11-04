@@ -4,10 +4,6 @@ import { ChatsModule } from "./chats/chats.module";
 import { HealthModule } from "./health/health.module";
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ChatsModule,
-    HealthModule,
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), ChatsModule, HealthModule],
 })
 export class AppModule {}

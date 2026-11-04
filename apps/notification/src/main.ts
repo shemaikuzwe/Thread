@@ -12,12 +12,13 @@ async function bootstrap() {
       urls: [env.RABBITMQ_URL],
       queue: "chat_queue",
       queueOptions: {
-        durable: false,
+        durable: true,
       },
     },
   });
 
   await app.startAllMicroservices();
+  await app.listen(env.PORT);
 }
 
 bootstrap();

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: notifcation-service-configv1
+  name: notification-service-configv3
   namespace: app
 
 data:
   PORT: "8000"
-  RABBITMQ_URL: rmq://rmq:5672
-  CLIENT_APP_URL: http://thread-web.local
+  RABBITMQ_URL: amqp://rabbitmq:5672
+  CLIENT_APP_URL: https://thread-web.local

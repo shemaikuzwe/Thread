@@ -22,9 +22,10 @@ spec:
           image: shemaelie/thread_chat-service:latest
           ports: 
             - containerPort: 8000
+            - containerPort: 8080
           envFrom:
             - configMapRef:
-                name: chat-service-configv1
+                name: chat-service-configv3
                 
             - secretRef:
                 name: database-url

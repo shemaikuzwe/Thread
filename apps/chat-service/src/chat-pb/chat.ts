@@ -290,7 +290,9 @@ export const Message: MessageFns<Message> = {
       message: isSet(object.message) ? globalThis.String(object.message) : "",
       type: isSet(object.type) ? typeFromJSON(object.type) : 0,
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
-      files: globalThis.Array.isArray(object?.files) ? object.files.map((e: any) => File.fromJSON(e)) : [],
+      files: globalThis.Array.isArray(object?.files)
+        ? object.files.map((e: any) => File.fromJSON(e))
+        : [],
     };
   },
 
@@ -504,7 +506,9 @@ export const ThreadResponse: MessageFns<ThreadResponse> = {
 
   fromJSON(object: any): ThreadResponse {
     return {
-      threads: globalThis.Array.isArray(object?.threads) ? object.threads.map((e: any) => globalThis.String(e)) : [],
+      threads: globalThis.Array.isArray(object?.threads)
+        ? object.threads.map((e: any) => globalThis.String(e))
+        : [],
     };
   },
 
@@ -541,9 +545,11 @@ export const ChatServiceService = {
     path: "/chat.ChatService/GetUserThreads" as const,
     requestStream: false as const,
     responseStream: false as const,
-    requestSerialize: (value: UserRequest): Buffer => Buffer.from(UserRequest.encode(value).finish()),
+    requestSerialize: (value: UserRequest): Buffer =>
+      Buffer.from(UserRequest.encode(value).finish()),
     requestDeserialize: (value: Buffer): UserRequest => UserRequest.decode(value),
-    responseSerialize: (value: ThreadResponse): Buffer => Buffer.from(ThreadResponse.encode(value).finish()),
+    responseSerialize: (value: ThreadResponse): Buffer =>
+      Buffer.from(ThreadResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): ThreadResponse => ThreadResponse.decode(value),
   },
   updateLastRead: {
@@ -564,7 +570,10 @@ export interface ChatServiceServer extends UntypedServiceImplementation {
 }
 
 export interface ChatServiceClient extends Client {
-  saveMessage(request: Message, callback: (error: ServiceError | null, response: Response) => void): ClientUnaryCall;
+  saveMessage(
+    request: Message,
+    callback: (error: ServiceError | null, response: Response) => void,
+  ): ClientUnaryCall;
   saveMessage(
     request: Message,
     metadata: Metadata,
@@ -591,7 +600,10 @@ export interface ChatServiceClient extends Client {
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: ThreadResponse) => void,
   ): ClientUnaryCall;
-  updateLastRead(request: Message, callback: (error: ServiceError | null, response: Response) => void): ClientUnaryCall;
+  updateLastRead(
+    request: Message,
+    callback: (error: ServiceError | null, response: Response) => void,
+  ): ClientUnaryCall;
   updateLastRead(
     request: Message,
     metadata: Metadata,
@@ -605,22 +617,34 @@ export interface ChatServiceClient extends Client {
   ): ClientUnaryCall;
 }
 
-export const ChatServiceClient = makeGenericClientConstructor(ChatServiceService, "chat.ChatService") as unknown as {
-  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): ChatServiceClient;
+export const ChatServiceClient = makeGenericClientConstructor(
+  ChatServiceService,
+  "chat.ChatService",
+) as unknown as {
+  new (
+    address: string,
+    credentials: ChannelCredentials,
+    options?: Partial<ClientOptions>,
+  ): ChatServiceClient;
   service: typeof ChatServiceService;
   serviceName: string;
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+export type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin ? P
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
 
 function longToNumber(int64: { toString(): string }): number {

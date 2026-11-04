@@ -24,7 +24,7 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: notification-service-configv1
+                name: notification-service-configv3
             - secretRef:
                 name: notification-service-secretsv1
                        
