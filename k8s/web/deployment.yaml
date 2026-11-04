@@ -19,12 +19,12 @@ spec:
     spec:
       containers:
         - name: web
-          image: web
+          image: shemaelie/thread_web:latest
           ports: 
             - containerPort: 3000
-          envFrom:
-            - secretKeyRef:
-                name: web-secretsv1
+          # envFrom:
+          #   - secretRef:
+          #       name: web-secretsv1
                        
           startupProbe:
             httpGet:
@@ -49,6 +49,6 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
-            limit:
+            limits:
               cpu: 500m
               memory: 256Mi

@@ -1,11 +1,11 @@
 apiVersion: gateway.networking.k8s.io/v1
-kind: HttpRoute
+kind: HTTPRoute
 metadata:
   name: web
   namespace: app
 spec: 
   parentRefs:
-    - name: web
+    - name: thread
   hostnames:
     - thread-web.local
     
@@ -16,4 +16,4 @@ spec:
             value: /
       backendRefs:
         - name: web
-          port: 8000
+          port: 3000
