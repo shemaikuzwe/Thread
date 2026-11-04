@@ -19,7 +19,7 @@ export function useWebsocket() {
     }
     const params = new URLSearchParams();
     params.append("ws_token", data.token);
-    return `${wsUrl}/v1/ws?${params.toString()}`;
+    return `${wsUrl}/ws?${params.toString()}`;
   }, [wsUrl]);
 
   const {

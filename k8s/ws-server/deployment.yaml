@@ -25,7 +25,7 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: ws-server-configv2
+                name: ws-server-configv3
               
           startupProbe:
             httpGet:

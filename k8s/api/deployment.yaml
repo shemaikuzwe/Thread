@@ -24,14 +24,14 @@ spec:
             - containerPort: 8000
           envFrom:
             - secretRef:
-                name: api-gateway-secretsv1
+                name: api-gateway-secretsv3
                        
           startupProbe:
             httpGet:
               path: /v1/health/live
               port: 8000
-            failureThreshold: 30
-            periodSeconds: 2
+            failureThreshold: 90
+            periodSeconds: 10
 
           readinessProbe:
             httpGet:

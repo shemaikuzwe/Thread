@@ -2,8 +2,11 @@ import { createAuthClient } from "better-auth/react";
 import { jwtClient } from "better-auth/client/plugins";
 import cookieJs from "js-cookie";
 
+const apiUrl =
+  typeof window === "undefined" ? process.env.API_URL?? "http://localhost:8000" : process.env.NEXT_PUBLIC_API_URL;
+
 const { useSession, signIn, signOut, $Infer, signUp, getSession, token } = createAuthClient({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/v1/auth`,
+  baseURL: `${apiUrl}/auth`,
   plugins: [jwtClient()],
   fetchOptions: {
     onSuccess: (ctx) => {

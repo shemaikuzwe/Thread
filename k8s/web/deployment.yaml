@@ -22,10 +22,10 @@ spec:
           image: shemaelie/thread_web:latest
           ports: 
             - containerPort: 3000
-          # envFrom:
-          #   - secretRef:
-          #       name: web-secretsv1
-                       
+          envFrom:
+            - configMapRef:
+                name: web-configv1
+
           startupProbe:
             httpGet:
               path: /api/health/live

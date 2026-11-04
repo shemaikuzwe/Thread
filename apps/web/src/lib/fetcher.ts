@@ -7,7 +7,7 @@ import cookiejs from "js-cookie";
  */
 export async function fetcher(url: string, options?: RequestInit) {
   const token = cookiejs.get("token");
-  return fetch(`/api${url}`, {
+  return fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
     ...options,
     headers: {
       ...options?.headers,
