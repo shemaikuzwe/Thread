@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ws-server-configv3
+  name: ws-server-configv6
   namespace: app
 
 data: 
   PORT: "8000"
-  REDIS_URL: redis://redis:6379
   API_URL: http://api-gateway:8000
   CLIENT_APP_URL: http://thread-web.local:30080
   CHAT_SERVICE_URL: tcp://chat-service:8080

@@ -25,11 +25,12 @@ spec:
             - containerPort: 8080
           envFrom:
             - configMapRef:
-                name: chat-service-configv3
+                name: chat-service-configv4
                 
             - secretRef:
-                name: database-url
-                    
+                name: database-urlv2
+            - secretRef:
+                name: redis-urlv1
           startupProbe:
             httpGet:
               path: /health/live

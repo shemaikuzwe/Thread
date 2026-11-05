@@ -21,12 +21,12 @@ resources:
   - web/service.yaml
   - web/httproute.yaml
   - web/configmap.yaml
-  - db/deployment.yaml
-  - db/service.yaml
-  - db/pvc.yaml
+  # - db/deployment.yaml
+  # - db/service.yaml
+  # - db/pvc.yaml
   - rabbitmq/deployment.yaml
   - rabbitmq/service.yaml
   - rabbitmq/pvc.yaml
-  - redis/deployment.yaml
-  - redis/service.yaml
-  - redis/pvc.yaml
+  # - redis/deployment.yaml
+  # - redis/service.yaml
+  # - redis/pvc.yaml

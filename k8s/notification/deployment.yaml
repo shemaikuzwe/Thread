@@ -27,7 +27,8 @@ spec:
                 name: notification-service-configv3
             - secretRef:
                 name: notification-service-secretsv1
-                       
+            - secretRef:
+                name: database-urlv2
           startupProbe:
             httpGet:
               path: /health/live

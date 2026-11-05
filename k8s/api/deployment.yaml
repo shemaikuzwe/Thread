@@ -25,7 +25,10 @@ spec:
           envFrom:
             - secretRef:
                 name: api-gateway-secretsv3
-                       
+            - secretRef:
+                name: database-urlv2
+            - secretRef:
+                name: redis-urlv1
           startupProbe:
             httpGet:
               path: /v1/health/live

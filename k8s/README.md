@@ -2,11 +2,19 @@
 
 Secrets are kept out of git use this commands(imperative) to create one.
 
-### 1. Create db password secret
+### 1. Install helm charts
+Redis
+
 ```bash
-openssl rand -hex 8
-printf "generated code"| kubectl create secret generic postgres-password  --from-file=POSTGRES_PASSWORD/dev/stdin --namespace=app
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm installredis bitnami/redis --version 28.3.12 --namespace=app
 ```
+Postgres
+```bash
+helm install my-postgresql bitnami/postgresql --version 18.12.18 --namespace=app
+```
+Gather their passwords create respective secrets.
+
 
 ### 2. Create database url env
 ```bash
